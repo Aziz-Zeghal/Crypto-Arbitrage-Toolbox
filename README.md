@@ -13,7 +13,9 @@ BE CAREFUL: if you use this code, always check on the website the leverage of pe
 
 ## How to use
 
-- Get a crypto pair available in both perpetual and spot, or use bestFundingRate() function
+- Install the requirements
+- Put the API key and secret key of Bybit in a file called keys
+- Get a crypto pair available in both perpetual and spot
 - Insert it in enterArbitrage(coin)
 - Now wait for convergence of perpetual and spot
 - ???
