@@ -66,8 +66,8 @@ def getCoinBalance(wantedcoin):
 # TODO: This function takes ONLY coins that exist in spot and perpetual
 # TODO: If condition to check coin exists and in good format, for user's confort
 def holdTime(coin, amount=100):
-    spotcoin = session.get_fee_rates(category="linear", symbol=coin)['result']['list'][0]
-    perpcoin = session.get_fee_rates(category="spot", symbol=coin)['result']['list'][0]
+    spotcoin = session.get_fee_rates(category="spot", symbol=coin)['result']['list'][0]
+    perpcoin = session.get_fee_rates(category="linear", symbol=coin)['result']['list'][0]
     
     spotMaker, spotTaker = float(spotcoin['makerFeeRate']) * amount, float(spotcoin['takerFeeRate']) * amount
     perpMaker, perpTaker = float(perpcoin['makerFeeRate']) * amount, float(perpcoin['takerFeeRate']) * amount
@@ -76,6 +76,9 @@ def holdTime(coin, amount=100):
     fundingRate = float(session.get_tickers(category="linear", symbol=coin)['result']['list'][0]['fundingRate']) * 100
     breakEven = round(totalFees * 100 / amount, 5)
     fundingRateTakes = round(breakEven / fundingRate, 0)
+    print("Perpetual enter: " + str(perpMaker) + " and exit: " + str(perpTaker))
+    print("Spot enter: " + str(spotMaker) + " and exit: " + str(spotTaker))
+
     print("Total fees: " + str(totalFees) + "$")
     print("Required to break even: " + str(breakEven) + "%")
     print("With funding rates of: " + str(fundingRate) + "%")
