@@ -3,6 +3,8 @@ Small Python script implements a basic delta-neutral arbitrage strategy between 
 
 Still building, because I am still looking into other arbitrage techniques
 
+BE CAREFUL: if you use this code, always check on the website the leverage of perpetual. API documentation does not refer to it, but the default value is 10x. Change it on the website for the wanted coin then use code.
+
 ## Concept
 
 - Retrieve the best funding rate on the CEX
@@ -20,10 +22,10 @@ Still building, because I am still looking into other arbitrage techniques
 
 ## Upgrades
 
-- **Autonomous position taker** sometimes, orders are not completed. Timeout system for positions, and better decision making (through trial and error no other ways)
+- **Autonomous position taker** sometimes, orders are not completed. Timeout system for positions, and better decision making (through trial and error no other ways). System that checks current positions, exits them if the funding rate is negative, takes current wallet size and fractions accordingly...
 - **Liquidation survey** if liquidation in short position is near, exit arbitrage position
 - **Position escaper** if the funding rate is negative, exit arbitrage position, and start looking for a new host
-- **Notifier** message every action (start position, end position, new found token, new funding rate, etc…)
+- **Notifier** if positions are active, message the new funding rate of coins, the current realised PNL, the new potential APY, and other info
 - **Heuristic system** calculate best coin based on multiple factors (liquidity, funding rate, history of funding rate). A coin is valuable if we know it will have a positive funding rate for a long period, to avoid fees
 - **Leverage** simply include leverage and calculate correctly
 - **Error handler** queries through the API can fail in rare cases. Find all possible results and handle them properly
