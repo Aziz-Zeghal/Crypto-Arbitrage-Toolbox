@@ -11,6 +11,14 @@ BE CAREFUL: if you use this code, always check on the website the leverage of pe
 - Take position when Spot & Perpetual converge
 - Profit from funding rates, check every 8 hours for positivity
 
+## How to use
+
+- Get a crypto pair available in both perpetual and spot, or use bestFundingRate() function
+- Insert it in enterArbitrage(coin)
+- Now wait for convergence of perpetual and spot
+- ???
+- Profit from the position with funding rate :)
+
 ## To-do list
 
 Code is functionnal. Just implement upgrades and make better documentation
