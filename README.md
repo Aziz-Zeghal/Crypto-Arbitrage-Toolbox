@@ -13,12 +13,7 @@ BE CAREFUL: if you use this code, always check on the website the leverage of pe
 
 ## To-do list
 
-- Get information from Bybit’s pairs (done)
-- Take the best funding rate coin (done)
-- Find convergence
-- Take position (short in Perpetual, buy in Spot)
-- Calculate potential APY
-
+Code is functionnal. Just implement upgrades and make better documentation
 
 ## Upgrades
 
