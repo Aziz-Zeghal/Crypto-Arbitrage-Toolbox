@@ -25,9 +25,9 @@ def getPairs():
         print(p['symbol'] + " with " + p['fundingRate'])
 
 # Gets the fundingRate of a given coin
-def getFundingRate(coin, mode="linear"):
+def getFundingRate(coin):
     try:
-        pair = session.get_tickers(category=mode, symbol=coin)['result']['list'][0]
+        pair = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
         value = float(pair['fundingRate']) * 100
         apy = float(pair['fundingRate']) * 365 * 3 * 100
         print(coin + " has a funding rate of " + str(value))
@@ -59,3 +59,32 @@ def getWallet():
 def getCoinBalance(wantedcoin):
     coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=wantedcoin)
     print("Total value of this coin is: " + coinsum['result']['list'][0]['coin'][0]['usdValue'] + "💲")
+
+# Wait for superposition of coin on spot and perpetual
+# Requires the dictionnary of the coin
+# TODO: Just use threads to execute jobs simultanous
+# TODO: Use sockets to retrieve live time information
+def enterArbitrage(coin):
+    spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
+    perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+    while spot['lastPrice'] != perp['lastPrice']:
+        print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
+        time.sleep(0.2)
+        spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
+        perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+    quantity = str(float(spot['lastPrice']) * 10)
+    session.place_order(
+        category="spot",
+        symbol=coin['symbol'],
+        side="Buy",
+        orderType="Limit",
+        qty=quantity,
+        price=spot['lastPrice'])
+    session.place_order(
+        category="linear",
+        symbol=coin['symbol'],
+        side="Sell",
+        orderType="Limit",
+        qty=quantity,
+        price=spot['lastPrice'])
+    
