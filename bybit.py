@@ -5,7 +5,7 @@ import time
 
 test = False
 
-# Definition of the account
+# Bybit testnet is really bad, BTC/USDT is at 38k and in Perp it is at 5k :)
 if not test:
     session = HTTP(api_key = keys.bybitPKey, api_secret = keys.bybitSKey)
 else:
@@ -14,19 +14,55 @@ else:
 # All requests will return a dictionnary containing retCode, retMsg, result, retExtInfo, time
 # In our case, inside result we have the category, and the list of pairs
 # TODO: All functions make requests with API, handle all possible errors while executing code
-bybitpairs = set()
 
-# Retrieves pairs in perpetual
-def getPairs():
-    # Get all the pairs in perpetual
+def getSymbols():
+    """
+    Prints the symbol and funding rate for each pair in Perpetual market.
+
+    Args:
+        None
+    Returns:
+        None
+    """
     pairs = session.get_tickers(category="linear")
     for p in pairs['result']['list']:
-        # print(float(p['fundingRate']) * 100)
-        bybitpairs.add(p.keys)
         print(p['symbol'] + " with " + p['fundingRate'])
+        
+def getWallet():
+    """
+    Prints the total value of the wallet.
+    To execute this function, need to upgrade_to_unified_trading_account()
 
-# Gets the fundingRate of a given coin
+    Args:
+        None
+    Returns:
+        None
+    """
+    wallet = session.get_wallet_balance(accountType="UNIFIED")
+    print("Total value of wallet is: " + wallet['result']['list'][0]['totalEquity'] + "💲")
+
+def getCoinBalance(coin):
+    """
+    Prints the total value of a given coin in the wallet.
+    To execute this function, need to upgrade_to_unified_trading_account()
+
+    Args:
+        coin (str)
+    Returns:
+        None
+    """
+    coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=coin)
+    print("Total value of this coin is: " + coinsum['result']['list'][0]['coin'][0]['usdValue'] + "💲")
+
 def getFundingRate(coin):
+    """
+    Prints the funding rate and APY of a given coin.
+
+    Args:
+        coin (str)
+    Returns:
+        None
+    """
     try:
         pair = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
         value = float(pair['fundingRate']) * 100
@@ -36,9 +72,16 @@ def getFundingRate(coin):
     except:
         print("Coin does not exist in this mode!")
 
-# Retrieve the best funding rate for a pair that exists in spot and future
 # TODO: Not optimal at all, O(n^2) at worst
 def bestFundingRate():
+    """
+    Prints the best funding rate and APY of a coin that exists in both Perpetual and Spot market.
+
+    Args:
+        None
+    Returns:
+        coin (dict)
+    """
     perppairs = session.get_tickers(category="linear")
     spotpairs = session.get_tickers(category="spot")
     top = 0
@@ -50,22 +93,24 @@ def bestFundingRate():
     apy = float(coin['fundingRate']) * 365 * 3 * 100
     print("This coin brings an APY of " + str(apy) + "%!")
     return coin
-        
-# To execute this function, need to upgrade_to_unified_trading_account()
-def getWallet():
-    wallet = session.get_wallet_balance(accountType="UNIFIED")
-    print("Total value of wallet is: " + wallet['result']['list'][0]['totalEquity'] + "💲")
 
-# Get amount of a coin
-def getCoinBalance(wantedcoin):
-    coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=wantedcoin)
-    print("Total value of this coin is: " + coinsum['result']['list'][0]['coin'][0]['usdValue'] + "💲")
-
-# Indicates how many times fundingRate has to be perceived to be in profit
-# Takes a coin with all needed information. We will get_fee_rates (dynamic)
 # TODO: This function takes ONLY coins that exist in spot and perpetual
 # TODO: If condition to check coin exists and in good format, for user's confort
 def holdTime(coin, amount=100):
+    """
+    Prints the total fees,
+    the required percentage to break even, 
+    the funding rate
+    and how many funding rates have to be perceived to be in profit.
+    Gets the fees from get_fee_rates(dynamic), and the funding rate from get_tickers.
+
+    Args:
+        coin (dict)
+        amount (int)
+    Returns:
+        totalFees (float)
+        breakEven (float)
+    """
     spotcoin = session.get_fee_rates(category="spot", symbol=coin)['result']['list'][0]
     perpcoin = session.get_fee_rates(category="linear", symbol=coin)['result']['list'][0]
     
@@ -85,14 +130,22 @@ def holdTime(coin, amount=100):
     print("How many funding rates have to be perceived: " + str(fundingRateTakes))
     return totalFees, breakEven
 
-# Wait for superposition of coin on spot and perpetual
-# Requires the dictionnary of the coin
-# CAREFUL: Need to check in perpetual the leverage engaged. Manually put it to 1.00x on the website
-# TODO: Just use threads to execute jobs simultanous
+# TODO: Use threads to execute jobs simultanous
 # TODO: Use sockets to retrieve live time information
 # TODO: Add a small verification of the minOrderQty with get_instruments_info
-# TODO: Not hard code the quantity to buy (just add a parameter)
-def enterArbitrage(coin):
+def enterArbitrage(coin, amount=20):
+    """
+    Enters an arbitrage position on a given coin.
+    Uses the spot and perpetual market to enter both positions.
+    IMPORTANT: the coin is a dictionnary, not a string.
+    Also, check the leverage on the website, it should be 1.00x. Cannot be modified through code
+
+    Args:
+        coin (dict)
+        amount (int)
+    Returns:
+        None
+    """
     spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
     perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
     while spot['lastPrice'] != perp['lastPrice']:
@@ -100,7 +153,7 @@ def enterArbitrage(coin):
         time.sleep(0.2)
         spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
         perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
-    quantity = str(round(20 / float(spot['lastPrice']), 1))
+    quantity = str(round(amount / float(spot['lastPrice']), 1))
     session.place_order(
         category="spot",
         symbol=coin['symbol'],
@@ -108,6 +161,7 @@ def enterArbitrage(coin):
         orderType="Limit",
         qty=quantity,
         price=spot['lastPrice'])
+
     session.place_order(
         category="linear",
         symbol=coin['symbol'],
@@ -117,3 +171,4 @@ def enterArbitrage(coin):
         price=spot['lastPrice'])
 
 # TODO: exitArbitrage(coin), with a given coin, exit both positions
+# Use holdTime to check if arbitrage is > to this value to see if we have a profit
