@@ -138,7 +138,6 @@ def enterArbitrage(coin, amount=20):
     Enters an arbitrage position on a given coin.
     Uses the spot and perpetual market to enter both positions.
     IMPORTANT: the coin is a dictionnary, not a string.
-    Also, check the leverage on the website, it should be 1.00x. Cannot be modified through code
 
     Args:
         coin (dict)
@@ -148,6 +147,7 @@ def enterArbitrage(coin, amount=20):
     """
     spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
     perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+    session.set_leverage(category="linear", symbol=coin['symbol'], buyLeverage="1", sellLeverage="1")
     while spot['lastPrice'] != perp['lastPrice']:
         print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
         time.sleep(0.2)
@@ -161,7 +161,6 @@ def enterArbitrage(coin, amount=20):
         orderType="Limit",
         qty=quantity,
         price=spot['lastPrice'])
-
     session.place_order(
         category="linear",
         symbol=coin['symbol'],
@@ -172,3 +171,4 @@ def enterArbitrage(coin, amount=20):
 
 # TODO: exitArbitrage(coin), with a given coin, exit both positions
 # Use holdTime to check if arbitrage is > to this value to see if we have a profit
+
