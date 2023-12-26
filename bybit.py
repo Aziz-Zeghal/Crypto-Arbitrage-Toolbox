@@ -13,6 +13,7 @@ else:
 
 # All requests will return a dictionnary containing retCode, retMsg, result, retExtInfo, time
 # In our case, inside result we have the category, and the list of pairs
+# TODO: All functions make requests with API, handle all possible errors while executing code
 bybitpairs = set()
 
 # Retrieves pairs in perpetual
@@ -60,10 +61,34 @@ def getCoinBalance(wantedcoin):
     coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=wantedcoin)
     print("Total value of this coin is: " + coinsum['result']['list'][0]['coin'][0]['usdValue'] + "💲")
 
+# Indicates how many times fundingRate has to be perceived to be in profit
+# Takes a coin with all needed information. We will get_fee_rates (dynamic)
+# TODO: This function takes ONLY coins that exist in spot and perpetual
+# TODO: If condition to check coin exists and in good format, for user's confort
+def holdTime(coin, amount=100):
+    spotcoin = session.get_fee_rates(category="linear", symbol=coin)['result']['list'][0]
+    perpcoin = session.get_fee_rates(category="spot", symbol=coin)['result']['list'][0]
+    
+    spotMaker, spotTaker = float(spotcoin['makerFeeRate']) * amount, float(spotcoin['takerFeeRate']) * amount
+    perpMaker, perpTaker = float(perpcoin['makerFeeRate']) * amount, float(perpcoin['takerFeeRate']) * amount
+    
+    totalFees = spotMaker + spotTaker + perpMaker + perpTaker
+    fundingRate = float(session.get_tickers(category="linear", symbol=coin)['result']['list'][0]['fundingRate']) * 100
+    breakEven = round(totalFees * 100 / amount, 5)
+    fundingRateTakes = round(breakEven / fundingRate, 0)
+    print("Total fees: " + str(totalFees) + "$")
+    print("Required to break even: " + str(breakEven) + "%")
+    print("With funding rates of: " + str(fundingRate) + "%")
+    print("How many funding rates have to be perceived: " + str(fundingRateTakes))
+    return totalFees, breakEven
+
 # Wait for superposition of coin on spot and perpetual
 # Requires the dictionnary of the coin
+# CAREFUL: Need to check in perpetual the leverage engaged. Manually put it to 1.00x on the website
 # TODO: Just use threads to execute jobs simultanous
 # TODO: Use sockets to retrieve live time information
+# TODO: Add a small verification of the minOrderQty with get_instruments_info
+# TODO: Not hard code the quantity to buy (just add a parameter)
 def enterArbitrage(coin):
     spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
     perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
@@ -72,7 +97,7 @@ def enterArbitrage(coin):
         time.sleep(0.2)
         spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
         perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
-    quantity = str(float(spot['lastPrice']) * 10)
+    quantity = str(round(20 / float(spot['lastPrice']), 1))
     session.place_order(
         category="spot",
         symbol=coin['symbol'],
@@ -87,4 +112,5 @@ def enterArbitrage(coin):
         orderType="Limit",
         qty=quantity,
         price=spot['lastPrice'])
-    
+
+# TODO: exitArbitrage(coin), with a given coin, exit both positions
