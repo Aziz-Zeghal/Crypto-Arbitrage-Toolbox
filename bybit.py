@@ -14,6 +14,7 @@ else:
 # All requests will return a dictionnary containing retCode, retMsg, result, retExtInfo, time
 # In our case, inside result we have the category, and the list of pairs
 # TODO: All functions make requests with API, handle all possible errors while executing code
+# TODO: Add a parameter to make functions verbose
 
 def getSymbols():
     """
@@ -169,6 +170,25 @@ def enterArbitrage(coin, amount=20):
         qty=quantity,
         price=spot['lastPrice'])
 
-# TODO: exitArbitrage(coin), with a given coin, exit both positions
-# Use holdTime to check if arbitrage is > to this value to see if we have a profit
+# TODO: getPNLPerpetual(coin)
+# Takes the perpetual contract of a coin, calculates the PNL - holdTime
 
+# TODO: exitArbitrage(coin), with a given coin, exit both positions
+# No conditions, just exit it.
+
+# TODO: Takedecision()
+# If fundingRate is negative, exit
+# If losing, or if APY < to a certain required amount (50% for example), exit
+# Passes everything ? Keep it
+# Always return the holdTime info with the right amount, if it was removed, getPNLPerpetual(coin)
+# (totalfees, breakEven, APY, PNL, removed)
+
+# TODO: cleanPositions()
+# Will check all current position, use Takedecision()
+# Take information of it to do stats (the position was exited/kept, APY with getFundingRate, PNL is positive/negative)
+
+# theUltimate
+# Check if positions are open, use cleanPosition
+# Checks available USDT and use while balance > 20 and margin < 80 %
+# Get the best pair use enterArbitrage(bestFundingRate)
+# Every 8 hours, use cleanPosition()
