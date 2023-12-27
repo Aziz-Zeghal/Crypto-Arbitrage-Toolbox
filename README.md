@@ -32,6 +32,9 @@ EXAMPLE: HNTUSDT had a funding rate of 0.2111%. On 100$, the total of fees (Spot
 
 Now, the required turnover to break even is 0.275% (sum of the fees). We need 2 funding rates to be in profit (if it stayed the same)
 
+Predicting the exact value of the next funding rate for a cryptocurrency is challenging, as it depends on various factors and market dynamics.
+Market sentiment, position imbalance, leverage and history of funding rates all have an impact on its value.
+
 ## Upgrades
 
 - **Autonomous position taker:**  sometimes, orders are not completed. Timeout system for positions, and better decision making (through trial and error no other ways). System that checks current positions, exits them if the funding rate is negative, takes current wallet size and fractions accordingly...
