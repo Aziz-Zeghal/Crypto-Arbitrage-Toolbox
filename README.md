@@ -21,9 +21,16 @@ BE CAREFUL: if you use this code, always check on the website the leverage of pe
 - ???
 - Profit from the position with funding rate :)
 
-## To-do list
+## Does it make profit ?
 
-Code is functionnal. Just implement upgrades and make better documentation
+Code is functionnal, but upgrades are missing.
+
+I noticed that a little luck is involved in this arbitrage strategy. We can enter a position that has a good funding rate, but at the next refresh it turns negative.
+One way to counter act this, would be to enter positions that have a really good APY and need the least amount of funding rates to be in profit.
+
+EXAMPLE: HNTUSDT had a funding rate of 0.2111%. On 100$, the total of fees (SpotEntry and SpotExit, PerpEntry and PerpExit) is around 0.685$
+
+Now, the required turnover to break even is 0.275% (sum of the fees). We need 2 funding rates to be in profit (if it stayed the same)
 
 ## Upgrades
 
