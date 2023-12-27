@@ -3,8 +3,6 @@ Small Python script implements a basic delta-neutral arbitrage strategy between 
 
 Still building, because I am still looking into other arbitrage techniques
 
-BE CAREFUL: if you use this code, always check on the website the leverage of perpetual. API documentation does not refer to it, but the default value is 10x. Change it on the website for the wanted coin then use code.
-
 ## Concept
 
 - Retrieve the best funding rate on the CEX
