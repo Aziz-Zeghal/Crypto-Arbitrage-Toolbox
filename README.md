@@ -21,7 +21,7 @@ BE CAREFUL: if you use this code, always check on the website the leverage of pe
 - ???
 - Profit from the position with funding rate :)
 
-## Does it make profit ?
+## Does it make money ?
 
 Code is functionnal, but upgrades are missing.
 
