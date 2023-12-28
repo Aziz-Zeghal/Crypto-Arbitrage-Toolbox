@@ -11,6 +11,11 @@ Still building, because I am still looking into other arbitrage techniques
 
 ## How to use
 
+2 strategies can be applied:
+Either take positions and only exit them when the funding rate is negative
+Make the minimum to break even from fees and look for a better pair (if the funding rates make an APY < 50 % for example)
+
+
 - Install the requirements
 - Put the API key and secret key of Bybit in a file called keys
 - Get a crypto pair available in both perpetual and spot
