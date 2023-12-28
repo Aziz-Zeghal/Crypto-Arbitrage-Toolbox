@@ -1,5 +1,6 @@
 import keys
 
+import math
 from pybit.unified_trading import HTTP
 import time
 
@@ -30,7 +31,7 @@ def getSymbols():
             apy = round(float(p['fundingRate']) * 365 * 3 * 100, 2)
         else:
             apy = 0
-        print(p['symbol'] +" with an APY of " + str(apy))
+        print(p['symbol'] +" with an APY of " + str(apy) + "%")
 
 def getWallet():
     """
@@ -76,6 +77,51 @@ def getFundingRate(coin):
     except:
         print("Coin does not exist in this mode!")
 
+def avgFundingRate(coin, history=4):
+    """
+    Prints the average funding rate for a given coin based on its history
+    
+    Args:
+        coin (str)
+        history (int)
+    Returns:
+        avg (float)
+    
+    """
+    rates = session.get_funding_rate_history(category="linear", symbol=coin, limit=history)['result']['list']
+    sumrates = 0
+    negative = 0
+    for rate in rates:
+        val = float(rate['fundingRate'])
+        sumrates += val
+        if val < 0:
+            negative += 1
+    avg = round((sumrates / history) * 100, 6)
+    print("The average funding rate for " + str(history) + " is " + str(avg) + "%\n")
+    print("Found " + str(negative) + " negatives!")
+    return avg
+
+def avgFundingRateList(coins, history=4):
+    """
+    Prints the average of given list of coins, and makes the avg of the avg (yes)
+    Can use bestList() and put it here
+    
+    Args:
+        coin (list of dict)
+        history (int)
+    Returns:
+        avg, apy (float, float)
+    """
+    sumrates = 0
+    for coin in coins:
+        print(coin['symbol'])
+        sumrates += avgFundingRate(coin['symbol'], history)
+    avg = round((sumrates / len(coins)), 6)
+    apy = avg * 3 * 365
+    
+    print("\nIn the end we have an average of " + str(avg) + "% for an APY of " + str(apy))
+    return avg, apy
+
 # TODO: This function takes ONLY coins that exist in spot and perpetual
 # TODO: If condition to check coin exists and in good format, for user's confort
 def holdTime(coin, amount=100):
@@ -96,29 +142,57 @@ def holdTime(coin, amount=100):
     spotcoin = session.get_fee_rates(category="spot", symbol=coin)['result']['list'][0]
     perpcoin = session.get_fee_rates(category="linear", symbol=coin)['result']['list'][0]
     
-    spotMaker, spotTaker = float(spotcoin['makerFeeRate']) * amount, float(spotcoin['takerFeeRate']) * amount
-    perpMaker, perpTaker = float(perpcoin['makerFeeRate']) * amount, float(perpcoin['takerFeeRate']) * amount
+    spotMaker = float(spotcoin['makerFeeRate']) * amount
+    perpMaker = float(perpcoin['makerFeeRate']) * amount
     
-    totalFees = spotMaker + spotTaker + perpMaker + perpTaker
+    totalFees = round(spotMaker * 2 + perpMaker * 2, 4)
     fundingRate = float(session.get_tickers(category="linear", symbol=coin)['result']['list'][0]['fundingRate']) * 100
     breakEven = round(totalFees * 100 / amount, 5)
-    fundingRateTakes = round(breakEven / fundingRate, 0)
-    apy = fundingRate * 365 * 3
+    fundingRateTakes = math.ceil(breakEven / fundingRate)
+    apy = round(fundingRate * 365 * 3, 4)
 
-    print("P: " + str(perpMaker) + " and exit: " + str(perpTaker))
-    print("S: " + str(spotMaker) + " and exit: " + str(spotTaker))
-    print("Total fees: " + str(totalFees) + "$\n")
-    
-    print(str(amount * fundingRate / 100) + "$ every pay")
-    print("So an APY of " + str(apy) + "%\n")
+    print("P: " + str(perpMaker))
+    print("S: " + str(spotMaker))
+    print("Total fees: " + str(totalFees) + "$")
+    print("Fees without the entry on perpetual: " + str(totalFees - perpMaker) + "$\n")
     
     print("Required to break even: " + str(breakEven) + "%")
+    print(str(round(amount * fundingRate / 100, 4)) + "$ every pay")
+    print("So an APY of " + str(apy) + "%\n")
+    
     print("With funding rates of: " + str(fundingRate) + "%")
     print("How many funding rates have to be perceived: " + str(fundingRateTakes))
     return totalFees, breakEven, apy
 
+def bestList(minapy=150):
+    """
+    Prints the best funding rates and APY of coins that exists in both Perpetual and Spot market.
+    minapy default value is 150%, because the break even needs 2 funding rates
+    a minimum of 265% needs only 1 funding rate
+    
+    Args:
+        minapy (int)
+    Returns:
+        coins (list of dict)
+    """
+    perppairs = session.get_tickers(category="linear")
+    spotpairs = session.get_tickers(category="spot")
+    top = 0
+    coins = []
+    for p in perppairs['result']['list']:
+        if p['fundingRate'] != '':
+            apy = float(p['fundingRate']) * 365 * 3 * 100
+            if apy > minapy and any(p['symbol'] == s['symbol'] for s in spotpairs['result']['list']):
+                coins.append(p)
+    
+    print("Here are the winners!")
+    for coin in coins:
+        apy = float(coin['fundingRate']) * 365 * 3 * 100
+        print(coin['symbol'] + " with an APY of " + str(apy) + "%!")
+    return coins
+
 # TODO: Not optimal at all, O(n^2) at worst
-def bestFundingRate():
+def bestCoin():
     """
     Prints the best funding rate and APY of a coin that exists in both Perpetual and Spot market.
 
@@ -182,7 +256,31 @@ def enterArbitrage(coin, amount=20):
         price=spot['lastPrice'])
 
 # TODO: exitArbitrage(coin), with a given coin, exit both positions
-# No conditions, just exit it.
+def exitArbitrage(coin):
+    """
+    Exits an arbitrage position without any conditions
+    Perpetual contract is bought, spot is sold
+    
+    Args:
+        coin (dict)
+    Returns:
+        None
+    """
+    try:
+        return 1
+    except:
+        print("Certain conditions are not met!")
+
+# TODO: profitCheck()
+# Checks if the current positions have a good PNL
+# Query all positions, indicate the situation, how much is left to earn etc.
+
+# TODO: statEater()
+# Takes all current positions' funding rate to do some stats :)
+# I need to approximate the APY, knowing that the funding rates always change
+
+# TODO: averageBestFundingRate()
+# Taking in account the history of funding rates, evaluate the best symbol
 
 # TODO: Takedecision()
 # If fundingRate is negative, exit
