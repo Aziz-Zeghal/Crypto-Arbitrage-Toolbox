@@ -16,6 +16,11 @@ else:
 # In our case, inside result we have the category, and the list of pairs
 # TODO: All functions make requests with API, handle all possible errors while executing code
 
+def TriangularPNL(pair1, pair2, pair3, amount):
+    result_amount = ((amount / pair1) / pair2) / pair3
+    pnl_percentage = ((result_amount - amount) / amount) * 100
+    return pnl_percentage
+
 def getSymbols():
     """
     Prints the symbol and APY with funding rate for each pair in Perpetual market.
@@ -54,10 +59,14 @@ def getCoinBalance(coin):
     Args:
         coin (str)
     Returns:
-        None
+        usdvalue, amount (int, int)
     """
-    coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=coin)
-    print("Total value of this coin is: " + coinsum['result']['list'][0]['coin'][0]['usdValue'] + "💲")
+    coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=coin)['result']['list'][0]['coin'][0]
+    usdvalue = coinsum['usdValue']
+    amount = coinsum['equity']
+    print("Total value of this coin is: " + coinsum['usdValue'] + "💲")
+    print("Amount is: " + amount)
+    return float(amount), float(usdvalue)
 
 # This function is kinda useless now
 def getFundingRate(coin):
@@ -122,8 +131,12 @@ def avgFundingRateList(coins, history=4):
     print("\nIn the end we have an average of " + str(avg) + "% for an APY of " + str(apy))
     return avg, apy
 
-# TODO: This function takes ONLY coins that exist in spot and perpetual
+
 # TODO: If condition to check coin exists and in good format, for user's confort
+# TODO: Holdtime can only be on coins that I own
+# TODO: Fees calculation is WRONG, spot exit depends on the actual value of the amount
+# EXAMPLE: 100 $ entry on spot, so 0.1 $ fee
+# But when we exit: 116 $ on spot, so 0.116 $ fee
 def holdTime(coin, amount=100):
     """
     Prints the total fees,
@@ -136,8 +149,9 @@ def holdTime(coin, amount=100):
         coin (string)
         amount (int)
     Returns:
-        totalFees (float)
+        totalFees - perpMaker (float)
         breakEven (float)
+        APY (float)
     """
     spotcoin = session.get_fee_rates(category="spot", symbol=coin)['result']['list'][0]
     perpcoin = session.get_fee_rates(category="linear", symbol=coin)['result']['list'][0]
@@ -162,7 +176,7 @@ def holdTime(coin, amount=100):
     
     print("With funding rates of: " + str(fundingRate) + "%")
     print("How many funding rates have to be perceived: " + str(fundingRateTakes))
-    return totalFees, breakEven, apy
+    return totalFees - perpMaker, breakEven, apy
 
 def bestList(minapy=150):
     """
@@ -255,21 +269,41 @@ def enterArbitrage(coin, amount=20):
         qty=quantity,
         price=spot['lastPrice'])
 
-# TODO: exitArbitrage(coin), with a given coin, exit both positions
-def exitArbitrage(coin):
+def exitArbitrage(coin, le=3):
     """
     Exits an arbitrage position without any conditions
     Perpetual contract is bought, spot is sold
     
     Args:
-        coin (dict)
+        coin (string)
     Returns:
         None
     """
-    try:
-        return 1
-    except:
-        print("Certain conditions are not met!")
+    decimalp = 2
+    spotamount = math.floor(getCoinBalance(coin[:le])[0] * 10**decimalp) / 10**decimalp
+    perpvalue = session.get_positions(category="linear", symbol=coin)['result']['list'][0]['size']
+    spot = session.get_tickers(category="spot", symbol=coin)['result']['list'][0]
+    perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
+    while spot['lastPrice'] != perp['lastPrice']:
+        print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
+        time.sleep(0.2)
+        spot = session.get_tickers(category="spot", symbol=coin)['result']['list'][0]
+        perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
+    session.place_order(
+        category="spot",
+        symbol=coin,
+        side="Sell",
+        orderType="Limit",
+        qty=spotamount,
+        price=spot['lastPrice'])
+    session.place_order(
+        category="linear",
+        symbol=coin,
+        side="Buy",
+        orderType="Limit",
+        qty=perpvalue,
+        price=spot['lastPrice'],
+        reduce_only=True)
 
 # TODO: profitCheck()
 # Checks if the current positions have a good PNL
@@ -296,4 +330,5 @@ def exitArbitrage(coin):
 # Check if positions are open, use cleanPosition
 # Checks available USDT and use while balance > 20
 # Get the best pair use enterArbitrage(bestFundingRate)
+# Enter the position 2 hours before the countdown of funding rate
 # Every 8 hours, use cleanPosition()
