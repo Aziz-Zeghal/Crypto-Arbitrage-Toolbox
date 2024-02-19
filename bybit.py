@@ -21,14 +21,14 @@ def TriangularPNL(pair1, pair2, pair3, amount):
     pnl_percentage = ((result_amount - amount) / amount) * 100
     return pnl_percentage
 
-def getSymbols():
+def getSymbols(verbose=True):
     """
     Prints the symbol and APY with funding rate for each pair in Perpetual market.
 
     Args:
-        None
+        verbose (bool)
     Returns:
-        None
+        pairs (list of dict)
     """
     pairs = session.get_tickers(category="linear")
     for p in pairs['result']['list']:
@@ -36,7 +36,9 @@ def getSymbols():
             apy = round(float(p['fundingRate']) * 365 * 3 * 100, 2)
         else:
             apy = 0
-        print(p['symbol'] +" with an APY of " + str(apy) + "%")
+        if (verbose):
+            print(p['symbol'] +" with an APY of " + str(apy) + "%")
+    return pairs['result']['list']
 
 def getWallet():
     """
@@ -62,11 +64,11 @@ def getCoinBalance(coin):
         usdvalue, amount (int, int)
     """
     coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=coin)['result']['list'][0]['coin'][0]
-    usdvalue = coinsum['usdValue']
+    availableToWithdraw = coinsum['availableToWithdraw']
     amount = coinsum['equity']
-    print("Total value of this coin is: " + coinsum['usdValue'] + "💲")
+    print("Total value of " + coin + " is: " + availableToWithdraw + "💲")
     print("Amount is: " + amount)
-    return float(amount), float(usdvalue)
+    return float(availableToWithdraw), float(amount)
 
 # This function is kinda useless now
 def getFundingRate(coin):
@@ -86,13 +88,14 @@ def getFundingRate(coin):
     except:
         print("Coin does not exist in this mode!")
 
-def avgFundingRate(coin, history=4):
+def avgFundingRate(coin, history=4, verbose=True):
     """
     Prints the average funding rate for a given coin based on its history
     
     Args:
         coin (str)
         history (int)
+        verbose (bool)
     Returns:
         avg (float)
     
@@ -106,11 +109,12 @@ def avgFundingRate(coin, history=4):
         if val < 0:
             negative += 1
     avg = round((sumrates / history) * 100, 6)
-    print("The average funding rate for " + str(history) + " is " + str(avg) + "%\n")
-    print("Found " + str(negative) + " negatives!")
+    if (verbose):
+        print("The average funding rate for " + str(history) + " is " + str(avg) + "%\n")
+        print("Found " + str(negative) + " negatives!")
     return avg
 
-def avgFundingRateList(coins, history=4):
+def avgFundingRateList(coins, history=4, verbose=True):
     """
     Prints the average of given list of coins, and makes the avg of the avg (yes)
     Can use bestList() and put it here
@@ -118,17 +122,19 @@ def avgFundingRateList(coins, history=4):
     Args:
         coin (list of dict)
         history (int)
+        verbose (bool)
     Returns:
         avg, apy (float, float)
     """
     sumrates = 0
     for coin in coins:
-        print(coin['symbol'])
-        sumrates += avgFundingRate(coin['symbol'], history)
+        #print(coin['symbol'])
+        sumrates += avgFundingRate(coin['symbol'], history, verbose)
     avg = round((sumrates / len(coins)), 6)
     apy = avg * 3 * 365
     
-    print("\nIn the end we have an average of " + str(avg) + "% for an APY of " + str(apy))
+    if (verbose):
+        print("\nIn the end we have an average of " + str(avg) + "% for an APY of " + str(apy))
     return avg, apy
 
 
@@ -230,6 +236,7 @@ def bestCoin():
 # TODO: Use threads to execute jobs simultanous
 # TODO: Use sockets to retrieve live time information
 # TODO: Add a small verification of the minOrderQty with get_instruments_info
+# TODO: Add a after float maximum amount in the parameters
 def enterArbitrage(coin, amount=20):
     """
     Enters an arbitrage position on a given coin.
@@ -242,6 +249,10 @@ def enterArbitrage(coin, amount=20):
     Returns:
         None
     """
+    equity, available = getCoinBalance("USDT")
+    if (amount * 2 >= available):
+        print("You do not have enough!")
+        return
     spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
     perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
     try:
@@ -308,7 +319,27 @@ def exitArbitrage(coin, le=3):
 # TODO: profitCheck()
 # Checks if the current positions have a good PNL
 # Query all positions, indicate the situation, how much is left to earn etc.
-
+def quick(coin, le=3):
+    decimalp = 2
+    spotamount = math.floor(getCoinBalance(coin[:le])[0] * 10**decimalp) / 10**decimalp
+    perpvalue = session.get_positions(category="linear", symbol=coin)['result']['list'][0]['size']
+    spot = session.get_tickers(category="spot", symbol=coin)['result']['list'][0]
+    perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
+    session.place_order(
+        category="spot",
+        symbol=coin,
+        side="Sell",
+        orderType="Limit",
+        qty=spotamount,
+        price=spot['lastPrice'])
+    session.place_order(
+        category="linear",
+        symbol=coin,
+        side="Buy",
+        orderType="Limit",
+        qty=perpvalue,
+        price=spot['lastPrice'],
+        reduce_only=True)
 # TODO: statEater()
 # Takes all current positions' funding rate to do some stats :)
 # I need to approximate the APY, knowing that the funding rates always change
