@@ -16,10 +16,17 @@ else:
 # In our case, inside result we have the category, and the list of pairs
 # TODO: All functions make requests with API, handle all possible errors while executing code
 
-def TriangularPNL(pair1, pair2, pair3, amount):
-    result_amount = ((amount / pair1) / pair2) / pair3
-    pnl_percentage = ((result_amount - amount) / amount) * 100
-    return pnl_percentage
+# ETH/USDC, BTC/USDC, ETH/BTC
+def TriangularPNL(pair1, pair2, pair3, amount=100):
+    # whatItShouldBe = pair1 / pair2
+    
+    # Buy ETH with USDC
+    ethBalance = amount / pair1
+    # Buy BTC with ETH
+    btcBalance = ethBalance * pair3
+    # Sell BTC for USDC
+    amount = btcBalance * pair2
+    return amount
 
 def getSymbols(verbose=True):
     """
@@ -65,9 +72,9 @@ def getCoinBalance(coin):
     """
     coinsum = session.get_wallet_balance(accountType="UNIFIED", coin=coin)['result']['list'][0]['coin'][0]
     availableToWithdraw = coinsum['availableToWithdraw']
-    amount = coinsum['equity']
+    amount = coinsum['usdValue']
     print("Total value of " + coin + " is: " + availableToWithdraw + "💲")
-    print("Amount is: " + amount)
+    print("Usd value is: " + amount)
     return float(availableToWithdraw), float(amount)
 
 # This function is kinda useless now
@@ -88,7 +95,7 @@ def getFundingRate(coin):
     except:
         print("Coin does not exist in this mode!")
 
-def avgFundingRate(coin, history=4, verbose=True):
+def avgFundingRate(coin, history=4, verbose=True, negative=True):
     """
     Prints the average funding rate for a given coin based on its history
     
@@ -96,25 +103,39 @@ def avgFundingRate(coin, history=4, verbose=True):
         coin (str)
         history (int)
         verbose (bool)
+        negative (bool)
     Returns:
         avg (float)
     
     """
-    rates = session.get_funding_rate_history(category="linear", symbol=coin, limit=history)['result']['list']
+    rates = session.get_funding_rate_history(category="linear", symbol=coin, limit=history + 40)['result']['list']
     sumrates = 0
-    negative = 0
+    bad = 0
+    reach = 0
     for rate in rates:
         val = float(rate['fundingRate'])
-        sumrates += val
-        if val < 0:
-            negative += 1
+        if reach == history:
+            break
+        if not negative:
+            if val < 0:
+                bad += 1
+            else:
+                reach += 1
+                sumrates += val
+        else:
+            if val < 0:
+                bad += 1
+            sumrates += val
+            reach += 1
+
+
     avg = round((sumrates / history) * 100, 6)
     if (verbose):
         print("The average funding rate for " + str(history) + " is " + str(avg) + "%\n")
-        print("Found " + str(negative) + " negatives!")
+        print("Found " + str(bad) + " negatives!")
     return avg
 
-def avgFundingRateList(coins, history=4, verbose=True):
+def avgFundingRateList(coins, history=4, verbose=True, negative=True):
     """
     Prints the average of given list of coins, and makes the avg of the avg (yes)
     Can use bestList() and put it here
@@ -123,13 +144,14 @@ def avgFundingRateList(coins, history=4, verbose=True):
         coin (list of dict)
         history (int)
         verbose (bool)
+        negative (bool)
     Returns:
         avg, apy (float, float)
     """
     sumrates = 0
     for coin in coins:
         #print(coin['symbol'])
-        sumrates += avgFundingRate(coin['symbol'], history, verbose)
+        sumrates += avgFundingRate(coin['symbol'], history, verbose, negative)
     avg = round((sumrates / len(coins)), 6)
     apy = avg * 3 * 365
     
@@ -237,15 +259,17 @@ def bestCoin():
 # TODO: Use sockets to retrieve live time information
 # TODO: Add a small verification of the minOrderQty with get_instruments_info
 # TODO: Add a after float maximum amount in the parameters
-def enterArbitrage(coin, amount=20):
+def enterArbitrage(coin, mingap, amount, le=3):
     """
-    Enters an arbitrage position on a given coin.
-    Uses the spot and perpetual market to enter both positions.
-    IMPORTANT: the coin is a dictionnary, not a string.
-
+    Gives the pourcentage gap between the perpetual and spot of a coin
+    Will enter a position in spot and perpetual with the mingap
+    Example: BTCUSDT has a 0.4 gap between spot and perpetual
+    Enter in the position, then sell with convergence
     Args:
         coin (dict)
+        mingap (float)
         amount (int)
+        le (int)
     Returns:
         None
     """
@@ -255,15 +279,20 @@ def enterArbitrage(coin, amount=20):
         return
     spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
     perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+    gap = float(perp['lastPrice']) * 100 / float(spot['lastPrice']) - 100
     try:
         session.set_leverage(category="linear", symbol=coin['symbol'], buyLeverage="1", sellLeverage="1")
     except:
         print("Already set to 1x")
-    while spot['lastPrice'] != perp['lastPrice']:
-        print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
-        time.sleep(0.2)
+    while gap < mingap:
+        print("Gap in " + str(gap) + "%")
+        time.sleep(0.1)
         spot = session.get_tickers(category="spot", symbol=coin['symbol'])['result']['list'][0]
         perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+        gap = float(perp['lastPrice']) * 100 / float(spot['lastPrice']) - 100
+        
+    innergap = gap
+    # Take position
     quantity = str(int(amount / float(spot['lastPrice'])))
     session.place_order(
         category="spot",
@@ -279,6 +308,14 @@ def enterArbitrage(coin, amount=20):
         orderType="Limit",
         qty=quantity,
         price=spot['lastPrice'])
+    
+    # print("We take " + str(gap) + "% !")
+    # print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
+    
+    # exitArbitrageExtra(coin['symbol'], le)
+    #print("Convergence!")
+
+    return innergap
 
 def exitArbitrage(coin, le=3):
     """
@@ -295,9 +332,9 @@ def exitArbitrage(coin, le=3):
     perpvalue = session.get_positions(category="linear", symbol=coin)['result']['list'][0]['size']
     spot = session.get_tickers(category="spot", symbol=coin)['result']['list'][0]
     perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
-    while spot['lastPrice'] != perp['lastPrice']:
+    while spot['lastPrice'] <= perp['lastPrice']:
         print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
-        time.sleep(0.2)
+        time.sleep(0.1)
         spot = session.get_tickers(category="spot", symbol=coin)['result']['list'][0]
         perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
     session.place_order(
