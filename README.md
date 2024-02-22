@@ -3,6 +3,11 @@ Small Python script implements a basic delta-neutral arbitrage strategy between 
 
 Still building, because I am still looking into other arbitrage techniques
 
+## UPDATE
+Looking into Put/Call parity, and Spot/Perpetual arbitrage (without funding rate).
+
+Also looking into Deribit API.
+
 ## Concept
 
 - Retrieve the best funding rate on the CEX
