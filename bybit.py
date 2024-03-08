@@ -18,26 +18,38 @@ else:
 
 # ETH/USDC, BTC/USDC, ETH/BTC
 def TriangularPNL(pair1, pair2, pair3, amount=100):
-    # whatItShouldBe = pair1 / pair2
-    
-    # Buy ETH with USDC
-    ethBalance = amount / pair1
-    # Buy BTC with ETH
-    btcBalance = ethBalance * pair3
-    # Sell BTC for USDC
-    amount = btcBalance * pair2
+    whatItShouldBe = pair1 / pair2
+    if (whatItShouldBe < pair3):
+        # Buy ETH with USDC
+        ethBalance = amount / pair1
+        # Buy BTC with ETH
+        btcBalance = ethBalance * pair3
+        # Sell BTC for USDC
+        amount = btcBalance * pair2
+        print("With ETH")
+    elif (whatItShouldBe > pair3):
+        # Buy BTC with USDC
+        btcBalance = amount / pair2
+        # Buy ETH with BTC
+        ethBalance = btcBalance / pair3
+        # Sell ETH for USDC
+        amount = ethBalance * pair1
+        print("With BTC")
+    else:
+        print("Perfect equilibrium")
     return amount
 
-def getSymbols(verbose=True):
+def getSymbols(verbose=True, cat="linear"):
     """
     Prints the symbol and APY with funding rate for each pair in Perpetual market.
 
     Args:
         verbose (bool)
+        cat (string)
     Returns:
         pairs (list of dict)
     """
-    pairs = session.get_tickers(category="linear")
+    pairs = session.get_tickers(category=cat)
     for p in pairs['result']['list']:
         if p['fundingRate'] != '':
             apy = round(float(p['fundingRate']) * 365 * 3 * 100, 2)
@@ -46,6 +58,23 @@ def getSymbols(verbose=True):
         if (verbose):
             print(p['symbol'] +" with an APY of " + str(apy) + "%")
     return pairs['result']['list']
+
+#BTCPERP not BTC-PERP
+def getCoin(coin, cat="linear"):
+    """
+    Returns the selected symbol info in the given category (coin is in all caps)
+
+    Args:
+        coin (string)
+        cat (string)
+    Returns:
+        coin (dict)
+    """
+    pairs = session.get_tickers(category=cat)
+    for p in pairs['result']['list']:
+        if p['symbol'] == coin:
+            return p
+    return None
 
 def getWallet():
     """
@@ -259,7 +288,7 @@ def bestCoin():
 # TODO: Use sockets to retrieve live time information
 # TODO: Add a small verification of the minOrderQty with get_instruments_info
 # TODO: Add a after float maximum amount in the parameters
-def enterArbitrage(coin, mingap, amount, le=3):
+def enterArbitrage(coin, mingap, amount):
     """
     Gives the pourcentage gap between the perpetual and spot of a coin
     Will enter a position in spot and perpetual with the mingap
@@ -291,7 +320,6 @@ def enterArbitrage(coin, mingap, amount, le=3):
         perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
         gap = float(perp['lastPrice']) * 100 / float(spot['lastPrice']) - 100
         
-    innergap = gap
     # Take position
     quantity = str(int(amount / float(spot['lastPrice'])))
     session.place_order(
@@ -315,9 +343,9 @@ def enterArbitrage(coin, mingap, amount, le=3):
     # exitArbitrageExtra(coin['symbol'], le)
     #print("Convergence!")
 
-    return innergap
+    return gap
 
-def exitArbitrage(coin, le=3):
+def exitArbitrage(coin):
     """
     Exits an arbitrage position without any conditions
     Perpetual contract is bought, spot is sold
@@ -327,6 +355,7 @@ def exitArbitrage(coin, le=3):
     Returns:
         None
     """
+    le = coin.find("USDT")
     decimalp = 2
     spotamount = math.floor(getCoinBalance(coin[:le])[0] * 10**decimalp) / 10**decimalp
     perpvalue = session.get_positions(category="linear", symbol=coin)['result']['list'][0]['size']
@@ -342,6 +371,99 @@ def exitArbitrage(coin, le=3):
         symbol=coin,
         side="Sell",
         orderType="Limit",
+        qty=spotamount,
+        price=spot['lastPrice'])
+    session.place_order(
+        category="linear",
+        symbol=coin,
+        side="Buy",
+        orderType="Limit",
+        qty=perpvalue,
+        price=spot['lastPrice'],
+        reduce_only=True)
+
+# enterArbitrageUSDC(getCoin("BTCPERP"), 0.04, 100)
+def enterArbitrageUSDC(coin, mingap, amount):
+    """
+    Similar to EnterArbitrage but for USDC (no fees)
+    Gives the pourcentage gap between the perpetual and spot of a coin
+    Will enter a position in spot and perpetual with the mingap
+    Example: BTCUSDT has a 0.4 gap between spot and perpetual
+    Enter in the position, then sell with convergence
+    Args:
+        coin (dict)
+        mingap (float)
+        amount (int)
+        le (int)
+    Returns:
+        None
+    """
+    equity, available = getCoinBalance("USDC")
+    if (amount * 2 >= available):
+        print("You do not have enough!")
+        return
+    spotCoinName = coin['symbol'][:coin['symbol'].find("PERP")] + "USDC"
+    spot = session.get_tickers(category="spot", symbol=spotCoinName)['result']['list'][0]
+    perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+    gap = float(perp['lastPrice']) * 100 / float(spot['lastPrice']) - 100
+    try:
+        session.set_leverage(category="linear", symbol=coin['symbol'], buyLeverage="1", sellLeverage="1")
+    except:
+        print("Already set to 1x")
+    while gap < mingap:
+        print("Gap in " + str(gap) + "%")
+        time.sleep(0.1)
+        spot = session.get_tickers(category="spot", symbol=spotCoinName)['result']['list'][0]
+        perp = session.get_tickers(category="linear", symbol=coin['symbol'])['result']['list'][0]
+        gap = float(perp['lastPrice']) * 100 / float(spot['lastPrice']) - 100
+    
+    # Take position
+    quantity = str(int(amount / float(spot['lastPrice'])))
+    session.place_order(
+        category="spot",
+        symbol=spotCoinName,
+        side="Buy",
+        orderType="Market",
+        qty=quantity,
+        price=spot['lastPrice'])
+    session.place_order(
+        category="linear",
+        symbol=coin['symbol'],
+        side="Sell",
+        orderType="Limit",
+        qty=quantity,
+        price=spot['lastPrice'])
+    return gap
+
+# exitArbitrageUSDC("SOLPERP")
+def exitArbitrageUSDC(coin):
+    """
+    Similar to exitArbitrage but for USDC (no fees)
+    Exits an arbitrage position without any conditions
+    Perpetual contract is bought, spot is sold
+    
+    Args:
+        coin (string)
+    Returns:
+        None
+    """
+    le = coin.find("PERP")
+    decimalp = 2
+    spotamount = math.floor(getCoinBalance(coin[:le])[0] * 10**decimalp) / 10**decimalp
+    spotCoinName = coin[:coin.find("PERP")] + "USDC"
+    perpvalue = session.get_positions(category="linear", symbol=coin)['result']['list'][0]['size']
+    spot = session.get_tickers(category="spot", symbol=spotCoinName)['result']['list'][0]
+    perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
+    while spot['lastPrice'] <= perp['lastPrice']:
+        print("spot " + spot['lastPrice'] + " and perp " + perp['lastPrice'])
+        time.sleep(0.1)
+        spot = session.get_tickers(category="spot", symbol=spotCoinName)['result']['list'][0]
+        perp = session.get_tickers(category="linear", symbol=coin)['result']['list'][0]
+    session.place_order(
+        category="spot",
+        symbol=spotCoinName,
+        side="Sell",
+        orderType="Market",
         qty=spotamount,
         price=spot['lastPrice'])
     session.place_order(
