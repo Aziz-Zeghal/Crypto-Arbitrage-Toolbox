@@ -4,9 +4,11 @@ Small Python script implements a basic delta-neutral arbitrage strategy between 
 Still building, because I am still looking into other arbitrage techniques
 
 ## UPDATE
-Looking into Put/Call parity, Triangular arbitrage, and Spot/Perpetual arbitrage (without funding rate).
+Looking into cash & carry arbitrage with leverage, flash loans.
 
-Also looking into Deribit API. I will make my own client
+Looked into Put/Call parity, Triangular arbitrage, and Spot/Perpetual arbitrage (without funding rate).
+
+Made my Deribit Client with websockets, the code is nice
 
 ## Concept
 
