@@ -20,6 +20,13 @@ Any strategy implemented has to respect these steps:
 - Future - Spot arbitrage
 - Cash and Carry Arbitrage or Basis Trading
 
+### Environnement
+I use a conda env:
+```
+conda create -n <env_name> python=3.10.6
+conda activate <env_name>
+conda create --name <env> --file req.txt
+```
 ### Research
 
 Looking into cash & carry arbitrage with leverage, flash loans.
