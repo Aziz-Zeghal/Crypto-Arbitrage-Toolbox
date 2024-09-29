@@ -1,22 +1,42 @@
-# bybit-spot-perp-arbitrage
-Small Python script implements a basic delta-neutral arbitrage strategy between a spot market and a perpetual futures contract. The strategy aims to capitalize on funding rate differentials between the two markets.
+# Crypto-Arbitrage-Toolbox
+This repository is a sandbox for many arbitrage strategies using crypto platforms (maybe DeFy one day).
 
-Still building, because I am still looking into other arbitrage techniques
+Still modifying architecture
 
-## UPDATE
+### Process
+
+Any strategy implemented has to respect these steps:
+
+- Implement a pipeline to retrieve data consistently and store it
+- Simulate market
+- Make calls
+- Profit
+
+### Strategies
+- Funding rate arbitrage Spot & Perpetual
+- Funding rate arbitrage Perpetual & Perpetual
+- Spot and Perpetual spread arbitrage (no funding rate profit)
+- Future - Future arbitrage
+- Future - Spot arbitrage
+- Cash and Carry Arbitrage or Basis Trading
+
+### Research
+
 Looking into cash & carry arbitrage with leverage, flash loans.
 
 Looked into Put/Call parity, Triangular arbitrage, and Spot/Perpetual arbitrage (without funding rate).
 
 Made my Deribit Client with websockets, the code is nice
 
-## Concept
+## Funding Rate Arbitrage
+
+### Concept
 
 - Retrieve the best funding rate on the CEX
 - Take position when Spot & Perpetual converge
 - Profit from funding rates, check every 8 hours for positivity
 
-## How to use
+### How to use
 
 2 strategies can be applied:
 
@@ -33,7 +53,7 @@ Make the minimum to break even from fees and look for a better pair (if the fund
 - ???
 - Profit from the position with funding rate :)
 
-## Does it make money ?
+### Does it make money ?
 
 Code is functionnal, but upgrades are missing.
 
@@ -49,7 +69,7 @@ Market sentiment, position imbalance, leverage and history of funding rates all 
 
 For now, this code is linked to luck, and should not be considered reliable or optimized.
 
-## Upgrades
+### Upgrades
 
 - **Autonomous position taker:**  sometimes, orders are not completed. Timeout system for positions, and better decision making (through trial and error no other ways). System that checks current positions, exits them if the funding rate is negative, takes current wallet size and fractions accordingly...
 - **Liquidation survey:**  if liquidation in short position is near, exit arbitrage position
