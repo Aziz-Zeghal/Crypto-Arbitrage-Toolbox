@@ -1,9 +1,11 @@
-import keys
-
 import math
 from pybit.unified_trading import HTTP
 import time
+import sys
+# The keys file is in the parent directory
+sys.path.append("../")
 
+import keys
 test = False
 
 # Bybit testnet is really bad, BTC/USDT is at 38k and in Perp it is at 5k :)

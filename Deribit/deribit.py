@@ -3,6 +3,10 @@ import websockets
 import json
 from pybit.unified_trading import HTTP
 
+# The keys file is in the parent directory
+sys.path.append("../")
+sys.path.append("../Bybit")
+
 import keys
 import deribitClient
 import bybit
