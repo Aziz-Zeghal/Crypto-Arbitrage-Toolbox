@@ -3,8 +3,9 @@ This repository is a sandbox for many arbitrage strategies using crypto platform
 
 Still modifying architecture
 
-### Process
 
+---
+### Process
 Any strategy implemented has to respect these steps:
 
 - Implement a pipeline to retrieve data consistently and store it
@@ -20,6 +21,8 @@ Any strategy implemented has to respect these steps:
 - Future - Spot arbitrage
 - Cash and Carry Arbitrage or Basis Trading
 
+
+---
 ### Environnement and tools
 
 #### Conda
@@ -50,6 +53,8 @@ docker run --pull=always --rm -it -p 8080:8080 --user=root \
 
 We want to scrape info on the market to create simulations and this is nice to have code run 24/7 on a VPS.
 
+
+---
 ### Research
 
 Looking into cash & carry arbitrage with leverage, flash loans.

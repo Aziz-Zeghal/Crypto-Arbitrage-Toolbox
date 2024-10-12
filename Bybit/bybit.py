@@ -1,4 +1,5 @@
 from pybit.unified_trading import HTTP
+from datetime import datetime
 import sys
 import os
 
@@ -13,7 +14,7 @@ class Bybit:
         """
         Initialize the Bybit session
         """
-        self.session = HTTP(demo = True, api_key = keys.demobybitPKey, api_secret = keys.demobybitSKey)
+        self.session = HTTP(api_key = keys.bybitPKey, api_secret = keys.bybitSKey)
 
     def get_USDC_BTC(self):
         """
@@ -51,7 +52,67 @@ class Bybit:
         
         return {"Balance": totalBalance, "BTC": btcValue, "USDC": usdcValue}
     
+    def get_futures(self, coin="BTC"):
+        """
+        Get all markets for a given coin
+
+        Link: https://bybit-exchange.github.io/docs/v5/market/instrument
+        Args:
+            coin (str): Either BTC or ETH
+        Return: 
+            dict: 
+                markets: Future markets and their info
+        """
+
+        # Sadly, I do not think there is a better way to do this
+        # But the contracts themself are not always queried
+        pairs = self.session.get_instruments_info(category="linear")
+        markets = []
+        for p in pairs['result']['list']:
+            # Looks like BTC-01NOV24
+            if p["symbol"].startswith(coin + "-"):
+                markets.append(p)
+
+        return markets
+    
+    def get_gap(self, futureContract1, futureContract2):
+        """
+        Get the gap between two future contracts 
+        CAREFUL: We suppose the contract1 is closer to delivery than contract2
+        This means that the price of contract1 should be lower than contract2
+
+        Args:
+            futureContract (str): The future contract to get the gap for
+        Return:
+            dict:
+                gap: The gap between the two contracts
+                coeff: The coefficient of the gap
+                apr: The annual percentage rate
+                daysLeft: The number of days left before the delivery of the first contract
+        """
+        # Index price is in spot price
+        futureTickers1 = self.session.get_tickers(symbol=futureContract1, category="linear")['result']['list'][0]
+        futureTickers2 = self.session.get_tickers(symbol=futureContract2, category="linear")['result']['list'][0]
+
+        # | Price of the future contract
+        longPrice = float(futureTickers1["lastPrice"])
+        shortPrice = float(futureTickers2["lastPrice"])
+        # - Calculate the gap
+        gap = shortPrice - longPrice
+
+        # - Calculate the coefficient
+        coeff = round((shortPrice / longPrice - 1) * 100, 3)
+
+        # | Time to delivery for the long contract, epoch in milliseconds (convert to seconds)
+        longDelivery = int(futureTickers1["deliveryTime"]) / 1000
+        todayDate = datetime.now().timestamp()
+        # - Time to delivery
+        # Transform to int to round floor (no need for Math.floor)
+        daysLeft = (longDelivery - todayDate) / 86400
+
+        apr = coeff * 365 / daysLeft / 2
+        return {"gap": gap, "coeff": coeff, "apr": apr, "daysLeft": daysLeft}
 
 if __name__ == "__main__":
     bybit = Bybit()
-    print(bybit.get_USDC_BTC())
+    print(bybit.get_gap("BTC-29NOV24", "BTC-27JUN25"))
