@@ -11,6 +11,7 @@ Still modifying architecture
 - [Environnement and tools](#Environnement-and-tools)
     - [Conda](#Conda)
     - [VSCode](#VSCode)
+    - [Jupiter Notebook](#Jupiter-Notebook)
     - [Kestra](#Kestra)
 - [Research](#Research)
   - [Future - Future Arbitrage](#Future---Future-Arbitrage)
@@ -44,12 +45,18 @@ Any strategy implemented has to respect these steps:
 
 ---
 ### Environnement and tools
+I code this project in a Github Codespace that I open with a Visual Studio Code window.
 
 #### Conda
 I use a conda env:
 ```
 conda create --name <env_name> --file req.txt
 conda activate <env_name>
+```
+
+You can dump an environment with:
+```
+conda list --export > req.txt
 ```
 
 Run the code with Python3.10.6
@@ -63,8 +70,14 @@ If you want to use VSCode, you can select the conda env like this:
 
 And you have color syntax and auto-completion !
 
+#### Jupiter Notebook
+Inside a Github Codespace from VSCode, you can open a Jupiter Notebook and run with a conda env:
+- Install the Jupyter extension
+- Open a new notebook
+- Select a kernel (the conda env you want)
+
 #### Kestra
-In order to launch code, I use Kestra (pipeline orchestrator) to extract data on a scheduler
+In order to extract data on a scheduler, I will use Kestra (pipeline orchestrator) 
 You can pull a docker image of Kestra like this:
 ```
 docker run --pull=always --rm -it -p 8080:8080 --user=root \
