@@ -13,11 +13,17 @@ Still modifying architecture
     - [VSCode](#VSCode)
     - [Kestra](#Kestra)
 - [Research](#Research)
-  - [Funding Rate Arbitrage](#Funding-Rate-Arbitrage)
+  - [Future - Future Arbitrage](#Future---Future-Arbitrage)
+    - [Concept](#Concept)
+    - [Advantages](Advantages)
+    - [Disadvantages](Disadvantages)
+    - [Does it make money ?](#Does-it-make-money-?)
+  - [Funding Rate Arbitrage (Not working on it right now)](#Funding-Rate-Arbitrage)
     - [Concept](#Concept)
     - [How to use](#How-to-use)
     - [Does it make money ?](#Does-it-make-money-?)
     - [Upgrades](#Upgrades)
+
 ---
 ### Process
 Any strategy implemented has to respect these steps:
@@ -42,12 +48,11 @@ Any strategy implemented has to respect these steps:
 #### Conda
 I use a conda env:
 ```
-conda create -n <env_name> python=3.10.6
-conda activate <env_name>
 conda create --name <env> --file req.txt
+conda activate <env_name>
 ```
 
-Run the code with Python3.10.
+Run the code with Python3.10.6
 
 #### VSCode
 If you want to use VSCode, you can select the conda env like this:
@@ -76,6 +81,38 @@ Looking into cash & carry arbitrage with leverage, flash loans.
 Looked into Put/Call parity, Triangular arbitrage, and Spot/Perpetual arbitrage (without funding rate).
 
 Made my Deribit Client with websockets, the code is nice
+
+## Future - Future Arbitrage
+Future contracts are agreements between two parties to buy or sell an asset at a future date for a price agreed upon today. The price of the asset is determined by the market, and the contract is settled at the end of the contract period.
+
+Future contracts are used by traders to hedge against price fluctuations in the underlying asset or to speculate on the future price of the asset.
+
+But crypto futures are special, every platform has its own way to define a future contract.
+
+### Concept
+- Retrieve 2 future contracts on 2 the same platforms
+- Short the future with the highest price, long the future with the lowest price
+- Wait for delivery of the long future
+- Either roll over with another future or take profit
+
+### Advantages
+- **High leverage**: 20x easy, cause the margin cannot go really low
+- **Low fees**: 2 legs with one in limit and the other following in market
+- **Huge returns**: Has a pretty good resistance to short/long movement
+- **Disadvantages can be paried**: With sharp movement, can join another arbitrage, because the spread will be huge
+
+### Disadvantages
+- **Unpredictable returns**: Cannot calculate how much I earn
+- **Sensible to movement**: Huge spikes in long can break a resistance to ROI
+- **Non-delta**: Short position is more important than long
+
+Example: 67k 30Mar2025 and 63k 30Oct2024
+1 short contract for 30Mar2025 is going to be more expensive, and convergence will not be full at the end of the long contract of 30Oct2024.
+
+### Does it make money ?
+YES. ROI is not reliable, but the strategy is.
+
+The only thing that can break it is a huge divergence in both contracts but it is rare, and comes back to normal after a while.
 
 ## Funding Rate Arbitrage
 
