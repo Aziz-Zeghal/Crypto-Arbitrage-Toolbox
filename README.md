@@ -60,6 +60,7 @@ If you want to use VSCode, you can select the conda env like this:
 - Python: Select Interpreter
 - Select the conda env you want
 
+
 And you have color syntax and auto-completion !
 
 #### Kestra
