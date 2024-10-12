@@ -1,10 +1,10 @@
 from pybit.unified_trading import HTTP
 from datetime import datetime
 import pandas as pd
-
 import sys
 import os
 
+from utils import *
 # We add the path to the sys.path
 # sys.path is contains a list of directories that the interpreter will search in for the required module. 
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
@@ -131,7 +131,7 @@ class BybitClient:
         Args:
             pretty (bool): If True, will format the elements in a more readable way
         Returns:
-            list: List of all the gaps information
+            pd.DataFrame: DataFrame containing all the gaps
         """
         btcFutureContracts = self.get_futures("BTC")
         btcTickers = []
@@ -187,7 +187,78 @@ class BybitClient:
             return f"{volume / 1_000:.2f}K"
         else:
             return str(volume)
+        
+    def get_history(self, contract, interval="m"):
+        """
+        Get the history of a given future contract
+        It will pull the maximum amount of data possible (1000 for Bybit)
+        Then, we take the oldest date, and we pull the next 1000 data points
+
+        Link: https://bybit-exchange.github.io/docs/v5/market/kline
+        Args:
+            contract (str): The future contract to get the history from
+            interval (str): The interval of the data
+        Returns:
+            Nothing, but saves the data to a file
+        """
+
+        file_name = f"{contract}_{interval}.json"
+        acc_data = []
+        try:
+            acc_data = load_data(file_name)
+            print(f"Loaded {len(acc_data)} existing data points.")
+
+            while True:
+                start_timestamp = acc_data[0][0]
+                # Take the most recent timestamp, and get the data after it
+                response = self.session.get_kline(
+                    symbol=contract, 
+                    category="linear", 
+                    interval=interval, 
+                    limit=1000, 
+                    start=start_timestamp
+                )["result"]["list"]
+
+                print(f"Fetched {len(response) - 1 if acc_data else len(response)} new data points.")
+
+                # Overwrite the newest data point, add the new data
+                acc_data = response + acc_data[1::]
+
+                if len(response) < 1000:
+                    break
+
+        except FileNotFoundError:
+            print("No previous data found, starting fresh.")
+            # From newest to oldest
+            # Define the end timestamp for the next batch
+            while True:
+                end_timestamp = acc_data[-1][0] if acc_data else None
+
+                # Request kline data from Bybit (1000 per batch)
+                response = self.session.get_kline(
+                    symbol=contract, 
+                    category="linear", 
+                    interval=interval, 
+                    limit=1000, 
+                    end=end_timestamp
+                )["result"]["list"]
+                
+                print(f"Fetched {len(response) - 1 if acc_data else len(response)} new data points.")
+                
+                # Overwrite the oldest data point, add the new data
+                acc_data = acc_data[::-1] + response
+                
+                # Break the loop if fewer than 1000 data points were returned (no more data available)
+                if len(response) < 1000:
+                    break
+
+        # Save to a file
+        save_data(file_name, acc_data)
+
+        return acc_data
 
 if __name__ == "__main__":
     bybit = BybitClient()
-    print(bybit.all_gaps())
+    # print(bybit.all_gaps())
+    bybit.get_history("BTC-28MAR25")
+    # bybit.get_history("BTC-26SEP25")
