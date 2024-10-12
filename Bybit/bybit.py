@@ -190,9 +190,10 @@ class BybitClient:
         
     def get_history(self, contract, interval="m"):
         """
-        Get the history of a given future contract
-        It will pull the maximum amount of data possible (1000 for Bybit)
-        Then, we take the oldest date, and we pull the next 1000 data points
+        Get the history of a future contract
+        If we do not have any data, we start from the oldest data point, and fetch the data before it
+        If we have some data, we start from the most recent data point, and fetch the data after it
+        We do it this way, because we cannot know when the contract started
 
         Link: https://bybit-exchange.github.io/docs/v5/market/kline
         Args:
@@ -207,10 +208,11 @@ class BybitClient:
         try:
             acc_data = load_data(file_name)
             print(f"Loaded {len(acc_data)} existing data points.")
-
+            
+            # Take the most recent timestamp, and get the data after it
             while True:
                 start_timestamp = acc_data[0][0]
-                # Take the most recent timestamp, and get the data after it
+
                 response = self.session.get_kline(
                     symbol=contract, 
                     category="linear", 
@@ -222,19 +224,19 @@ class BybitClient:
                 print(f"Fetched {len(response) - 1 if acc_data else len(response)} new data points.")
 
                 # Overwrite the newest data point, add the new data
-                acc_data = response + acc_data[1::]
+                acc_data = response + acc_data[1:]
 
+                # Break the loop if fewer than 1000 data points were returned (no more data available)
                 if len(response) < 1000:
                     break
 
         except FileNotFoundError:
             print("No previous data found, starting fresh.")
-            # From newest to oldest
-            # Define the end timestamp for the next batch
+
+            # Take the oldest timestamp, and get the data before it
             while True:
                 end_timestamp = acc_data[-1][0] if acc_data else None
 
-                # Request kline data from Bybit (1000 per batch)
                 response = self.session.get_kline(
                     symbol=contract, 
                     category="linear", 
@@ -246,7 +248,7 @@ class BybitClient:
                 print(f"Fetched {len(response) - 1 if acc_data else len(response)} new data points.")
                 
                 # Overwrite the oldest data point, add the new data
-                acc_data = acc_data[::-1] + response
+                acc_data = acc_data[:-1:] + response
                 
                 # Break the loop if fewer than 1000 data points were returned (no more data available)
                 if len(response) < 1000:
@@ -260,5 +262,5 @@ class BybitClient:
 if __name__ == "__main__":
     bybit = BybitClient()
     # print(bybit.all_gaps())
-    bybit.get_history("BTC-28MAR25")
-    # bybit.get_history("BTC-26SEP25")
+    # bybit.get_history("BTC-28MAR25", interval="720")
+    bybit.get_history("BTC-26SEP25", interval="5")
