@@ -20,13 +20,36 @@ Any strategy implemented has to respect these steps:
 - Future - Spot arbitrage
 - Cash and Carry Arbitrage or Basis Trading
 
-### Environnement
+### Environnement and tools
+
+#### Conda
 I use a conda env:
 ```
 conda create -n <env_name> python=3.10.6
 conda activate <env_name>
 conda create --name <env> --file req.txt
 ```
+
+Run the code with Python3.10.
+
+#### VSCode
+If you want to use VSCode, you can select the conda env like this:
+- Ctrl+Shift+P to open the command palette
+- Python: Select Interpreter
+- Select the conda env you want
+And you have color syntax and auto-completion !
+
+#### Kestra
+In order to launch code, I use Kestra (pipeline orchestrator) to extract data on a scheduler
+You can pull a docker image of Kestra like this:
+```
+docker run --pull=always --rm -it -p 8080:8080 --user=root \
+ -v /var/run/docker.sock:/var/run/docker.sock \
+ -v /tmp:/tmp kestra/kestra:latest server local
+```
+
+We want to scrape info on the market to create simulations and this is nice to have code run 24/7 on a VPS.
+
 ### Research
 
 Looking into cash & carry arbitrage with leverage, flash loans.
