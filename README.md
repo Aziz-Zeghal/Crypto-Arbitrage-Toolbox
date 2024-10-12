@@ -3,7 +3,21 @@ This repository is a sandbox for many arbitrage strategies using crypto platform
 
 Still modifying architecture
 
+## Table of Contents
 
+
+- [Process](#Process)
+- [Strategies](#Strategies)
+- [Environnement and tools](#Environnement-and-tools)
+    - [Conda](#Conda)
+    - [VSCode](#VSCode)
+    - [Kestra](#Kestra)
+- [Research](#Research)
+  - [Funding Rate Arbitrage](#Funding-Rate-Arbitrage)
+    - [Concept](#Concept)
+    - [How to use](#How-to-use)
+    - [Does it make money ?](#Does-it-make-money-?)
+    - [Upgrades](#Upgrades)
 ---
 ### Process
 Any strategy implemented has to respect these steps:
