@@ -48,7 +48,7 @@ Any strategy implemented has to respect these steps:
 #### Conda
 I use a conda env:
 ```
-conda create --name <env> --file req.txt
+conda create --name <env_name> --file req.txt
 conda activate <env_name>
 ```
 
@@ -59,6 +59,7 @@ If you want to use VSCode, you can select the conda env like this:
 - Ctrl+Shift+P to open the command palette
 - Python: Select Interpreter
 - Select the conda env you want
+
 And you have color syntax and auto-completion !
 
 #### Kestra
