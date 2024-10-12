@@ -19,7 +19,7 @@ Still modifying architecture
     - [Disadvantages](Disadvantages)
     - [Does it make money ?](#Does-it-make-money-?)
   - [Funding Rate Arbitrage (Not working on it right now)](#Funding-Rate-Arbitrage)
-    - [Concept](#Concept)
+    - [Concept](#Concept-1)
     - [How to use](#How-to-use)
     - [Does it make money ?](#Does-it-make-money-?)
     - [Upgrades](#Upgrades)
