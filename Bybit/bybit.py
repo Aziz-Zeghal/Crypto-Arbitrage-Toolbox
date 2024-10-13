@@ -242,9 +242,60 @@ class BybitClient:
         save_data(file_name, acc_data)
 
         return acc_data
+    
+    def position_calculator(self, contract, side, quantityUSDC, leverage=1):
+        """
+        Checks information about a position before entering it
+        User submits a USDC quantity, and we calculate the amount of contracts to buy/sell
+        The calculations are based on the Bybit documentation, but they will never be 100% accurate
+
+        Link: https://bybit-exchange.github.io/docs/v5/order/create-order
+        Source for calculations: https://www.bybit.com/en/help-center/article/Order-Cost-USDT-ContractUSDT_Perpetual_Contract
+        Args:
+            contract (str): The future contract to enter a position on
+            side (str): Either "Buy" or "Sell"
+            quantityUSDC (int): Price in USDC of contracts to buy/sell
+            leverage (int): The leverage to use
+        Returns:
+            dict: The response from the API
+        """
+        # The user submits a USDC quantity, we calculate the amount of contracts to buy/sell
+        # We could use the marketUnit parameter to "quoteCoin", but we want to control the quantity
+
+        # We get the LAST ticker price
+        ticker = self.session.get_tickers(symbol=contract, category="linear")['result']['list'][0]
+        
+        # Retrieve last price
+        orderPrice = float(ticker["lastPrice"])
+        # Taker fees are 0.055%
+        takerFees = 0.00055
+        # Calculate the quantity of contracts to Buy/Sell and floor round to 3 decimals
+        quantityContracts = int(quantityUSDC / orderPrice * 1000) / 1000
+
+        # Initial Margin
+        initialMargin = quantityContracts * orderPrice / leverage
+
+        # Fee to Open Position
+        feeToOpen = quantityContracts * orderPrice * takerFees
+
+        # Bankruptcy Price for Position (short is + 1, long is - 1)
+        bankruptcyPrice = orderPrice * (leverage - 1 if side == "Buy" else leverage + 1) / leverage
+
+        # Fee to Close Position
+        feeToClose = quantityContracts * bankruptcyPrice * takerFees
+
+        # Finally the Order Cost
+        orderCost = initialMargin + feeToOpen + feeToClose
+
+        # TODO: Not sure about this, Buy/Sell do not have the same formula
+        print(f"Used value: {quantityContracts * orderPrice} USDC")
+        print (f"Order Cost: {orderCost} for {quantityContracts} contracts")
+        return {"value": quantityContracts * orderPrice, "orderCost": orderCost, "quantityContracts": quantityContracts}
+
 
 if __name__ == "__main__":
     bybit = BybitClient()
     # print(bybit.all_gaps())
     # bybit.get_history("BTC-28MAR25", interval="720")
-    bybit.get_history("BTC-26SEP25", interval="W")
+    # bybit.get_history("BTC-26SEP25", interval="W")
+    print(bybit.position_calculator("BTC-28MAR25", side="Buy", quantityUSDC=100, leverage=3))

@@ -9,3 +9,5 @@
 * [ ] Information system to notify the user about status of positions
 * [ ] Make a Kestra ETL pipeline to extract, transform and load data 24/7
 * [ ] Create a simulation tool with historical data
+* [ ] Add error handling for requests (not a priority, learn the code first)
+* [ ] Change methods to handle other future contracts (not just BTCUSDC)
