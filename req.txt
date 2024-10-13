@@ -4,6 +4,7 @@
 _libgcc_mutex=0.1=conda_forge
 _openmp_mutex=4.5=2_gnu
 asttokens=2.4.1=pyhd8ed1ab_0
+attrs=24.2.0=pypi_0
 blas=1.0=mkl
 bottleneck=1.3.7=py310ha9d4c09_0
 bzip2=1.0.8=h5eee18b_6
@@ -15,12 +16,15 @@ debugpy=1.8.7=py310hf71b8c6_0
 decorator=5.1.1=pyhd8ed1ab_0
 exceptiongroup=1.2.2=pyhd8ed1ab_0
 executing=2.1.0=pyhd8ed1ab_0
+fastjsonschema=2.20.0=pypi_0
 idna=3.10=pypi_0
 importlib-metadata=8.5.0=pyha770c72_0
 intel-openmp=2023.1.0=hdb19cb5_46306
 ipykernel=6.29.5=pyh3099207_0
 ipython=8.28.0=pyh707e725_0
 jedi=0.19.1=pyhd8ed1ab_0
+jsonschema=4.23.0=pypi_0
+jsonschema-specifications=2024.10.1=pypi_0
 jupyter_client=8.6.3=pyhd8ed1ab_0
 jupyter_core=5.7.2=pyh31011fe_1
 krb5=1.21.3=h143b758_0
@@ -39,6 +43,7 @@ mkl=2023.1.0=h213fc3f_46344
 mkl-service=2.4.0=py310h5eee18b_1
 mkl_fft=1.3.10=py310h5eee18b_0
 mkl_random=1.2.7=py310h1128e8f_0
+nbformat=5.10.4=pypi_0
 ncurses=6.4=h6a678d5_0
 nest-asyncio=1.6.0=pyhd8ed1ab_0
 numexpr=2.8.7=py310h85018f9_0
@@ -52,6 +57,7 @@ pexpect=4.9.0=pyhd8ed1ab_0
 pickleshare=0.7.5=py_1003
 pip=24.2=py310h06a4308_0
 platformdirs=4.3.6=pyhd8ed1ab_0
+plotly=5.24.1=pypi_0
 prompt-toolkit=3.0.48=pyha770c72_0
 psutil=6.0.0=py310ha75aee5_1
 ptyprocess=0.7.0=pyhd3deb0d_0
@@ -66,12 +72,15 @@ python_abi=3.10=2_cp310
 pytz=2024.1=py310h06a4308_0
 pyzmq=26.2.0=py310h71f11fc_3
 readline=8.2=h5eee18b_0
+referencing=0.35.1=pypi_0
 requests=2.32.3=pypi_0
+rpds-py=0.20.0=pypi_0
 setuptools=75.1.0=py310h06a4308_0
 six=1.16.0=pyhd3eb1b0_1
 sqlite=3.45.3=h5eee18b_0
 stack_data=0.6.2=pyhd8ed1ab_0
 tbb=2021.8.0=hdb19cb5_0
+tenacity=9.0.0=pypi_0
 tk=8.6.14=h39e8969_0
 tornado=6.4.1=py310ha75aee5_1
 traitlets=5.14.3=pyhd8ed1ab_0
