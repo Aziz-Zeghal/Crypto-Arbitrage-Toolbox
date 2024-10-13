@@ -5,14 +5,14 @@ import sys
 import os
 
 if __name__ == "__main__":
-    from utils import load_data, save_data
+    from utils import load_data, save_data, format_volume
 
     # We add the path to the sys.path
     # sys.path is contains a list of directories that the interpreter will search in for the required module. 
     sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
 else:
     # We are running this script as a module
-    from .utils import load_data, save_data
+    from .utils import load_data, save_data, format_volume
 
 import keys
 
@@ -160,7 +160,7 @@ class BybitClient:
                         "Coeff": f"{gap['coeff']:.2f} %",
                         "APR": f"{gap['apr']:.2f} %",      
                         "DaysLeft": int(gap["daysLeft"]),
-                        "CumVolume": self.format_volume(vol)
+                        "CumVolume": format_volume(vol)
                     })
                 else:
                     rows.append({
@@ -175,24 +175,6 @@ class BybitClient:
 
         gaps = pd.DataFrame(rows)
         return gaps
-    
-    def format_volume(self, volume):
-        """
-        Converts volume into a human-readable format, like 656666 -> 656.66K.
-
-        Args:
-            volume (int): Volume to format
-        Returns:
-            str: Formatted volume
-        """
-        if volume >= 1_000_000_000:
-            return f"{volume / 1_000_000_000:.2f}B"
-        elif volume >= 1_000_000:
-            return f"{volume / 1_000_000:.2f}M"
-        elif volume >= 1_000:
-            return f"{volume / 1_000:.2f}K"
-        else:
-            return str(volume)
         
     def get_history(self, contract, interval="m"):
         """
@@ -208,57 +190,53 @@ class BybitClient:
         Returns:
             Nothing, but saves the data to a file
         """
-
+        
         file_name = f"{contract}_{interval}.json"
         acc_data = []
+
         try:
             acc_data = load_data(file_name)
             print(f"Loaded {len(acc_data)} existing data points.")
-            
-            # Take the most recent timestamp, and get the data after it
-            while True:
-                start_timestamp = acc_data[0][0]
-
-                response = self.session.get_kline(
-                    symbol=contract, 
-                    category="linear", 
-                    interval=interval, 
-                    limit=1000, 
-                    start=start_timestamp
-                )["result"]["list"]
-
-                print(f"Fetched {len(response) - 1 if acc_data else len(response)} new data points.")
-
-                # Overwrite the newest data point, add the new data
-                acc_data = response + acc_data[1:]
-
-                # Break the loop if fewer than 1000 data points were returned (no more data available)
-                if len(response) < 1000:
-                    break
-
+            # Fetch newer data
+            timestamp_key = "start"
+            # Get the most recent timestamp
+            timestamp = acc_data[0][0]  
         except FileNotFoundError:
             print("No previous data found, starting fresh.")
+            # Fetch older data
+            timestamp_key = "end"
+            # No timestamp available, start fresh
+            timestamp = None
 
-            # Take the oldest timestamp, and get the data before it
-            while True:
-                end_timestamp = acc_data[-1][0] if acc_data else None
+        # Fetch and append data
+        while True:
+            params = {
+                "symbol": contract,
+                "category": "linear",
+                "interval": interval,
+                "limit": 1000
+            }
+            if timestamp:
+                params[timestamp_key] = timestamp
 
-                response = self.session.get_kline(
-                    symbol=contract, 
-                    category="linear", 
-                    interval=interval, 
-                    limit=1000, 
-                    end=end_timestamp
-                )["result"]["list"]
-                
-                print(f"Fetched {len(response) - 1 if acc_data else len(response)} new data points.")
-                
-                # Overwrite the oldest data point, add the new data
-                acc_data = acc_data[:-1:] + response
-                
-                # Break the loop if fewer than 1000 data points were returned (no more data available)
-                if len(response) < 1000:
-                    break
+            response = self.session.get_kline(**params)["result"]["list"]
+
+            print(f"Fetched {len(response)} new data points.")
+
+            # Depending on direction, either append or prepend the data
+            if timestamp_key == "start":
+                # Fetching forward, add new data at the start
+                acc_data = response + acc_data[1:]  
+            else:
+                # Fetching backward, add new data at the end
+                acc_data = acc_data[:-1] + response  
+
+            # Update the timestamp for the next iteration
+            timestamp = acc_data[0][0] if timestamp_key == "start" else acc_data[-1][0]
+
+            # Break if fewer than 1000 data points were returned
+            if len(response) < 1000:
+                break
 
         # Save to a file
         save_data(file_name, acc_data)
@@ -269,4 +247,4 @@ if __name__ == "__main__":
     bybit = BybitClient()
     # print(bybit.all_gaps())
     # bybit.get_history("BTC-28MAR25", interval="720")
-    bybit.get_history("BTC-26SEP25", interval="3")
+    bybit.get_history("BTC-26SEP25", interval="W")
