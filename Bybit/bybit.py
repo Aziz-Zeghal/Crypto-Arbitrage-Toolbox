@@ -4,12 +4,18 @@ import pandas as pd
 import sys
 import os
 
-from utils import *
-# We add the path to the sys.path
-# sys.path is contains a list of directories that the interpreter will search in for the required module. 
-sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
+if __name__ == "__main__":
+    from utils import load_data, save_data
+
+    # We add the path to the sys.path
+    # sys.path is contains a list of directories that the interpreter will search in for the required module. 
+    sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
+else:
+    # We are running this script as a module
+    from .utils import load_data, save_data
 
 import keys
+
 
 class BybitClient:
     def __init__(self):
@@ -263,4 +269,4 @@ if __name__ == "__main__":
     bybit = BybitClient()
     # print(bybit.all_gaps())
     # bybit.get_history("BTC-28MAR25", interval="720")
-    bybit.get_history("BTC-26SEP25", interval="5")
+    bybit.get_history("BTC-26SEP25", interval="3")
