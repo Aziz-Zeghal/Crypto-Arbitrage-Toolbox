@@ -125,7 +125,7 @@ class BybitClient:
         todayDate = datetime.now().timestamp()
         # - Time to delivery
         # Transform to int to round floor (no need for Math.floor)
-        daysLeft = (longDelivery - todayDate) / 86400
+        daysLeft = (longDelivery - todayDate) / 86400 + 1
 
         apr = coeff * 365 / daysLeft / 2
         return {"gap": gap, "coeff": coeff, "apr": apr, "daysLeft": daysLeft, "cumVolume": cumVolume}
