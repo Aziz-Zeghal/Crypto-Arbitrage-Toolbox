@@ -94,4 +94,58 @@ def plot_candles(file):
             dtick=(y_max - y_min) / 10
         )
     )
+    return fig, df
+
+def plot_compare(longfile, shortfile):
+    """
+    Takes two files, transforms them to pandas DataFrames, and plots them as a candlestick chart.
+    We suppose that the first dataset is the Long position, second is the Short position.
+    Also, they are the same candle size.
+
+    The files contain a list of candles in the format:
+        [startTime, openPrice, highPrice, lowPrice, closePrice, volume, turnover]
+
+    Args:
+        longfile (str): The file containing the long position candles data
+        shortfile (str): The file containing the short position candles data
+    Returns:
+        fig (plotly.graph_objects.Figure): The candlestick chart
+    """
+
+    figLong, dfLong = plot_candles(longfile)
+    figShort, dfShort = plot_candles(shortfile)
+
+    fig = go.Figure(data = figLong.data + figShort.data)
+
+    # Change the name of traces to distinguish between the two datasets
+    fig.data[0].name = longfile
+    fig.data[1].name = shortfile
+
+    # Change color to have 1 whole color
+    fig.data[0].decreasing.fillcolor = 'green'
+    fig.data[0].decreasing.line.color = 'green'
+
+    fig.data[1].increasing.fillcolor = 'red'
+    fig.data[1].increasing.line.color = 'red'
+
+
+
+    # Last small params for the final plot
+    fig.update_layout(
+        title='Candlestick Chart',
+        xaxis_title='Time',
+        yaxis_title='Price',
+        xaxis_rangeslider_visible=False,
+        # To avoid overlapping text on x-axis
+        xaxis_tickangle=-45,
+        # Add the draw function
+        newshape = dict(
+            label=dict(
+                texttemplate="Change: %{dy:.2f}",
+            )
+        )
+    )
+
+    fig.update_layout(modebar_add=['drawline'])
+
     return fig

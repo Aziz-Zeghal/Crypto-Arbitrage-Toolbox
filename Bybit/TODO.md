@@ -11,3 +11,4 @@
 * [ ] Create a simulation tool with historical data
 * [ ] Add error handling for requests (not a priority, learn the code first)
 * [ ] Change methods to handle other future contracts (not just BTCUSDC)
+* [ ] Make subcomponents (simulation, data, strategy, notification, etc)
