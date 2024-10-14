@@ -44,7 +44,7 @@ def plot_candles(file):
     Args:
         file (str): The file containing the candles data
     Returns:
-        fig (plotly.graph_objects.Figure): The candlestick chart
+        dict: {"figure": fig, "dataframe": df}
     """
     data = load_data(file)
     columns = ["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
@@ -69,7 +69,6 @@ def plot_candles(file):
                                          high=df["highPrice"],
                                          low=df["lowPrice"],
                                          close=df["closePrice"])])
-    
     # Determine min and max prices for more granular y-axis control
     min_price = df[["lowPrice"]].min().values[0]
     max_price = df[["highPrice"]].max().values[0]
@@ -94,8 +93,10 @@ def plot_candles(file):
             dtick=(y_max - y_min) / 10
         )
     )
-    return fig, df
 
+    return {"figure": fig, "dataframe": df}
+
+# TODO: The difference plot is not in the caption I don't know why
 def plot_compare(longfile, shortfile):
     """
     Takes two files, transforms them to pandas DataFrames, and plots them as a candlestick chart.
@@ -112,10 +113,33 @@ def plot_compare(longfile, shortfile):
         fig (plotly.graph_objects.Figure): The candlestick chart
     """
 
-    figLong, dfLong = plot_candles(longfile)
-    figShort, dfShort = plot_candles(shortfile)
+    figLong, dfLong = plot_candles(longfile).values()
+    figShort, dfShort = plot_candles(shortfile).values()
+
+    diffCalc = 100 - dfLong["closePrice"] * 100 / dfShort["closePrice"]
 
     fig = go.Figure(data = figLong.data + figShort.data)
+
+    # Display difference
+    diff_graph = go.Scatter(
+        x=dfShort["startTime"],
+        # Not the same number of candles, but it works
+        y=(dfShort["closePrice"] + dfLong["closePrice"]) / 2,
+        # Displaying text will be ugly as hell
+        mode='lines',
+        name="Difference",
+        textfont=dict(
+            color='black',
+            size=10
+        ),
+        text=[f'{diff:.2f}%' for diff in diffCalc],
+        showlegend=False
+    )
+    # Add in the caption
+    fig.add_trace(diff_graph)
+
+    # Can do this to display inside a candle's information
+    # fig.data[1].text = [f'Difference: {diff:.2f}' for diff in diffCalc]
 
     # Change the name of traces to distinguish between the two datasets
     fig.data[0].name = longfile
@@ -127,8 +151,6 @@ def plot_compare(longfile, shortfile):
 
     fig.data[1].increasing.fillcolor = 'red'
     fig.data[1].increasing.line.color = 'red'
-
-
 
     # Last small params for the final plot
     fig.update_layout(

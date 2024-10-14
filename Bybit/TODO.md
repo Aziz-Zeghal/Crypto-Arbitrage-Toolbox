@@ -12,3 +12,4 @@
 * [ ] Add error handling for requests (not a priority, learn the code first)
 * [ ] Change methods to handle other future contracts (not just BTCUSDC)
 * [ ] Make subcomponents (simulation, data, strategy, notification, etc)
+* [ ] Add a cursor to the plot to always have the date and price
