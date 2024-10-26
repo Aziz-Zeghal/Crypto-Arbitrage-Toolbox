@@ -1,4 +1,6 @@
 # Future - Future
+I will convert this TODO list to Github issues.
+
 * [x] Get the history of a future contract
 * [x] Get all gaps between future contracts
 * [x] Plot historical data of a future contract
@@ -17,3 +19,5 @@
 * [ ] Add a cursor to the plot to always have the date and price under the mouse
 * [ ] Make a tendance of spread plot
 * [ ] Make code generic enough to handle perpetual contracts (add a limit to the number of fetches)
+* [ ] POC that the difference between future contracts closes
+* [ ] Cut the main Bybit class into submodules

@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import plotly.graph_objects as go
+import datetime
 
 
 def load_data(file: str) -> list:
@@ -11,6 +12,30 @@ def load_data(file: str) -> list:
 def save_data(file: str, data: list) -> None:
     with open(file, "w") as f:
         json.dump(data, f)
+
+
+def get_epoch(date: str) -> int:
+    """
+    Converts a date to a human-readable date.
+
+    Args:
+        date (str): Date to convert
+    Returns:
+        int: Epoch time
+    """
+    return int(datetime.datetime.strptime(date, "%d/%m/%Y").timestamp() * 1000)
+
+
+def get_date(epoch: int) -> str:
+    """
+    Converts an epoch to a human-readable date.
+
+    Args:
+        epoch (int): Epoch time
+    Returns:
+        str: Date
+    """
+    return datetime.datetime.fromtimestamp(epoch / 1000).strftime("%d/%m/%Y")
 
 
 def format_volume(volume: int) -> str:

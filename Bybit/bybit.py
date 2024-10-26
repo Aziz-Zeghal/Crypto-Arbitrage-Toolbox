@@ -5,19 +5,21 @@ import sys
 import os
 
 if __name__ == "__main__":
-    from utils import load_data, save_data, format_volume
+    from utils import load_data, save_data, format_volume, get_epoch
 
     # We add the path to the sys.path
     # sys.path is contains a list of directories that the interpreter will search in for the required module.
     sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
 else:
     # We are running this script as a module
-    from .utils import load_data, save_data, format_volume
+    from .utils import load_data, save_data, format_volume, get_epoch
 
 import keys
 
 
 class BybitClient:
+    __slots__ = ["session"]
+
     def __init__(self):
         """
         Initialize the Bybit session
@@ -235,9 +237,9 @@ class BybitClient:
 
         return df_gaps
 
-    def get_history(self, contract, interval="m"):
+    def get_history(self, contract, interval="m", lastDate="01/01/2021"):
         """
-        Get the history of a future contract
+        Get the history of a future contract until lastDate
         If we do not have any data, we start from the oldest data point, and fetch the data before it
         If we have some data, we start from the most recent data point, and fetch the data after it
         We do it this way, because we cannot know when the contract started
@@ -247,12 +249,15 @@ class BybitClient:
         Args:
             contract (str): The future contract to get the history from
             interval (str): The interval of the data
+            lastDate (str): The last date of fetched data
         Returns:
             Nothing, but saves the data to a file
         """
 
         file_name = f"{contract}_{interval}.json"
         acc_data = []
+        # Convert date to epoch in milliseconds
+        lastDate = get_epoch(lastDate)
 
         try:
             acc_data = load_data(file_name)
@@ -268,14 +273,17 @@ class BybitClient:
             # No timestamp available, start fresh
             timestamp = None
 
+        params = {
+            "symbol": contract,
+            "category": "linear",
+            "interval": interval,
+            "limit": 1000,
+        }
+
         # Fetch and append data
         while True:
-            params = {
-                "symbol": contract,
-                "category": "linear",
-                "interval": interval,
-                "limit": 1000,
-            }
+            params["interval"] = interval
+
             if timestamp:
                 params[timestamp_key] = timestamp
 
@@ -295,8 +303,8 @@ class BybitClient:
             if numberCandles > 0:
                 timestamp = acc_data[0][0] if timestamp_key == "start" else acc_data[-1][0]
 
-            # Break if fewer than 1000 data points were returned
-            if numberCandles < 1000:
+            # Break if fewer than 1000 data points were returned or we reached the last date
+            if numberCandles < 1000 or acc_data != [] and int(acc_data[-1][0]) < lastDate:
                 break
 
         # Save to a file
