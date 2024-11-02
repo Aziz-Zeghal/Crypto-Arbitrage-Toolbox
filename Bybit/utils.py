@@ -127,7 +127,7 @@ def plot_candles(file: str) -> dict:
         yaxis=dict(range=[y_min, y_max], tickmode="linear", dtick=(y_max - y_min) / 10),
     )
 
-    return {"figure": fig, "dataframe": df}
+    return fig, df
 
 
 # TODO: The difference plot is not in the caption I don't know why
@@ -137,8 +137,8 @@ def plot_compare(longfile: str, shortfile: str) -> go.Figure:
     We suppose that the first dataset is the Long position, second is the Short position.
     Also, they are the same candle size.
     """
-    figLong, dfLong = plot_candles(longfile).values()
-    figShort, dfShort = plot_candles(shortfile).values()
+    figLong, dfLong = plot_candles(longfile)
+    figShort, dfShort = plot_candles(shortfile)
 
     # Merge both DataFrames on the 'startTime' column to align their data
     merged_df = pd.merge(dfLong, dfShort, on="startTime", suffixes=("_long", "_short"), how="inner")
