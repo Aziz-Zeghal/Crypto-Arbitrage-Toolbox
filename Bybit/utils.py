@@ -4,26 +4,63 @@ import plotly.graph_objects as go
 import datetime
 
 
-def load_data(file: str) -> list:
-    with open(file, "r") as f:
-        return json.load(f)
+def save_klines_parquet(file: str, df: pd.DataFrame) -> None:
+    """
+    Saves a DataFrame to a parquet file.
+    We do NOT format it because we want to keep the raw data.
+
+    Args:
+        file (str): File to save
+        df (pd.DataFrame): DataFrame to save
+    """
+
+    df.to_parquet(file)
 
 
-def save_data(file: str, data: list) -> None:
-    with open(file, "w") as f:
-        json.dump(data, f)
+def load_parquet(file: str, pretty=False) -> pd.DataFrame:
+    """
+    Loads a parquet file and returns a DataFrame.
+
+    Args:
+        file (str): File to load
+        pretty (bool): If True, will format the DataFrame
+    """
+    df = pd.read_parquet(file)
+
+    if pretty:
+        # Convert timestamps to numeric to get rid of overflow errors
+        df["startTime"] = pd.to_numeric(df["startTime"], errors="coerce")
+        # Convert timestamps to datetime
+        df["startTime"] = pd.to_datetime(df["startTime"], unit="ms", errors="coerce")
+        df["startTime"] = df["startTime"].dt.strftime("%Y-%m-%d %H:%M")
+
+        # Convert prices to numeric for proper plotting
+        df["openPrice"] = pd.to_numeric(df["openPrice"], errors="coerce")
+        df["highPrice"] = pd.to_numeric(df["highPrice"], errors="coerce")
+        df["lowPrice"] = pd.to_numeric(df["lowPrice"], errors="coerce")
+        df["closePrice"] = pd.to_numeric(df["closePrice"], errors="coerce")
+
+    return df
 
 
 def get_epoch(date: str) -> int:
     """
     Converts a date to a human-readable date.
+    Takes a date in the format DD/MM/YYYY or YYYY-MM-DD HH:MM and converts it to epoch time.
 
     Args:
         date (str): Date to convert
     Returns:
         int: Epoch time
     """
-    return int(datetime.datetime.strptime(date, "%d/%m/%Y").timestamp() * 1000)
+    # Check the format of the date
+
+    # We have DD/MM/YYYY
+    if "/" in date:
+        return int(datetime.datetime.strptime(date, "%d/%m/%Y").timestamp() * 1000)
+    # We have YYYY-MM-DD HH:MM
+    else:
+        return int(datetime.datetime.strptime(date, "%Y-%m-%d %H:%M").timestamp() * 1000)
 
 
 def get_date(epoch: int) -> str:
@@ -69,30 +106,7 @@ def plot_candles(file: str) -> dict:
     Returns:
         dict: {"figure": fig, "dataframe": df}
     """
-    data = load_data(file)
-    columns = [
-        "startTime",
-        "openPrice",
-        "highPrice",
-        "lowPrice",
-        "closePrice",
-        "volume",
-        "turnover",
-    ]
-
-    df = pd.DataFrame(data, columns=columns)
-
-    # Convert timestamps to numeric to get rid of overflow errors
-    df["startTime"] = pd.to_numeric(df["startTime"], errors="coerce")
-    # Convert timestamps to datetime
-    df["startTime"] = pd.to_datetime(df["startTime"], unit="ms", errors="coerce")
-    df["startTime"] = df["startTime"].dt.strftime("%Y-%m-%d %H:%M")
-
-    # Convert prices to numeric for proper plotting
-    df["openPrice"] = pd.to_numeric(df["openPrice"], errors="coerce")
-    df["highPrice"] = pd.to_numeric(df["highPrice"], errors="coerce")
-    df["lowPrice"] = pd.to_numeric(df["lowPrice"], errors="coerce")
-    df["closePrice"] = pd.to_numeric(df["closePrice"], errors="coerce")
+    df = load_parquet(file, pretty=True)
 
     # Use plotly
     fig = go.Figure(
@@ -192,3 +206,14 @@ def plot_compare(longfile: str, shortfile: str) -> go.Figure:
     fig.update_layout(modebar_add=["drawline"])
 
     return fig
+
+
+# Deprecated
+def load_data(file: str) -> list:
+    with open(file, "r") as f:
+        return json.load(f)
+
+
+def save_data(file: str, data: list) -> None:
+    with open(file, "w") as f:
+        json.dump(data, f)
