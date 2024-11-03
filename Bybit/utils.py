@@ -94,7 +94,7 @@ def format_volume(volume: int) -> str:
         return str(volume)
 
 
-def plot_candles(file: str) -> dict:
+def plot_candles(file: str, dateLimit=None) -> dict:
     """
     Takes a file, transforms it to a pandas DataFrame, and plots it as a candlestick chart.
     The file contains a list of candles in the format:
@@ -103,10 +103,16 @@ def plot_candles(file: str) -> dict:
     Special thanks to this ressource: https://github.com/SteWolk/kuegiBot/blob/4bf335fbdebeca89b49c4fd7843d70f79235f3fe/kuegi_bot/utils/helper.py#L132
     Args:
         file (str): The file containing the candles data
+        dateLimit (str): The date to filter the data (format: YYYY-MM-DD HH:MM)
     Returns:
         dict: {"figure": fig, "dataframe": df}
     """
     df = load_klines_parquet(file, pretty=True)
+
+    # Filter according to the date
+    if dateLimit:
+        # This syntax looks like numpy
+        df = df[df["startTime"] >= dateLimit]
 
     # Use plotly
     fig = go.Figure(
@@ -145,17 +151,24 @@ def plot_candles(file: str) -> dict:
 
 
 # TODO: The difference plot is not in the caption I don't know why
-def plot_compare(longfile: str, shortfile: str) -> go.Figure:
+def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     """
     Takes two files, transforms them to pandas DataFrames, and plots them as a candlestick chart.
     We suppose that the first dataset is the Long position, second is the Short position.
     Also, they are the same candle size.
+
+    Args:
+        longfile (str): The file containing the long candles data
+        shortfile (str): The file containing the short candles data
+        dateLimit (str): The date to filter the data (format: YYYY-MM-DD HH:MM)
+    Returns:
+        go.Figure: The figure containing both datasets
     """
-    figLong, dfLong = plot_candles(longfile)
-    figShort, dfShort = plot_candles(shortfile)
+    figLong, dfLong = plot_candles(longfile, dateLimit=dateLimit)
+    figShort, dfShort = plot_candles(shortfile, dateLimit=dateLimit)
 
     # Merge both DataFrames on the 'startTime' column to align their data
-    merged_df = pd.merge(dfLong, dfShort, on="startTime", suffixes=("_long", "_short"), how="inner")
+    merged_df = pd.merge(dfShort, dfLong, suffixes=("_long", "_short"), how="inner", on="startTime")
 
     # Calculate the difference only for aligned data
     # We do this to stop calculating difference when one of the datasets ends
