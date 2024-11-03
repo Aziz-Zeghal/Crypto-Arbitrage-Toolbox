@@ -17,7 +17,7 @@ def save_klines_parquet(file: str, df: pd.DataFrame) -> None:
     df.to_parquet(file)
 
 
-def load_parquet(file: str, pretty=False) -> pd.DataFrame:
+def load_klines_parquet(file: str, pretty=False) -> pd.DataFrame:
     """
     Loads a parquet file and returns a DataFrame.
 
@@ -106,7 +106,7 @@ def plot_candles(file: str) -> dict:
     Returns:
         dict: {"figure": fig, "dataframe": df}
     """
-    df = load_parquet(file, pretty=True)
+    df = load_klines_parquet(file, pretty=True)
 
     # Use plotly
     fig = go.Figure(

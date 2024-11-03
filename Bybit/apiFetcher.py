@@ -6,7 +6,7 @@ import pandas as pd
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
-from utils import save_klines_parquet, get_epoch, load_parquet, save_data, load_data
+from utils import save_klines_parquet, get_epoch, load_klines_parquet, save_data, load_data
 import keys
 
 
@@ -191,7 +191,7 @@ class bybitFetcher:
         )
 
         try:
-            acc_data = load_parquet(file_name)
+            acc_data = load_klines_parquet(file_name)
             print(f"Loaded {len(acc_data)} existing data points.")
             timestamp_key = "start"
             timestamp = acc_data.iloc[0]["startTime"]
