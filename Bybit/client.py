@@ -116,7 +116,7 @@ class BybitClient:
 
         return df_gaps
 
-    def postion_calculator(self, contract, side, quantityUSDC, leverage=1):
+    def position_calculator(self, contract, side, quantityUSDC, leverage=1):
         """
         Checks information about a position before entering it
         User submits a USDC quantity, and we calculate the amount of contracts to buy/sell

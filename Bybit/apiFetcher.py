@@ -2,10 +2,11 @@ from pybit.unified_trading import HTTP
 from datetime import datetime
 import sys
 import os
+import pandas as pd
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
-from utils import load_data, save_data, get_epoch
+from utils import save_klines_parquet, get_epoch, load_parquet, save_data, load_data
 import keys
 
 
@@ -87,6 +88,7 @@ class bybitFetcher:
         sorted_markets = sorted(markets, key=extract_date)
         return sorted_markets
 
+    # WARNING: Deprecated, use get_history_pd instead
     def get_history(self, contract, interval="m", lastDate="01/01/2021"):
         """
         Get the history of a future contract until lastDate
@@ -157,7 +159,80 @@ class bybitFetcher:
             if numberCandles < 1000 or acc_data != [] and int(acc_data[-1][0]) < lastDate:
                 break
 
-        # Save to a file
+        # Save the data in Dataframes
         save_data(file_name, acc_data)
+        return acc_data
 
+    # TODO: Add the lastDate feature
+    # TODO: No need to load the whole DataFrame, just the last part, then concat to the file, Parquet is not made for that though
+    def get_history_pd(self, contract, interval="m", lastDate="01/01/2021"):
+        """
+        Get the history of a future contract until lastDate
+        If we do not have any data, we start from the oldest data point, and fetch the data before it
+        If we have some data, we start from the most recent data point, and fetch the data after it
+        We do it this way, because we cannot know when the contract started
+        Also, when a contract has no more klines, it will not throw an error
+
+        Link: https://bybit-exchange.github.io/docs/v5/market/kline
+        Args:
+            contract (str): The future contract to get the history from
+            interval (str): The interval of the data
+            lastDate (str): The last date of fetched data
+        Returns:
+            A DataFrame containing the accumulated data
+        """
+
+        file_name = f"{contract}_{interval}.parquet"
+        lastDate = get_epoch(lastDate)
+
+        # Initialize an empty DataFrame for accumulated data
+        acc_data = pd.DataFrame(
+            columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
+        )
+
+        try:
+            acc_data = load_parquet(file_name)
+            print(f"Loaded {len(acc_data)} existing data points.")
+            timestamp_key = "start"
+            timestamp = acc_data.iloc[0]["startTime"]
+
+        except FileNotFoundError:
+            print("No previous data found, starting fresh.")
+            timestamp_key = "end"
+            timestamp = None
+
+        params = {
+            "symbol": contract,
+            "category": "linear",
+            "interval": interval,
+            "limit": 1000,
+        }
+
+        while True:
+            if timestamp:
+                params[timestamp_key] = timestamp
+
+            response = self.session.get_kline(**params)["result"]["list"]
+            new_data = pd.DataFrame(
+                response,
+                columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"],
+            )
+
+            print(f"Fetched {len(new_data)} new data points.")
+
+            if timestamp_key == "start":
+                acc_data = pd.concat([new_data, acc_data.iloc[1:]], ignore_index=True)
+            else:
+                acc_data = pd.concat([acc_data.iloc[:-1], new_data], ignore_index=True)
+
+            numberCandles = len(new_data)
+            if numberCandles > 0:
+                timestamp = (
+                    acc_data.iloc[0]["startTime"] if timestamp_key == "start" else acc_data.iloc[-1]["startTime"]
+                )
+
+            if numberCandles < 1000:
+                break
+
+        save_klines_parquet(file_name, acc_data)
         return acc_data
