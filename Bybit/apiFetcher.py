@@ -89,9 +89,9 @@ class bybitFetcher:
         return sorted_markets
 
     # WARNING: Deprecated, use get_history_pd instead
-    def get_history(self, contract, interval="m", lastDate="01/01/2021"):
+    def get_history(self, contract, interval="m", dateLimit="01/01/2021"):
         """
-        Get the history of a future contract until lastDate
+        Get the history of a future contract until dateLimit
         If we do not have any data, we start from the oldest data point, and fetch the data before it
         If we have some data, we start from the most recent data point, and fetch the data after it
         We do it this way, because we cannot know when the contract started
@@ -101,7 +101,7 @@ class bybitFetcher:
         Args:
             contract (str): The future contract to get the history from
             interval (str): The interval of the data
-            lastDate (str): The last date of fetched data
+            dateLimit (str): The last date of fetched data
         Returns:
             Nothing, but saves the data to a file
         """
@@ -109,7 +109,7 @@ class bybitFetcher:
         file_name = f"{contract}_{interval}.json"
         acc_data = []
         # Convert date to epoch in milliseconds
-        lastDate = get_epoch(lastDate)
+        dateLimit = get_epoch(dateLimit)
 
         try:
             acc_data = load_data(file_name)
@@ -156,34 +156,36 @@ class bybitFetcher:
                 timestamp = acc_data[0][0] if timestamp_key == "start" else acc_data[-1][0]
 
             # Break if fewer than 1000 data points were returned or we reached the last date
-            if numberCandles < 1000 or acc_data != [] and int(acc_data[-1][0]) < lastDate:
+            if numberCandles < 1000 or acc_data != [] and int(acc_data[-1][0]) < dateLimit:
                 break
 
         # Save the data in Dataframes
         save_data(file_name, acc_data)
         return acc_data
 
-    # TODO: Add the lastDate feature
-    # TODO: No need to load the whole DataFrame, just the last part, then concat to the file, Parquet is not made for that though
-    def get_history_pd(self, contract, interval="m", lastDate="01/01/2021"):
+    # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
+    def get_history_pd(self, contract, interval="m", dateLimit="01/01/2021", category="linear"):
         """
-        Get the history of a future contract until lastDate
+        Get the history of a future contract until dateLimit
         If we do not have any data, we start from the oldest data point, and fetch the data before it
         If we have some data, we start from the most recent data point, and fetch the data after it
         We do it this way, because we cannot know when the contract started
         Also, when a contract has no more klines, it will not throw an error
 
+        Warning: the last candle will not be at dateLimit, but a little after it
+
         Link: https://bybit-exchange.github.io/docs/v5/market/kline
         Args:
             contract (str): The future contract to get the history from
             interval (str): The interval of the data
-            lastDate (str): The last date of fetched data
+            dateLimit (str): The last date of fetched data
+            category (str): The category of the contract
         Returns:
             A DataFrame containing the accumulated data
         """
 
         file_name = f"{contract}_{interval}.parquet"
-        lastDate = get_epoch(lastDate)
+        dateLimit = get_epoch(dateLimit)
 
         # Initialize an empty DataFrame for accumulated data
         acc_data = pd.DataFrame(
@@ -203,7 +205,7 @@ class bybitFetcher:
 
         params = {
             "symbol": contract,
-            "category": "linear",
+            "category": category,
             "interval": interval,
             "limit": 1000,
         }
@@ -231,7 +233,7 @@ class bybitFetcher:
                     acc_data.iloc[0]["startTime"] if timestamp_key == "start" else acc_data.iloc[-1]["startTime"]
                 )
 
-            if numberCandles < 1000:
+            if numberCandles < 1000 or int(acc_data.iloc[-1]["startTime"]) < dateLimit:
                 break
 
         save_klines_parquet(file_name, acc_data)
