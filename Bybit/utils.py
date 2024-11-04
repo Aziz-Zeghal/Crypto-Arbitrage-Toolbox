@@ -209,6 +209,15 @@ def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     )
     fig.add_trace(diff_graph, row=2, col=1)
 
+    # Trendline of difference trace
+    trendline = go.Scatter(
+        x=merged_df["startTime"],
+        y=diffCalc.rolling(window=150).mean(),
+        name="Trendline",
+        marker=dict(color="black"),
+    )
+    fig.add_trace(trendline, row=2, col=1)
+
     # Final layout updates
     fig.update_layout(
         title="Candlestick Chart",
