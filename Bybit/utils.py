@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 import datetime
 
 
@@ -152,44 +153,43 @@ def plot_candles(file: str, dateLimit=None) -> dict:
 
 # TODO: The difference plot is not in the caption I don't know why
 def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
-    """
-    Takes two files, transforms them to pandas DataFrames, and plots them as a candlestick chart.
-    We suppose that the first dataset is the Long position, second is the Short position.
-    Also, they are the same candle size.
+    # Get DataFrames for Long and Short datasets
+    _, dfLong = plot_candles(longfile, dateLimit=dateLimit)
+    _, dfShort = plot_candles(shortfile, dateLimit=dateLimit)
 
-    Args:
-        longfile (str): The file containing the long candles data
-        shortfile (str): The file containing the short candles data
-        dateLimit (str): The date to filter the data (format: YYYY-MM-DD HH:MM)
-    Returns:
-        go.Figure: The figure containing both datasets
-    """
-    figLong, dfLong = plot_candles(longfile, dateLimit=dateLimit)
-    figShort, dfShort = plot_candles(shortfile, dateLimit=dateLimit)
+    # Merge both DataFrames on 'startTime' to align their data
+    merged_df = pd.merge(dfLong, dfShort, suffixes=("_long", "_short"), how="inner", on="startTime")
 
-    # Merge both DataFrames on the 'startTime' column to align their data
-    merged_df = pd.merge(dfShort, dfLong, suffixes=("_long", "_short"), how="inner", on="startTime")
+    # Initialize figure
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.02)
 
-    # Calculate the difference only for aligned data
-    # We do this to stop calculating difference when one of the datasets ends
-    diffCalc = 100 - merged_df["closePrice_long"] * 100 / merged_df["closePrice_short"]
-
-    # Create the figure
-    fig = go.Figure(data=figLong.data + figShort.data)
-
-    # Display the difference
-    diff_graph = go.Scatter(
-        x=merged_df["startTime"],
-        y=(merged_df["closePrice_short"] + merged_df["closePrice_long"]) / 2,
-        mode="lines",
-        name="Difference",
-        textfont=dict(color="black", size=10),
-        text=[f"{diff:.2f}%" for diff in diffCalc],
-        showlegend=False,
+    # Add Long position candlestick with specific color
+    fig.add_trace(
+        go.Candlestick(
+            x=merged_df["startTime"],
+            open=merged_df["openPrice_long"],
+            high=merged_df["highPrice_long"],
+            low=merged_df["lowPrice_long"],
+            close=merged_df["closePrice_long"],
+            name=shortfile,
+        ),
+        row=1,
+        col=1,
     )
 
-    # Add the difference trace to the figure
-    fig.add_trace(diff_graph)
+    # Add Short position candlestick with specific color
+    fig.add_trace(
+        go.Candlestick(
+            x=merged_df["startTime"],
+            open=merged_df["openPrice_short"],
+            high=merged_df["highPrice_short"],
+            low=merged_df["lowPrice_short"],
+            close=merged_df["closePrice_short"],
+            name=longfile,
+        ),
+        row=1,
+        col=1,
+    )
 
     # Change the name of traces to distinguish between the two datasets
     fig.data[0].name = longfile
@@ -201,6 +201,13 @@ def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
 
     fig.data[1].increasing.fillcolor = "red"
     fig.data[1].increasing.line.color = "red"
+
+    # Calculate and add the difference trace
+    diffCalc = 100 - merged_df["closePrice_long"] * 100 / merged_df["closePrice_short"]
+    diff_graph = go.Scatter(
+        x=merged_df["startTime"], y=diffCalc, name="Coefficient of difference", marker=dict(color="blue")
+    )
+    fig.add_trace(diff_graph, row=2, col=1)
 
     # Final layout updates
     fig.update_layout(
@@ -217,7 +224,6 @@ def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     )
 
     fig.update_layout(modebar_add=["drawline"])
-
     return fig
 
 
