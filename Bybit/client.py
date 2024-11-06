@@ -71,17 +71,19 @@ class BybitClient:
         gaps = pd.DataFrame(rows)
         return gaps
 
-    def all_gaps_pd(self, pretty=True):
+    def all_gaps_pd(self, pretty=True, inverse=False, perpetual=False):
         """
         Get all the gaps for all the future contracts
 
         Args:
-            pretty (bool): If True, will format the elements in a more readable way
+            pretty (bool): will format the elements in a more readable way
+            inverse (bool): will get the inverse contracts
+            perpetual (bool): will get the perpetual contracts
         Returns:
             pd.DataFrame: DataFrame containing all the gaps
         """
 
-        btcFutureContracts = self.fetcher.get_futures("BTC")
+        btcFutureContracts = self.fetcher.get_futures("BTC", inverse=inverse, perpetual=perpetual)
 
         # First, get the tickers of every future contract in a dataframe
         btcTickers = pd.DataFrame(
@@ -98,7 +100,7 @@ class BybitClient:
         for i, longTicker in btcTickers.iterrows():
             # Take all futures after the current one
             for j, shortTicker in btcTickers.iloc[i + 1 :].iterrows():
-                gap = self.get_gap(longTicker, shortTicker)
+                gap = bybitAnalyser.get_gap(longTicker, shortTicker)
                 vol = int(gap["cumVolume"])
 
                 # Prepare the row data

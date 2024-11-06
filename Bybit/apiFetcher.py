@@ -59,30 +59,59 @@ class bybitFetcher:
 
         return {"Balance": totalBalance, "BTC": btcValue, "USDC": usdcValue}
 
-    def get_futures(self, coin="BTC"):
+    # TODO: Maybe add error handling for the case where the contract does not exist
+    def get_spot(self, coin="BTC"):
         """
-        Get all markets for a given coin
+        Get spot for a given coin
+
+        Args:
+            coin (str): Either BTC or ETH
+        Returns:
+            list: List of all the products
+        """
+        markets = []
+        pair = self.session.get_instruments_info(symbol=f"{coin}USDT", category="spot")["result"]["list"][0]
+        markets.append(pair)
+        pair = self.session.get_instruments_info(symbol=f"{coin}USDC", category="spot")["result"]["list"][0]
+        markets.append(pair)
+
+        return markets
+
+    def get_futures(self, coin="BTC", inverse=False, perpetual=False):
+        """
+        Get all the future contracts for a given coin
 
         Link: https://bybit-exchange.github.io/docs/v5/market/instrument
         Args:
             coin (str): Either BTC or ETH
+            inverse (bool): If True, will return inverse futures
+            perpetual (bool): If True, will return perpetual
         Return:
             list: List of all the future contracts for the given coin sorted by expiry date
         """
 
         # Sadly, I do not think there is a better way to do this
         # But the contracts themself are not always queried
-        pairs = self.session.get_instruments_info(category="linear")
+        pairs = self.session.get_instruments_info(category="linear", baseCoin=coin)
         markets = []
         for p in pairs["result"]["list"]:
             # Looks like BTC-01NOV24
-            if p["symbol"].startswith(coin + "-"):
+            if p["contractType"] == "LinearFutures":
+                markets.append(p["symbol"])
+            elif perpetual and p["contractType"] == "LinearPerpetual":
+                markets.append(p["symbol"])
+            elif inverse and p["contractType"] == "InverseFutures":
                 markets.append(p["symbol"])
 
         # Function to extract and convert the date part to a datetime object
         def extract_date(contract):
-            date_str = contract.split("-")[-1]  # Extracts the date part, e.g., '01NOV24'
-            return datetime.strptime(date_str, "%d%b%y")
+            # Extracts the date part, e.g., '01NOV24' or '0328' for inverse futures
+            date_str = contract.split("-")[-1] if "-" in contract else contract[-4:]
+            try:
+                return datetime.strptime(date_str, "%d%b%y")
+            except ValueError:
+                # Maximum date for inverse futures and perpetuals
+                return datetime.strptime("2000", "%Y")
 
         # Sort the markets by expiry date
         sorted_markets = sorted(markets, key=extract_date)
