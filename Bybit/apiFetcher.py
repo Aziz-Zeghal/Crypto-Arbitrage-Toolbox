@@ -77,7 +77,7 @@ class bybitFetcher:
 
         return markets
 
-    def get_futures(self, coin="BTC", inverse=False, perpetual=False):
+    def get_futureNames(self, coin="BTC", inverse=False, perpetual=False):
         """
         Get all the future contracts for a given coin
 
@@ -118,7 +118,7 @@ class bybitFetcher:
         return sorted_markets
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
-    def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear"):
+    def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear", dest=None):
         """
         Get the history of a future product until dateLimit
         If we do not have any data, we start from the oldest data point, and fetch the data before it
@@ -143,6 +143,10 @@ class bybitFetcher:
             file_name += "_spot.parquet"
         else:
             file_name += ".parquet"
+
+        if dest:
+            file_name = os.path.join(dest, file_name)
+
         dateLimit = get_epoch(dateLimit)
 
         # Initialize an empty DataFrame for accumulated data

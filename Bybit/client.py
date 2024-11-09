@@ -34,7 +34,7 @@ class BybitClient:
             pd.DataFrame: DataFrame containing all the gaps
         """
 
-        btcFutureContracts = self.fetcher.get_futures("BTC", inverse=inverse, perpetual=perpetual)
+        btcFutureContracts = self.fetcher.get_futureNames("BTC", inverse=inverse, perpetual=perpetual)
 
         # First, get the tickers of every future contract in a dataframe
         btcTickers = pd.DataFrame(
@@ -52,8 +52,19 @@ class BybitClient:
             response["symbol"] = "BTCUSDT (Spot)"
             btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
 
-        # Create an empty dataframe to store the result
-        df_gaps = pd.DataFrame(columns=["Buy", "Sell", "Gap", "Coeff", "APR", "DaysLeft", "CumVolume"])
+        # Define an empty DataFrame with specified columns and data types
+        column_types = {
+            "Buy": "string",
+            "Sell": "string",
+            "Gap": "float" if not pretty else "string",
+            "Coeff": "float" if not pretty else "string",
+            "APR": "float" if not pretty else "string",
+            "DaysLeft": "int",
+            "CumVolume": "int" if not pretty else "string",
+        }
+
+        # Create an empty DataFrame with the specified columns
+        df_gaps = pd.DataFrame(columns=column_types.keys()).astype(column_types)
 
         # Now, we can calculate the gaps
         for i, longTicker in btcTickers.iterrows():
@@ -75,6 +86,7 @@ class BybitClient:
 
                 df_gaps = pd.concat([df_gaps, pd.DataFrame([row])], ignore_index=True)
 
+        df_gaps = df_gaps.astype(column_types)
         return df_gaps
 
     def position_calculator(self, contract, side, quantityUSDC, leverage=1):

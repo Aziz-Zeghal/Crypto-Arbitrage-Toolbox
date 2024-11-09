@@ -4,6 +4,7 @@ import pandas as pd
 
 class bybitAnalyser:
 
+    # TODO: Maybe place fees heres
     @staticmethod
     def get_gap(longTickers, shortTickers):
         """
