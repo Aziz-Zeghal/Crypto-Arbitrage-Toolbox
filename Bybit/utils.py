@@ -245,3 +245,17 @@ def load_data(file: str) -> list:
 def save_data(file: str, data: list) -> None:
     with open(file, "w") as f:
         json.dump(data, f)
+
+
+def json_to_parquet(file: str) -> None:
+    """
+    Converts a JSON file to a parquet file.
+
+    Args:
+        file (str): File to convert
+    """
+    data = load_data(file)
+    df = pd.DataFrame(
+        data, columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
+    )
+    save_klines_parquet(file.replace(".json", ".parquet"), df)

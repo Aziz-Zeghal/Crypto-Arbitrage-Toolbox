@@ -4,6 +4,7 @@ import pandas as pd
 
 class bybitAnalyser:
 
+    # TODO: Maybe place fees heres
     @staticmethod
     def get_gap(longTickers, shortTickers):
         """
@@ -36,14 +37,24 @@ class bybitAnalyser:
         # - Calculate the coefficient
         coeff = round((shortPrice / longPrice - 1) * 100, 3)
 
-        # | Time to delivery for the long contract, epoch in milliseconds (convert to seconds)
+        # | Time to delivery for the contracts, epoch in milliseconds (convert to seconds)
         longDelivery = int(longTickers["deliveryTime"]) / 1000
+        shortDelivery = int(shortTickers["deliveryTime"]) / 1000
+
         todayDate = datetime.now().timestamp()
         # - Time to delivery
-        # Transform to int to round floor (no need for Math.floor)
-        daysLeft = (longDelivery - todayDate) / 86400 + 1
+        # Sometimes, its a perpetual contract, so we need to check if the delivery time is 0
+        # TODO: Two perpetuals give a negative daysLeft, but it's fine
+        if longDelivery != 0:
+            maximumTime = longDelivery
+        else:
+            maximumTime = shortDelivery
+        daysLeft = (maximumTime - todayDate) / 86400 + 1
 
-        apr = coeff * 365 / daysLeft / 2
+        if daysLeft != 0:
+            apr = coeff * 365 / daysLeft / 2
+        else:
+            apr = 0
         return {
             "gap": gap,
             "coeff": coeff,
