@@ -118,27 +118,31 @@ class bybitFetcher:
         return sorted_markets
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
-    def get_history_pd(self, contract, interval="m", dateLimit="01/01/2021", category="linear"):
+    def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear"):
         """
-        Get the history of a future contract until dateLimit
+        Get the history of a future product until dateLimit
         If we do not have any data, we start from the oldest data point, and fetch the data before it
         If we have some data, we start from the most recent data point, and fetch the data after it
-        We do it this way, because we cannot know when the contract started
-        Also, when a contract has no more klines, it will not throw an error
+        We do it this way, because we cannot know when the product started
+        Also, when a product has no more klines, it will not throw an error
 
         Warning: the last candle will not be at dateLimit, but a little after it
 
         Link: https://bybit-exchange.github.io/docs/v5/market/kline
         Args:
-            contract (str): The future contract to get the history from
+            product (str): The future product to get the history from
             interval (str): The interval of the data
             dateLimit (str): The last date of fetched data
-            category (str): The category of the contract
+            category (str): The category of the product
         Returns:
             A DataFrame containing the accumulated data
         """
 
-        file_name = f"{contract}_{interval}.parquet"
+        file_name = f"{product}_{interval}"
+        if category == "spot":
+            file_name += "_spot.parquet"
+        else:
+            file_name += ".parquet"
         dateLimit = get_epoch(dateLimit)
 
         # Initialize an empty DataFrame for accumulated data
@@ -158,7 +162,7 @@ class bybitFetcher:
             timestamp = None
 
         params = {
-            "symbol": contract,
+            "symbol": product,
             "category": category,
             "interval": interval,
             "limit": 1000,
