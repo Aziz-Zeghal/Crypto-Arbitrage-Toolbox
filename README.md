@@ -14,12 +14,18 @@ Still modifying architecture
     - [Jupiter Notebook](#Jupiter-Notebook)
     - [Kestra](#Kestra)
 - [Research](#Research)
-  - [Future - Future Arbitrage](#Future---Future-Arbitrage)
+  - [Spot x Future](#Spot-x-Future)
+    - [Concept](#Concept)
+    - [Variations](#Variations)
+    - [Advantages](Advantages)
+    - [Disadvantages](Disadvantages)
+    - [Does it make money ?](#Does-it-make-money-?)
+  - [Perpetual x Future](#Perpetual-x-Future)
     - [Concept](#Concept)
     - [Advantages](Advantages)
     - [Disadvantages](Disadvantages)
     - [Does it make money ?](#Does-it-make-money-?)
-  - [Funding Rate Arbitrage (Not working on it right now)](#Funding-Rate-Arbitrage)
+  - [Funding Rate - Spot x Perpetual](#Funding-Rate---Spot-x-Perpetual)
     - [Concept](#Concept-1)
     - [How to use](#How-to-use)
     - [Does it make money ?](#Does-it-make-money-?)
@@ -97,7 +103,7 @@ Looked into Put/Call parity, Triangular arbitrage, and Spot/Perpetual arbitrage 
 
 Made my Deribit Client with websockets, the code is nice
 
-## Future - Future Arbitrage
+## Spot x Future
 Future contracts are agreements between two parties to buy or sell an asset at a future date for a price agreed upon today. The price of the asset is determined by the market, and the contract is settled at the end of the contract period.
 
 Future contracts are used by traders to hedge against price fluctuations in the underlying asset or to speculate on the future price of the asset.
@@ -105,10 +111,37 @@ Future contracts are used by traders to hedge against price fluctuations in the 
 But crypto futures are special, every platform has its own way to define a future contract.
 
 ### Concept
-- Retrieve 2 future contracts on 2 the same platforms
-- Short the future with the highest price, long the future with the lowest price
-- Wait for delivery of the long future
-- Either roll over with another future or take profit
+- Find a future contract
+- Short the future, buy the spot token
+- Wait for delivery of future
+- Either roll over with another future or sell spot token
+
+### Variations
+Can be either:
+- USDC-margined: Classic way
+- Coin-margined: Even better, because the collateral of the future is the asset itself. Very easy to track PNL
+
+### Advantages
+- **Low fees**: Bybit USDC spot sometimes has 0% fees
+- **Disadvantages can be paried**: With sharp movement, can join another arbitrage, because the spread will be huge
+- **Very stable**: Hard to come out with a loss, even though there is risk
+
+### Disadvantages
+- **Non-delta**: Future contract is not as granular as spot (minimum unit is 0.01 contract)
+- **No leverage**: Spot can be borrowed, but annoying
+
+### Does it make money ?
+YES. ROI is not reliable, but the strategy is.
+
+The only thing that can break it is a huge divergence in both contracts but it is rare, and comes back to normal after a while.
+
+## Perpetual x Future
+
+### Concept
+- Find a future contract and perpetual contract
+- Depending on the funding rate and the holding period, either long perpetual and short future, or the opposite (mostly the first case)
+- Wait for delivery of future
+- Either roll over with another future or sell the perpetual contract
 
 ### Advantages
 - **High leverage**: 20x easy, cause the margin cannot go really low
@@ -119,17 +152,17 @@ But crypto futures are special, every platform has its own way to define a futur
 ### Disadvantages
 - **Unpredictable returns**: Cannot calculate how much I earn
 - **Sensible to movement**: Huge spikes in long can break a resistance to ROI
-- **Non-delta**: Short position is more important than long
+- **Non-delta**: Again, future contracts are not as granular (minimum unit is 0.01 contract)
 
-Example: 67k 30Mar2025 and 63k 30Oct2024
-1 short contract for 30Mar2025 is going to be more expensive, and convergence will not be full at the end of the long contract of 30Oct2024.
+Example: 67k 30Mar2025 and 63k perpetual
+1 short contract for 30Mar2025 is going to be more expensive.
 
 ### Does it make money ?
-YES. ROI is not reliable, but the strategy is.
+Still did not try it. But in theory if gap is higher than fees and funding rate is close to 0, can be controlled.
 
-The only thing that can break it is a huge divergence in both contracts but it is rare, and comes back to normal after a while.
+Best case is a funding rate either negative or close to zero. Because the strategy will capture the gap + the funding rate.
 
-## Funding Rate Arbitrage
+## Funding Rate - Spot x Perpetual
 
 ### Concept
 
