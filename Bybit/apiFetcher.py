@@ -117,81 +117,6 @@ class bybitFetcher:
         sorted_markets = sorted(markets, key=extract_date)
         return sorted_markets
 
-    # WARNING: Deprecated, use get_history_pd instead
-    def get_history(self, contract, interval="m", dateLimit="01/01/2021"):
-        """
-        Get the history of a future contract until dateLimit
-        If we do not have any data, we start from the oldest data point, and fetch the data before it
-        If we have some data, we start from the most recent data point, and fetch the data after it
-        We do it this way, because we cannot know when the contract started
-        Also, when a contract has no more klines, it will not throw an error
-
-        Link: https://bybit-exchange.github.io/docs/v5/market/kline
-        Args:
-            contract (str): The future contract to get the history from
-            interval (str): The interval of the data
-            dateLimit (str): The last date of fetched data
-        Returns:
-            Nothing, but saves the data to a file
-        """
-
-        file_name = f"{contract}_{interval}.json"
-        acc_data = []
-        # Convert date to epoch in milliseconds
-        dateLimit = get_epoch(dateLimit)
-
-        try:
-            acc_data = load_data(file_name)
-            print(f"Loaded {len(acc_data)} existing data points.")
-            # Fetch newer data
-            timestamp_key = "start"
-            # Get the most recent timestamp
-            timestamp = acc_data[0][0]
-        except FileNotFoundError:
-            print("No previous data found, starting fresh.")
-            # Fetch older data
-            timestamp_key = "end"
-            # No timestamp available, start fresh
-            timestamp = None
-
-        params = {
-            "symbol": contract,
-            "category": "linear",
-            "interval": interval,
-            "limit": 1000,
-        }
-
-        # Fetch and append data
-        while True:
-            params["interval"] = interval
-
-            if timestamp:
-                params[timestamp_key] = timestamp
-
-            response = self.session.get_kline(**params)["result"]["list"]
-            print(f"Fetched {len(response)} new data points.")
-
-            # Depending on direction, either append or prepend the data
-            if timestamp_key == "start":
-                # Fetching forward, add new data at the start
-                acc_data = response + acc_data[1:]
-            else:
-                # Fetching backward, add new data at the end
-                acc_data = acc_data[:-1] + response
-
-            numberCandles = len(response)
-            # Update the timestamp for the next iteration
-            if numberCandles > 0:
-                timestamp = acc_data[0][0] if timestamp_key == "start" else acc_data[-1][0]
-
-            # Break if fewer than 1000 data points were returned or we reached the last date
-            if numberCandles < 1000 or acc_data != [] and int(acc_data[-1][0]) < dateLimit:
-                break
-
-        # Save the data in Dataframes
-        save_data(file_name, acc_data)
-        return acc_data
-
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
     def get_history_pd(self, contract, interval="m", dateLimit="01/01/2021", category="linear"):
         """
@@ -265,5 +190,6 @@ class bybitFetcher:
             if numberCandles < 1000 or int(acc_data.iloc[-1]["startTime"]) < dateLimit:
                 break
 
-        save_klines_parquet(file_name, acc_data)
+        if not acc_data.empty:
+            save_klines_parquet(file_name, acc_data)
         return acc_data

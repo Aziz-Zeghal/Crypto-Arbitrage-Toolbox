@@ -20,65 +20,16 @@ class BybitClient:
         # Just to reference the methods for the analyser
         self.analyser = bybitAnalyser
 
-    def all_gaps(self, pretty=True):
+    def all_gaps_pd(self, pretty=True, inverse=False, perpetual=False, spot=False):
         """
         Get all the gaps for all the future contracts
 
-        Args:
-            pretty (bool): If True, will format the elements in a more readable way
-        Returns:
-            pd.DataFrame: DataFrame containing all the gaps
-        """
-
-        btcFutureContracts = self.fetcher.get_futures("BTC")
-        btcTickers = []
-        # First, get the tickers of every future contract
-        for future in btcFutureContracts:
-            btcTickers.append(self.fetcher.session.get_tickers(symbol=future, category="linear")["result"]["list"][0])
-
-        # Now, we can calculate the gaps
-        rows = []
-        for longTicker in btcTickers:
-            # Take all futures after it
-            for shortTicker in btcTickers[btcTickers.index(longTicker) + 1 :]:
-                gap = bybitAnalyser.get_gap(longTicker, shortTicker)
-                vol = int(gap["cumVolume"])
-                if pretty:
-                    rows.append(
-                        {
-                            "Buy": longTicker["symbol"],
-                            "Sell": shortTicker["symbol"],
-                            "Gap": f"$ {gap['gap']:.2f}",
-                            "Coeff": f"{gap['coeff']:.2f} %",
-                            "APR": f"{gap['apr']:.2f} %",
-                            "DaysLeft": int(gap["daysLeft"]),
-                            "CumVolume": format_volume(vol),
-                        }
-                    )
-                else:
-                    rows.append(
-                        {
-                            "Buy": longTicker["symbol"],
-                            "Sell": shortTicker["symbol"],
-                            "Gap": gap["gap"],
-                            "Coeff": gap["coeff"],
-                            "APR": gap["apr"],
-                            "DaysLeft": gap["daysLeft"],
-                            "CumVolume": gap["cumVolume"],
-                        }
-                    )
-
-        gaps = pd.DataFrame(rows)
-        return gaps
-
-    def all_gaps_pd(self, pretty=True, inverse=False, perpetual=False):
-        """
-        Get all the gaps for all the future contracts
-
+        Careful: All flags should not be activated at the same time
         Args:
             pretty (bool): will format the elements in a more readable way
             inverse (bool): will get the inverse contracts
             perpetual (bool): will get the perpetual contracts
+            spot (bool): will get the spot contracts
         Returns:
             pd.DataFrame: DataFrame containing all the gaps
         """
@@ -92,6 +43,14 @@ class BybitClient:
                 for future in btcFutureContracts
             ]
         )
+
+        # Then the spot contracts (Take only USDT)
+        if spot:
+            response = self.fetcher.session.get_tickers(symbol="BTCUSDT", category="spot")["result"]["list"][0]
+            # Put deliveryTime to 0
+            response["deliveryTime"] = 0
+            response["symbol"] = "BTCUSDT (Spot)"
+            btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
 
         # Create an empty dataframe to store the result
         df_gaps = pd.DataFrame(columns=["Buy", "Sell", "Gap", "Coeff", "APR", "DaysLeft", "CumVolume"])
