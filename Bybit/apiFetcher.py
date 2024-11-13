@@ -118,6 +118,7 @@ class bybitFetcher:
         return sorted_markets
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
+    # TODO: Add a verbose parameter
     def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear", dest=None):
         """
         Get the history of a future product until dateLimit
