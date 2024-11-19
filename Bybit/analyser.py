@@ -4,7 +4,7 @@ import pandas as pd
 
 class bybitAnalyser:
 
-    # TODO: Maybe place fees heres
+    # TODO: Maybe place fees here, make new columns in the DataFrame
     @staticmethod
     def get_gap(longTickers, shortTickers):
         """
