@@ -8,6 +8,7 @@ Still modifying architecture
 
 - [Process](#Process)
 - [Strategies](#Strategies)
+- [Architecture](#Architecture)
 - [Environnement and tools](#Environnement-and-tools)
     - [Conda](#Conda)
     - [VSCode](#VSCode)
@@ -40,6 +41,19 @@ Any strategy implemented has to respect these steps:
 - Make calls
 - Profit
 
+### Architecture
+For now, the architecture looks like this:
+
+![image](https://github.com/user-attachments/assets/d43148f0-880a-42e8-b005-beb766a03745)
+
+**Utils**: Management of Parquet files. Currently, it only handles Klines for everything (spot, inverse, linear).
+**Analyser**: Calculates fees, the amount of USDC required to balance quantities between two contracts, etc.
+**ApiFetcher**: Handles all communication with a socket or the API. Also tracks the Klines of previous contracts in a dictionary.
+**Simulation**: In the long term, it could simulate an entry + exit. For this, it relies on the Analyser for calculations.
+**Visualizer**: A laboratory for viewing data in different ways. It can display real data or simulated data (from Simulation).
+**Client**: Executes the entry + exit arbitrage logic. This will run as a systemd process (a daemon in the background).
+**GreekMaster**: Monitors the account and calls ephemeral client processes to orchestrate arbitrage entry. If the delta is unfavorable (meaning the arbitrage is no longer profitable), it sends a notification.
+
 ### Strategies
 - Funding rate arbitrage Spot & Perpetual
 - Funding rate arbitrage Perpetual & Perpetual
@@ -47,7 +61,6 @@ Any strategy implemented has to respect these steps:
 - Future - Future arbitrage
 - Future - Spot arbitrage
 - Cash and Carry Arbitrage or Basis Trading
-
 
 ---
 ### Environnement and tools
