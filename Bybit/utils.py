@@ -151,7 +151,6 @@ def plot_candles(file: str, dateLimit=None) -> dict:
     return fig, df
 
 
-# TODO: The difference plot is not in the caption I don't know why
 def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     # Get DataFrames for Long and Short datasets
     _, dfLong = plot_candles(longfile, dateLimit=dateLimit)

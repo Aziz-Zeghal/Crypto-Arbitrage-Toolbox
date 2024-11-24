@@ -1,8 +1,9 @@
-from pybit.unified_trading import HTTP
+from pybit.unified_trading import HTTP, WebSocket
 from datetime import datetime
 import sys
 import os
 import pandas as pd
+import asyncio
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
@@ -11,13 +12,20 @@ import keys
 
 
 class bybitFetcher:
-    __slots__ = ["session"]
+    __slots__ = ["session", "ws"]
 
-    def __init__(self):
+    def __init__(self, demo=False):
         """
         Initialize the Bybit session
         """
-        self.session = HTTP(api_key=keys.bybitPKey, api_secret=keys.bybitSKey)
+        if demo:
+            self.session = HTTP(api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, demo=True)
+        else:
+            self.session = HTTP(api_key=keys.bybitPKey, api_secret=keys.bybitSKey)
+
+        self.ws = WebSocket(
+            api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="linear"
+        )
 
     def get_USDC_BTC(self):
         """
@@ -202,3 +210,89 @@ class bybitFetcher:
         if not acc_data.empty:
             save_klines_parquet(file_name, acc_data)
         return acc_data
+
+    async def set_leverage(self, symbol: str, leverage: str):
+        """
+        Set the leverage for a given symbol
+
+        Link: https://bybit-exchange.github.io/docs/inverse/#t-changeleverage
+        Args:
+            symbol (str): The symbol to change the leverage for
+            leverage (str): The leverage to set
+        Returns:
+            dict: The response from the API
+        """
+        categories = ["linear", "inverse"]
+        for category in categories:
+            try:
+                return self.session.set_leverage(
+                    symbol=symbol, category=category, buyLeverage=leverage, sellLeverage=leverage
+                )
+            except Exception as e:
+                print(f"Failed to set leverage for {symbol} in category '{category}': {e}")
+        return None
+
+    async def enter_both_position(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
+        """
+        Enter a position in both contracts.
+
+        CAREFUL: It will not be arbitrage. The quantities have to be calculated beforehand.
+
+        Args:
+            longSymbol (str): The symbol to long
+            shortSymbol (str): The symbol to short
+            longQuantity (int): The quantity to long
+            shortQuantity (int): The quantity to short
+        Returns:
+            dict: The response from the API
+        """
+
+        # We will use asyncio to make calls at the same time.
+
+        async def enter_position(symbol, quantity):
+            return self.session.place_order(
+                symbol=symbol,
+                category="linear",
+                side="Buy" if symbol == longSymbol else "Sell",
+                qty=quantity,
+                orderType="Market",
+            )
+
+        # Make both API calls concurrently
+        long_task = enter_position(longSymbol, longQuantity, "Buy")
+        short_task = enter_position(shortSymbol, shortQuantity, "Sell")
+
+        # Gather the results
+        responses = await asyncio.gather(long_task, short_task)
+        return responses
+
+    async def exit_both_position(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
+        """
+        Exit a position in both contracts.
+
+        Args:
+            longSymbol (str): The symbol to long
+            shortSymbol (str): The symbol to short
+        Returns:
+            dict: The response from the API
+        """
+
+        # We will use asyncio to make calls at the same time.
+
+        async def close_position(symbol, quantity):
+            return self.session.place_order(
+                symbol=symbol,
+                category="linear",
+                side="Sell" if symbol == longSymbol else "Buy",
+                qty=quantity,
+                orderType="Market",
+                reduceOnly=True,
+            )
+
+        # Make both API calls concurrently
+        long_task = close_position(longSymbol, longQuantity)
+        short_task = close_position(shortSymbol, shortQuantity)
+
+        # Gather the results
+        responses = await asyncio.gather(long_task, short_task)
+        return responses

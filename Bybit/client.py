@@ -11,11 +11,11 @@ from analyser import bybitAnalyser
 class BybitClient:
     __slots__ = ["fetcher", "analyser"]
 
-    def __init__(self):
+    def __init__(self, demo=False):
         """
         Initialize the Bybit fetcher
         """
-        self.fetcher = bybitFetcher()
+        self.fetcher = bybitFetcher(demo=demo)
 
         # Just to reference the methods for the analyser
         self.analyser = bybitAnalyser
@@ -106,3 +106,24 @@ class BybitClient:
         # Get the tickers
         ticker = self.fetcher.session.get_tickers(symbol=contract, category="linear")["result"]["list"][0]
         return bybitAnalyser.position_calculator(ticker, side, quantityUSDC, leverage)
+
+    async def perp_future_arbitrage(self, longContract, shortContract, quantityUSDC):
+        """
+        Given two contracts, calculate the quantity of contracts to buy/sell and enter.
+        Finally, enter an arbitrage position. The leverage is already set.
+
+        We suppose that the conditions are met for the arbitrage.
+
+
+        This function is dedicated to contracts, but it could also be spot
+
+        Args:
+            longContract (str): The long contract
+            shortContract (str): The short contract
+            quantityUSDC (float): The quantity in USDC
+            leverage (int): The leverage to use
+        Returns:
+            dict: The response from the API
+        """
+
+        return True
