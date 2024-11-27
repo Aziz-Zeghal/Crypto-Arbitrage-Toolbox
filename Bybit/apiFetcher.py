@@ -17,6 +17,9 @@ class bybitFetcher:
     def __init__(self, demo=False):
         """
         Initialize the Bybit session
+
+        session (HTTP): The HTTP session
+        ws (WebSocket): The WebSocket session
         """
         if demo:
             self.session = HTTP(api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, demo=True)
@@ -229,7 +232,9 @@ class bybitFetcher:
                     symbol=symbol, category=category, buyLeverage=leverage, sellLeverage=leverage
                 )
             except Exception as e:
-                print(f"Failed to set leverage for {symbol} in category '{category}': {e}")
+                # Either wrong category, or leverage was set
+                pass
+
         return None
 
     async def enter_both_position(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
