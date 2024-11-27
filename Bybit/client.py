@@ -9,16 +9,25 @@ from analyser import bybitAnalyser
 
 
 class BybitClient:
-    __slots__ = ["fetcher", "analyser"]
+    __slots__ = ["fetcher", "analyser", "shared_data", "active"]
 
-    def __init__(self):
+    def __init__(self, demo=False):
         """
         Initialize the Bybit fetcher
+
+        fetcher (bybitFetcher): Fetcher for the Bybit API
+        analyser (bybitAnalyser): Analyser for calculations
+        shared_data (dict): Last message of the WebSocket (updated in real time)
+
         """
-        self.fetcher = bybitFetcher()
+        self.fetcher = bybitFetcher(demo=demo)
 
         # Just to reference the methods for the analyser
         self.analyser = bybitAnalyser
+
+        self.shared_data = {}
+
+        self.active = True
 
     def all_gaps_pd(self, pretty=True, inverse=False, perpetual=False, spot=False):
         """
@@ -106,3 +115,86 @@ class BybitClient:
         # Get the tickers
         ticker = self.fetcher.session.get_tickers(symbol=contract, category="linear")["result"]["list"][0]
         return bybitAnalyser.position_calculator(ticker, side, quantityUSDC, leverage)
+
+    def check_arbitrage(self, quantityUSDC: float, minimumGap=-0.2):
+        """
+        Callback function for both products' channels
+
+        Checks if conditions are met for the arbitrage.
+
+        Args:
+            quantityUSDC (float): The quantity in USDC
+            minimumGap (float): The minimum gap to consider for the arbitrage
+        Returns:
+            None
+        """
+
+        # Check if the data is complete
+        if "long" not in self.shared_data or "short" not in self.shared_data:
+            return
+        longTickers = self.shared_data["long"]["data"]
+        shortTickers = self.shared_data["short"]["data"]
+
+        # | Price of the future contract
+        longPrice = float(longTickers["lastPrice"])
+        shortPrice = float(shortTickers["lastPrice"])
+        # - Calculate the gap
+        coeff = round((shortPrice / longPrice - 1) * 100, 3)
+        print(f"Gap of: {coeff}%")
+        # Check if the gap is enough
+        if coeff <= minimumGap:
+            print(f"Arbitrage opportunity found: {coeff}")
+
+            # Calculate the position
+            longPosition = self.position_calculator(longTickers["symbol"], "Buy", quantityUSDC)
+            shortPosition = self.position_calculator(shortTickers["symbol"], "Sell", quantityUSDC)
+
+            # Print the position
+            print(longPosition)
+            print(shortPosition)
+            self.active = False
+
+    # TODO: In the long run, this will be the strategy selector too
+    async def Eris(self, longContract: str, shortContract: str, quantityUSDC: float, leverage=1):
+        """
+        The main executor, Eris
+
+        Actions:
+            - Initialize the Bybit client
+            - Listen to the tickers with the websocket
+            - Associate to callback functions
+
+        Callback functions for both channels will check for the conditions of the arbitrage.
+
+        Args:
+            longContract (str): The long contract's name
+            shortContract (str): The short contract's name
+            quantityUSDC (float): The quantity in USDC
+        Returns:
+            dict: The response from the API
+        """
+
+        # Set the leverage
+        await self.fetcher.set_leverage(longContract, leverage)
+        await self.fetcher.set_leverage(shortContract, leverage)
+
+        # Define handlers
+        def short_handler(message):
+            # Update the shared data
+            self.shared_data["short"] = message
+
+        # We position the arbitrage here, because more messages
+        def long_handler(message):
+            # Update the shared data
+            self.shared_data["long"] = message
+            # Check for the arbitrage
+            self.check_arbitrage(quantityUSDC)
+
+        # Listen to channels
+        self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
+        self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
+
+        # Now, hold the program
+        while self.active:
+            pass
+        sys.exit(0)
