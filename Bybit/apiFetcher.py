@@ -264,8 +264,8 @@ class bybitFetcher:
             )
 
         # Make both API calls concurrently
-        long_task = enter_position(longSymbol, longQuantity, "Buy")
-        short_task = enter_position(shortSymbol, shortQuantity, "Sell")
+        long_task = enter_position(longSymbol, longQuantity)
+        short_task = enter_position(shortSymbol, shortQuantity)
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)

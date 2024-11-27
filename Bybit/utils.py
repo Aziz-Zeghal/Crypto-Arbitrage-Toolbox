@@ -152,6 +152,18 @@ def plot_candles(file: str, dateLimit=None) -> dict:
 
 
 def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
+    """
+    Compares two datasets in a candlestick chart.
+    The two datasets are merged on the 'startTime' column to align them.
+
+    Args:
+        longfile (str): File containing the long dataset
+        shortfile (str): File containing the short dataset
+        dateLimit (str): The date to filter the data (format: YYYY-MM-DD HH:MM)
+
+    Returns:
+        go.Figure: The plotly figure
+    """
     # Get DataFrames for Long and Short datasets
     _, dfLong = plot_candles(longfile, dateLimit=dateLimit)
     _, dfShort = plot_candles(shortfile, dateLimit=dateLimit)
@@ -217,19 +229,23 @@ def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     )
     fig.add_trace(trendline, row=2, col=1)
 
-    # Final layout updates
-    fig.update_layout(
-        title="Candlestick Chart",
-        xaxis_title="Time",
-        yaxis_title="Price",
-        xaxis_rangeslider_visible=False,
-        xaxis_tickangle=-45,
-        newshape=dict(
-            label=dict(
-                texttemplate="Change: %{dy:.2f}",
-            )
-        ),
-    )
+    try:
+        # Final layout updates
+        fig.update_layout(
+            title="Candlestick Chart",
+            xaxis_title="Time",
+            yaxis_title="Price",
+            xaxis_rangeslider_visible=False,
+            xaxis_tickangle=-45,
+            newshape=dict(
+                label=dict(
+                    texttemplate="Change: %{dy:.2f}",
+                )
+            ),
+        )
+    except Exception as e:
+        print("Are you sure the dateLimit is correct?")
+        print(e)
 
     fig.update_layout(modebar_add=["drawline"])
     return fig

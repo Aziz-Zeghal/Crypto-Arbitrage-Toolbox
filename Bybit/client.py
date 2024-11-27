@@ -27,8 +27,6 @@ class BybitClient:
 
         self.shared_data = {}
 
-        self.active = True
-
     def all_gaps_pd(self, pretty=True, inverse=False, perpetual=False, spot=False):
         """
         Get all the gaps for all the future contracts
@@ -116,7 +114,7 @@ class BybitClient:
         ticker = self.fetcher.session.get_tickers(symbol=contract, category="linear")["result"]["list"][0]
         return bybitAnalyser.position_calculator(ticker, side, quantityUSDC, leverage)
 
-    def check_arbitrage(self, quantityUSDC: float, minimumGap=-0.2):
+    def check_arbitrage(self, minimumGap):
         """
         Callback function for both products' channels
 
@@ -139,23 +137,16 @@ class BybitClient:
         longPrice = float(longTickers["lastPrice"])
         shortPrice = float(shortTickers["lastPrice"])
         # - Calculate the gap
-        coeff = round((shortPrice / longPrice - 1) * 100, 3)
+        coeff = (shortPrice / longPrice - 1) * 100
         print(f"Gap of: {coeff}%")
         # Check if the gap is enough
-        if coeff <= minimumGap:
+        if coeff >= minimumGap:
             print(f"Arbitrage opportunity found: {coeff}")
 
-            # Calculate the position
-            longPosition = self.position_calculator(longTickers["symbol"], "Buy", quantityUSDC)
-            shortPosition = self.position_calculator(shortTickers["symbol"], "Sell", quantityUSDC)
-
-            # Print the position
-            print(longPosition)
-            print(shortPosition)
-            self.active = False
+            self.client.ws.exit()
 
     # TODO: In the long run, this will be the strategy selector too
-    async def Eris(self, longContract: str, shortContract: str, quantityUSDC: float, leverage=1):
+    async def Eris(self, longContract: str, shortContract: str, quantityUSDC: float, leverage=1, minimumGap=0.15):
         """
         The main executor, Eris
 
@@ -180,21 +171,42 @@ class BybitClient:
 
         # Define handlers
         def short_handler(message):
-            # Update the shared data
-            self.shared_data["short"] = message
+            if not self.fetcher.ws.exited:
+                self.shared_data["short"] = message
 
         # We position the arbitrage here, because more messages
         def long_handler(message):
-            # Update the shared data
-            self.shared_data["long"] = message
-            # Check for the arbitrage
-            self.check_arbitrage(quantityUSDC)
+            if not self.fetcher.ws.exited:
+                self.shared_data["long"] = message
+                self.check_arbitrage(minimumGap=minimumGap)
 
         # Listen to channels
         self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
         self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
 
         # Now, hold the program
-        while self.active:
+        while not self.fetcher.ws.exited:
             pass
+
+        # Either arbitrage found or something bad happened
+        # TODO: Need to be sure of arbitrage (boolean or better solution)
+
+        longTickers = self.shared_data["long"]["data"]
+        shortTickers = self.shared_data["short"]["data"]
+        # Calculate the position
+        longPosition = self.position_calculator(longTickers["symbol"], "Buy", quantityUSDC)
+        shortPosition = self.position_calculator(shortTickers["symbol"], "Sell", quantityUSDC)
+        # Open the positions
+        await self.fetcher.enter_both_position(
+            longContract, shortContract, longPosition["quantityContracts"], shortPosition["quantityContracts"]
+        )
+
+        print("For " + longContract + ":")
+        print(longPosition)
+        print("For " + shortContract + ":")
+        print(shortPosition)
+
+        print("Last messages:")
+        print(self.shared_data)
+
         sys.exit(0)

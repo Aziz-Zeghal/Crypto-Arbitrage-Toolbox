@@ -63,6 +63,7 @@ class bybitAnalyser:
             "cumVolume": cumVolume,
         }
 
+    # TODO: Verbose parameter
     @staticmethod
     def position_calculator(ticker, side, quantityUSDC, leverage=1):
         """
@@ -106,8 +107,8 @@ class bybitAnalyser:
         orderCost = initialMargin + feeToOpen + feeToClose
 
         # TODO: Not sure about this, Buy/Sell do not have the same formula
-        print(f"Used value: {quantityContracts * orderPrice} USDC")
-        print(f"Order Cost: {orderCost} for {quantityContracts} contracts")
+        # print(f"Used value: {quantityContracts * orderPrice} USDC")
+        # print(f"Order Cost: {orderCost} for {quantityContracts} contracts")
         return {
             "value": quantityContracts * orderPrice,
             "orderCost": orderCost,
