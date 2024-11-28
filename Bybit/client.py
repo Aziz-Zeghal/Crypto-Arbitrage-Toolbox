@@ -140,13 +140,13 @@ class BybitClient:
         coeff = (shortPrice / longPrice - 1) * 100
         print(f"Gap of: {coeff}%")
         # Check if the gap is enough
-        if coeff >= minimumGap:
+        if coeff <= minimumGap:
             print(f"Arbitrage opportunity found: {coeff}")
 
             self.client.ws.exit()
 
     # TODO: In the long run, this will be the strategy selector too
-    async def Eris(self, longContract: str, shortContract: str, quantityUSDC: float, leverage=1, minimumGap=0.15):
+    async def Eris(self, longContract: str, shortContract: str, quantityUSDC: float, leverage=1, minimumGap=0.12):
         """
         The main executor, Eris
 

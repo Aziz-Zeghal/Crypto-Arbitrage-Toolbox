@@ -15,7 +15,7 @@ async def main():
     then = datetime.now()
     print(f"Time taken to create the client: {then - now}")
     # BTCUSDT	BTC-29NOV24
-    await client.Eris("BTCUSDT", "BTC-29NOV24", quantityUSDC=400)
+    await client.Eris("BTCUSDT", "BTC-29NOV24", quantityUSDC=400, minimumGap=-0.23)
 
 
 if __name__ == "__main__":
