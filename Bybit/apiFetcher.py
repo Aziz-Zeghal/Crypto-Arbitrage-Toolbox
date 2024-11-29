@@ -179,6 +179,7 @@ class bybitFetcher:
             columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
         )
 
+        self.logger.info(f"*Fetching data for {product}.")
         try:
             acc_data = load_klines_parquet(file_name)
             self.logger.info(f"Loaded {len(acc_data)} existing data points.")
