@@ -11,7 +11,7 @@ import Bybit.utils
 async def main():
     # Create a Bybit client
     now = datetime.now()
-    client = BybitClient(demo=True)
+    client = BybitClient(demo=True, verbose=1)
     then = datetime.now()
     print(f"Time taken to create the client: {then - now}")
     # BTCUSDT	BTC-29NOV24

@@ -4,9 +4,9 @@ import pandas as pd
 
 class bybitAnalyser:
 
-    # TODO: Maybe place fees here, make new columns in the DataFrame
+    # TODO: Still not perfect (take history)
     @staticmethod
-    def get_gap(longTickers, shortTickers):
+    def get_gap(longTickers, shortTickers, applyFees=False):
         """
         Get the gap between two future contracts with their tickers
         CAREFUL: We suppose the longTickers is closer to delivery than shortTickers
@@ -15,6 +15,7 @@ class bybitAnalyser:
         Args:
             longTickers (dict): Tickers of the first future contract
             shortTickers (dict): Tickers of the second future contract
+            applyFees (bool): If True, will apply the fees (4 takers, 0.22%)
         Return:
             dict:
                 gap: The gap between the two contracts
@@ -37,6 +38,12 @@ class bybitAnalyser:
         # - Calculate the coefficient
         coeff = round((shortPrice / longPrice - 1) * 100, 3)
 
+        if applyFees:
+            if coeff < 0:
+                coeff = min(coeff + 0.22, 0)
+            else:
+                coeff = max(coeff - 0.22, 0)
+
         # | Time to delivery for the contracts, epoch in milliseconds (convert to seconds)
         longDelivery = int(longTickers["deliveryTime"]) / 1000
         shortDelivery = int(shortTickers["deliveryTime"]) / 1000
@@ -44,6 +51,7 @@ class bybitAnalyser:
         todayDate = datetime.now().timestamp()
         # - Time to delivery
         # Sometimes, its a perpetual contract, so we need to check if the delivery time is 0
+
         # TODO: Two perpetuals give a negative daysLeft, but it's fine
         if longDelivery != 0:
             maximumTime = longDelivery
@@ -52,7 +60,7 @@ class bybitAnalyser:
         daysLeft = (maximumTime - todayDate) / 86400 + 1
 
         if daysLeft != 0:
-            apr = coeff * 365 / daysLeft / 2
+            apr = coeff * 365 / daysLeft
         else:
             apr = 0
         return {
@@ -63,7 +71,6 @@ class bybitAnalyser:
             "cumVolume": cumVolume,
         }
 
-    # TODO: Verbose parameter
     @staticmethod
     def position_calculator(ticker, side, quantityUSDC, leverage=1):
         """
@@ -107,8 +114,6 @@ class bybitAnalyser:
         orderCost = initialMargin + feeToOpen + feeToClose
 
         # TODO: Not sure about this, Buy/Sell do not have the same formula
-        # print(f"Used value: {quantityContracts * orderPrice} USDC")
-        # print(f"Order Cost: {orderCost} for {quantityContracts} contracts")
         return {
             "value": quantityContracts * orderPrice,
             "orderCost": orderCost,

@@ -1,6 +1,6 @@
 import pandas as pd
 import sys
-import os
+import logging
 
 # Custom imports
 from utils import format_volume
@@ -9,9 +9,9 @@ from analyser import bybitAnalyser
 
 
 class BybitClient:
-    __slots__ = ["fetcher", "analyser", "shared_data", "active"]
+    __slots__ = ["fetcher", "analyser", "shared_data", "logger"]
 
-    def __init__(self, demo=False):
+    def __init__(self, demo=False, verbose=0):
         """
         Initialize the Bybit fetcher
 
@@ -27,13 +27,34 @@ class BybitClient:
 
         self.shared_data = {}
 
-    def all_gaps_pd(self, pretty=True, inverse=False, perpetual=False, spot=False):
+        # Set up logger here (not using basicConfig inside init)
+        self.logger = logging.getLogger(__name__)
+
+        if verbose:
+            # Create a StreamHandler to output logs to console
+            console_handler = logging.StreamHandler(sys.stdout)
+            formatter = logging.Formatter(
+                "\033[36m%(asctime)s\033[0m - %(name)s - \033[33m%(levelname)s\033[0m - %(message)s"
+            )
+            console_handler.setFormatter(formatter)
+            self.logger.addHandler(console_handler)
+
+            # Add the handler to the logger and set the level
+            if verbose == 1:
+                self.logger.setLevel(logging.INFO)
+            else:
+                self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.WARNING)  # Default to WARNING if not verbose
+
+    def all_gaps_pd(self, pretty=True, applyFees=False, inverse=False, perpetual=False, spot=False):
         """
         Get all the gaps for all the future contracts
 
         Careful: All flags should not be activated at the same time
         Args:
             pretty (bool): will format the elements in a more readable way
+            applyFees (bool): will apply the fees (4 takers, 0.22%)
             inverse (bool): will get the inverse contracts
             perpetual (bool): will get the perpetual contracts
             spot (bool): will get the spot contracts
@@ -77,7 +98,7 @@ class BybitClient:
         for i, longTicker in btcTickers.iterrows():
             # Take all futures after the current one
             for j, shortTicker in btcTickers.iloc[i + 1 :].iterrows():
-                gap = bybitAnalyser.get_gap(longTicker, shortTicker)
+                gap = bybitAnalyser.get_gap(longTicker, shortTicker, applyFees)
                 vol = int(gap["cumVolume"])
 
                 # Prepare the row data
@@ -138,11 +159,13 @@ class BybitClient:
         shortPrice = float(shortTickers["lastPrice"])
         # - Calculate the gap
         coeff = (shortPrice / longPrice - 1) * 100
-        print(f"Gap of: {coeff}%")
+
+        # Here, we put a check so that it will not process the log and use a buffer.
+        if self.logger.level == logging.INFO:
+            self.logger.info(f"Gap: {coeff:.4f} %")
+
         # Check if the gap is enough
         if coeff <= minimumGap:
-            print(f"Arbitrage opportunity found: {coeff}")
-
             self.client.ws.exit()
 
     # TODO: In the long run, this will be the strategy selector too
@@ -180,10 +203,14 @@ class BybitClient:
                 self.shared_data["long"] = message
                 self.check_arbitrage(minimumGap=minimumGap)
 
+        # Start socket
+
+        self.fetcher.start_ws()
         # Listen to channels
         self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
         self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
 
+        self.logger.info("Listening to the tickers")
         # Now, hold the program
         while not self.fetcher.ws.exited:
             pass
@@ -201,12 +228,12 @@ class BybitClient:
             longContract, shortContract, longPosition["quantityContracts"], shortPosition["quantityContracts"]
         )
 
-        print("For " + longContract + ":")
-        print(longPosition)
-        print("For " + shortContract + ":")
-        print(shortPosition)
+        self.logger.info("For " + longContract + ":")
+        self.logger.info(longPosition)
+        self.logger.info("For " + shortContract + ":")
+        self.logger.info(shortPosition)
 
-        print("Last messages:")
-        print(self.shared_data)
+        self.logger.info("Last messages:")
+        self.logger.info(self.shared_data)
 
         sys.exit(0)

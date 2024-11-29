@@ -1,9 +1,11 @@
-from pybit.unified_trading import HTTP, WebSocket
 from datetime import datetime
 import sys
 import os
 import pandas as pd
 import asyncio
+import logging
+
+from pybit.unified_trading import HTTP, WebSocket
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
@@ -12,7 +14,7 @@ import keys
 
 
 class bybitFetcher:
-    __slots__ = ["session", "ws"]
+    __slots__ = ["session", "ws", "logger"]
 
     def __init__(self, demo=False):
         """
@@ -26,6 +28,16 @@ class bybitFetcher:
         else:
             self.session = HTTP(api_key=keys.bybitPKey, api_secret=keys.bybitSKey)
 
+        self.ws = None
+
+        self.logger = logging.getLogger("Bybit.client.fetcher")
+
+        # Change the logger config to say fetcher talked
+
+    def start_ws(self):
+        """
+        Start the WebSocket session
+        """
         self.ws = WebSocket(
             api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="linear"
         )
@@ -146,6 +158,7 @@ class bybitFetcher:
             interval (str): The interval of the data
             dateLimit (str): The last date of fetched data
             category (str): The category of the product
+            dest (str): The destination folder to save the data
         Returns:
             A DataFrame containing the accumulated data
         """
@@ -166,14 +179,15 @@ class bybitFetcher:
             columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
         )
 
+        self.logger.info(f"*Fetching data for {product}.")
         try:
             acc_data = load_klines_parquet(file_name)
-            print(f"Loaded {len(acc_data)} existing data points.")
+            self.logger.info(f"Loaded {len(acc_data)} existing data points.")
             timestamp_key = "start"
             timestamp = acc_data.iloc[0]["startTime"]
 
         except FileNotFoundError:
-            print("No previous data found, starting fresh.")
+            self.logger.info("No previous data found, starting fresh.")
             timestamp_key = "end"
             timestamp = None
 
@@ -194,7 +208,7 @@ class bybitFetcher:
                 columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"],
             )
 
-            print(f"Fetched {len(new_data)} new data points.")
+            self.logger.info(f"Fetched {len(new_data)} new data points.")
 
             if timestamp_key == "start":
                 acc_data = pd.concat([new_data, acc_data.iloc[1:]], ignore_index=True)
