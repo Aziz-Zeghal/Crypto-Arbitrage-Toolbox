@@ -1,6 +1,7 @@
 import logging
 import sys
 import pandas as pd
+import asyncio
 
 from client import BybitClient
 from analyser import bybitAnalyser
@@ -124,8 +125,43 @@ class GreekMaster:
         df_gaps = df_gaps.astype(column_types)
         return df_gaps
 
+    # TODO: Does not fetch in parallel. Should be done in parallel
+    async def save_klines(self, dest):
+        """
+        Save the klines of all the future contracts in parquet format
+        Checks if a parquet file exists to update it, else creates a new one
+
+        Args:
+            dest (str): The destination folder
+        """
+        allContracts = self.client.fetcher.get_futureNames()
+
+        async def fetch_history(contract, interval, category="linear"):
+            await self.client.fetcher.get_history_pd(
+                contract, interval=interval, dest=dest, dateLimit="2024-01-01 00:00", category=category
+            )
+
+        tasks = []
+
+        for contract in allContracts:
+            tasks.append(fetch_history(contract, "15"))
+            tasks.append(fetch_history(contract, "5"))
+            tasks.append(fetch_history(contract, "1"))
+
+        # spot
+        tasks.append(fetch_history("BTCUSDT", "15", category="spot"))
+        tasks.append(fetch_history("BTCUSDT", "5", category="spot"))
+        tasks.append(fetch_history("BTCUSDT", "1", category="spot"))
+
+        # Perpetual contracts
+        tasks.append(fetch_history("BTCUSDT", "15"))
+        tasks.append(fetch_history("BTCUSDT", "5"))
+        tasks.append(fetch_history("BTCUSDT", "1"))
+
+        await asyncio.gather(*tasks)
+
     # TODO: callables should be a pydantic object to reference the existing strategies
-    async def one_shot_PF(self, strategy: callable, quantityUSDC: float, leverage=1):
+    async def one_shot_PF(self, strategy: callable, quantityUSDC: float, leverage="1"):
         """
         One shot strategy with perpetual and future contracts
 
@@ -136,12 +172,32 @@ class GreekMaster:
             - Wait for gap on other side
             - Cashout
             - Repeat.
+
         Args:
             strategy (callable): The strategy to use
             quantityUSDC (float): The quantity in USDC
             leverage (int): The leverage to use
         """
-        pass
+
+        # Get all gaps
+        gaps = self.all_gaps_pd(inverse=False, perpetual=True, pretty=False, applyFees=True)
+
+        # Retrieve the one with best coeff that has BTCUSDT on buy side
+        bestGap = gaps.loc[gaps["Buy"] == "BTCUSDT"]
+
+        # Keep the positive coeffs
+        bestGap = bestGap.loc[bestGap["Coeff"] > 0]
+        self.logger.info(f"Best gap: {bestGap.head()}")
+
+        # Take the best proportion (short time, good gap)
+        bestGap = bestGap.loc[bestGap["DaysLeft"] < 25]
+        bestGap = bestGap.loc[bestGap["Coeff"].idxmax()]
+
+        self.logger.info(f"Best gap\n{bestGap}")
+
+        self.logger.info(f"Starting {strategy.__name__} with {quantityUSDC} USDC and {leverage}x leverage")
+        # Invoke strategy
+        await strategy(bestGap["Buy"], bestGap["Sell"], quantityUSDC, leverage)
 
     async def stay_alive_SF(self, quantityUSDC: float):
         """
@@ -161,5 +217,24 @@ class GreekMaster:
             - Wait for the delivery day
             - Cashout
             - Repeat.
+
+        Args:
+            quantityUSDC (float): The quantity in USDC
         """
-        pass
+        # Get all gaps
+        gaps = self.all_gaps_pd(inverse=False, pretty=False, applyFees=True, spot=True)
+
+        # Retrieve the one with best coeff that has BTCUSDT on buy side
+        bestGap = gaps.loc[gaps["Buy"] == "BTCUSDT (Spot)"]
+
+        # Keep the positive coeffs
+        self.logger.info(f"Best gap\n{bestGap}")
+
+        # Take the best proportion (short time, good gap)
+        bestGap = bestGap.loc[bestGap["DaysLeft"] < 25]
+        bestGap = bestGap.loc[bestGap["Coeff"].idxmax()]
+
+        self.logger.info(f"Best gap\n{bestGap}")
+
+        # Invoke strategy
+        await self.client.Ulysse(bestGap["Buy"], bestGap["Sell"], quantityUSDC)

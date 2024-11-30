@@ -30,7 +30,7 @@ class bybitFetcher:
 
         self.ws = None
 
-        self.logger = logging.getLogger("Bybit.client.fetcher")
+        self.logger = logging.getLogger("Bybit.greekMaster.fetcher")
 
         # Change the logger config to say fetcher talked
 
@@ -142,7 +142,7 @@ class bybitFetcher:
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
     # TODO: Add a verbose parameter
-    def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear", dest=None):
+    async def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear", dest=None):
         """
         Get the history of a future product until dateLimit
         If we do not have any data, we start from the oldest data point, and fetch the data before it
@@ -178,8 +178,9 @@ class bybitFetcher:
         acc_data = pd.DataFrame(
             columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
         )
-
-        self.logger.info(f"*Fetching data for {product}.")
+        ORANGE = "\033[38;5;214m"
+        RESET = "\033[0m"
+        self.logger.info(f"Fetching data for {ORANGE}{product}{RESET}.")
         try:
             acc_data = load_klines_parquet(file_name)
             self.logger.info(f"Loaded {len(acc_data)} existing data points.")
@@ -247,7 +248,8 @@ class bybitFetcher:
                 )
             except Exception as e:
                 # Either wrong category, or leverage was set
-                pass
+                if not e.args[0].startswith(("Illegal category", "leverage not modified")):
+                    raise e
 
         return None
 

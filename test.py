@@ -14,7 +14,7 @@ async def main():
     then = datetime.now()
     print(f"Time taken to create the client: {then - now}")
     # BTCUSDT	BTC-29NOV24
-    await Master.Eris("BTCUSDT", "BTC-20DEC24", quantityUSDC=400, minimumGap=-0.23)
+    await Master.one_shot_PF(Master.client.Ulysse, 1000, "1")
 
 
 if __name__ == "__main__":

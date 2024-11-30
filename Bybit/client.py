@@ -4,6 +4,7 @@ import logging
 
 # Custom imports
 from apiFetcher import bybitFetcher
+from analyser import bybitAnalyser
 
 
 class BybitClient:
@@ -58,13 +59,16 @@ class BybitClient:
             self.logger.info(f"Gap: {coeff:.4f} %")
 
         # Check if the gap is enough
-        if coeff <= minimumGap:
+        if coeff >= minimumGap:
             self.client.ws.exit()
 
     # TODO: In the long run, this will be the strategy selector too
-    async def Eris(self, longContract: str, shortContract: str, quantityUSDC: float, leverage=1, minimumGap=0.12):
+    # TODO: If connection ends too fast, program takes time to end
+    # Could make threaded websocket call_backs, and when we are done SIGINT them
+    async def Ulysse(self, longContract: str, shortContract: str, quantityUSDC: float, leverage="1", minimumGap=0.12):
         """
-        The main executor, Eris
+        The main executor, Ulysse
+        Main character to spawn the strategy
 
         Actions:
             - Initialize the Bybit client
@@ -98,8 +102,8 @@ class BybitClient:
                 self.check_arbitrage(minimumGap=minimumGap)
 
         # Start socket
-
         self.fetcher.start_ws()
+
         # Listen to channels
         self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
         self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
@@ -107,16 +111,17 @@ class BybitClient:
         self.logger.info("Listening to the tickers")
         # Now, hold the program
         while not self.fetcher.ws.exited:
-            pass
+            await asyncio.sleep(1)
 
         # Either arbitrage found or something bad happened
         # TODO: Need to be sure of arbitrage (boolean or better solution)
 
-        longTickers = self.longContract
-        shortTickers = self.shortContract
+        longTickers = self.longContract["data"]
+        shortTickers = self.shortContract["data"]
+
         # Calculate the position
-        longPosition = self.position_calculator(longTickers["symbol"], "Buy", quantityUSDC)
-        shortPosition = self.position_calculator(shortTickers["symbol"], "Sell", quantityUSDC)
+        longPosition = bybitAnalyser.position_calculator(longTickers, "Buy", quantityUSDC)
+        shortPosition = bybitAnalyser.position_calculator(shortTickers, "Sell", quantityUSDC)
         # Open the positions
         await self.fetcher.enter_both_position(
             longContract, shortContract, longPosition["quantityContracts"], shortPosition["quantityContracts"]

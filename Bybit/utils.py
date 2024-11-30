@@ -95,7 +95,7 @@ def format_volume(volume: int) -> str:
         return str(volume)
 
 
-def plot_candles(file: str, dateLimit=None) -> dict:
+def plot_candles(file: str, lowerlimit="2024-01-01 00:00", upperlimit="2026-01-01 00:00") -> dict:
     """
     Takes a file, transforms it to a pandas DataFrame, and plots it as a candlestick chart.
     The file contains a list of candles in the format:
@@ -104,16 +104,16 @@ def plot_candles(file: str, dateLimit=None) -> dict:
     Special thanks to this ressource: https://github.com/SteWolk/kuegiBot/blob/4bf335fbdebeca89b49c4fd7843d70f79235f3fe/kuegi_bot/utils/helper.py#L132
     Args:
         file (str): The file containing the candles data
-        dateLimit (str): The date to filter the data (format: YYYY-MM-DD HH:MM)
+        lowerlimit (str): The lower bound date to filter the data (format: YYYY-MM-DD HH:MM)
+        upperlimit (str): The upper bound date to filter the data (format: YYYY-MM-DD HH:MM)
     Returns:
         dict: {"figure": fig, "dataframe": df}
     """
     df = load_klines_parquet(file, pretty=True)
 
     # Filter according to the date
-    if dateLimit:
-        # This syntax looks like numpy
-        df = df[df["startTime"] >= dateLimit]
+    # This syntax looks like numpy
+    df = df[(df["startTime"] >= lowerlimit) & (df["startTime"] <= upperlimit)]
 
     # Use plotly
     fig = go.Figure(
@@ -135,23 +135,28 @@ def plot_candles(file: str, dateLimit=None) -> dict:
     y_min = min_price * 0.99  # 1% below the lowest price
     y_max = max_price * 1.01  # 1% above the highest price
 
-    fig.update_layout(
-        title="Candlestick Chart",
-        xaxis_title="Time",
-        yaxis_title="Price",
-        xaxis_rangeslider_visible=False,
-        # To avoid overlapping text on x-axis
-        xaxis_tickangle=-45,
-        # Show a subset of x-axis labels for clarity
-        xaxis_tickvals=df["startTime"][:: len(df) // 5],
-        # Y-axis extension and more granular tick intervals
-        yaxis=dict(range=[y_min, y_max], tickmode="linear", dtick=(y_max - y_min) / 10),
-    )
-
+    try:
+        fig.update_layout(
+            title="Candlestick Chart",
+            xaxis_title="Time",
+            yaxis_title="Price",
+            xaxis_rangeslider_visible=False,
+            # To avoid overlapping text on x-axis
+            xaxis_tickangle=-45,
+            # Show a subset of x-axis labels for clarity
+            xaxis_tickvals=df["startTime"][:: len(df) // 5],
+            # Y-axis extension and more granular tick intervals
+            yaxis=dict(range=[y_min, y_max], tickmode="linear", dtick=(y_max - y_min) / 10),
+        )
+    except Exception as e:
+        print("Are you sure the date limits are correct?")
+        raise e
     return fig, df
 
 
-def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
+def plot_compare(
+    longfile: str, shortfile: str, lowerlimit="2024-01-01 00:00", upperlimit="2026-01-01 00:00"
+) -> go.Figure:
     """
     Compares two datasets in a candlestick chart.
     The two datasets are merged on the 'startTime' column to align them.
@@ -159,14 +164,19 @@ def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     Args:
         longfile (str): File containing the long dataset
         shortfile (str): File containing the short dataset
-        dateLimit (str): The date to filter the data (format: YYYY-MM-DD HH:MM)
+        lowerlimit (str): The lower bound date to filter the data (format: YYYY-MM-DD HH:MM)
+        upperlimit (str): The upper bound date to filter the data (format: YYYY-MM-DD HH:MM)
 
     Returns:
         go.Figure: The plotly figure
     """
     # Get DataFrames for Long and Short datasets
-    _, dfLong = plot_candles(longfile, dateLimit=dateLimit)
-    _, dfShort = plot_candles(shortfile, dateLimit=dateLimit)
+    try:
+        _, dfLong = plot_candles(longfile, lowerlimit=lowerlimit, upperlimit=upperlimit)
+        _, dfShort = plot_candles(shortfile, lowerlimit=lowerlimit, upperlimit=upperlimit)
+    except Exception as e:
+        print("One limit is incorrect.")
+        raise e
 
     # Merge both DataFrames on 'startTime' to align their data
     merged_df = pd.merge(dfLong, dfShort, suffixes=("_long", "_short"), how="inner", on="startTime")
@@ -229,23 +239,19 @@ def plot_compare(longfile: str, shortfile: str, dateLimit=None) -> go.Figure:
     )
     fig.add_trace(trendline, row=2, col=1)
 
-    try:
-        # Final layout updates
-        fig.update_layout(
-            title="Candlestick Chart",
-            xaxis_title="Time",
-            yaxis_title="Price",
-            xaxis_rangeslider_visible=False,
-            xaxis_tickangle=-45,
-            newshape=dict(
-                label=dict(
-                    texttemplate="Change: %{dy:.2f}",
-                )
-            ),
-        )
-    except Exception as e:
-        print("Are you sure the dateLimit is correct?")
-        print(e)
+    # Final layout updates
+    fig.update_layout(
+        title="Candlestick Chart",
+        xaxis_title="Time",
+        yaxis_title="Price",
+        xaxis_rangeslider_visible=False,
+        xaxis_tickangle=-45,
+        newshape=dict(
+            label=dict(
+                texttemplate="Change: %{dy:.2f}",
+            )
+        ),
+    )
 
     fig.update_layout(modebar_add=["drawline"])
     return fig
