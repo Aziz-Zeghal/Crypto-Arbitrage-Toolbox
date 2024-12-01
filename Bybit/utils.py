@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import logging
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import datetime
@@ -280,3 +281,24 @@ def json_to_parquet(file: str) -> None:
         data, columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
     )
     save_klines_parquet(file.replace(".json", ".parquet"), df)
+
+
+class ColorFormatter(logging.Formatter):
+    """
+    Custom formatter to colorize log level names based on their severity.
+    """
+
+    def format(self, record):
+        # Define color mappings for log levels
+        level_colors = {
+            "DEBUG": "\033[37m",  # White
+            "INFO": "\033[32m",  # Green
+            "WARNING": "\033[33m",  # Yellow
+            "ERROR": "\033[31m",  # Red
+            "CRITICAL": "\033[41m",  # Red background
+        }
+        reset = "\033[0m"
+
+        # Apply color to levelname
+        record.levelname = f"{level_colors.get(record.levelname, '')}{record.levelname}{reset}"
+        return super().format(record)

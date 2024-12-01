@@ -18,16 +18,16 @@ class bybitFetcher:
     __slots__ = ["session", "ws", "logger"]
 
     @beartype
-    def __init__(self, demo=False):
+    def __init__(self, demo=False, verbose=0):
         """
         Initialize the Bybit session
 
         Args:
             demo (bool): If True, will use the demo keys
 
-        Makes:
-            session (HTTP): The HTTP session
-            logger (logging.Logger): Logger for the fetcher
+        Defines:
+            - session (HTTP): The HTTP session
+            - logger (logging.Logger): Logger for the fetcher
         """
         if demo:
             self.session = HTTP(api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, demo=True)
@@ -36,7 +36,13 @@ class bybitFetcher:
 
         self.ws = None
 
-        self.logger = logging.getLogger("Bybit.greekMaster.fetcher")
+        self.logger = logging.getLogger("greekMaster.client.fetcher")
+
+        # Set the logger level
+        if verbose == 1:
+            self.logger.setLevel(logging.INFO)
+        elif verbose >= 2:
+            self.logger.setLevel(logging.DEBUG)
 
         # Change the logger config to say fetcher talked
 

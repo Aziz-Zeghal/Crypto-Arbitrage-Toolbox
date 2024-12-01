@@ -14,7 +14,11 @@ async def main():
     then = datetime.now()
     print(f"Time taken to create the client: {then - now}")
     # BTCUSDT	BTC-29NOV24
-    await Master.one_shot_PF(Master.client.Ulysse, 1000, "1")
+    try:
+        await Master.one_shot_PF(strategy=Master.client.check_arbitrage, quantityUSDC=1000, leverage="1")
+    except Exception as e:
+        print("Something happened, exiting")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

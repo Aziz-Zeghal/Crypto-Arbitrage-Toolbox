@@ -16,6 +16,7 @@ class bybitAnalyser:
             longTickers (dict): Tickers of the first future contract
             shortTickers (dict): Tickers of the second future contract
             applyFees (bool): If True, will apply the fees (4 takers, 0.22%)
+
         Return:
             dict:
                 gap: The gap between the two contracts

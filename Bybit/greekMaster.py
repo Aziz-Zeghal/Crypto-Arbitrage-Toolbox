@@ -7,7 +7,7 @@ from typing import Callable
 
 from client import BybitClient
 from analyser import bybitAnalyser
-from utils import format_volume
+from utils import format_volume, ColorFormatter
 
 
 class GreekMaster:
@@ -23,13 +23,18 @@ class GreekMaster:
 
         GreekMaster is supposed to live forever. Context will be stopped here, not in main.
 
-        client (BybitClient): Client for the Bybit API
-        fetcher (bybitFetcher): Fetcher for the Bybit API
-        contracts (list): List of all the current contracts
-        logger (logging.Logger): Logger for the client
+        3 types of methods:
+            - Strategies: Called by the executor
+            - Executors: Setup application, then call the strategy
+            - Callables: Reference to the existing strategies
+        Defines:
+            - client (BybitClient): Client for the Bybit API
+            - fetcher (bybitFetcher): Fetcher for the Bybit API
+            - contracts (list): List of all the current contracts
+            - logger (logging.Logger): Logger for the client
 
         """
-        self.client = BybitClient(demo=demo)
+        self.client = BybitClient(demo=demo, verbose=verbose)
 
         # Just for easy reference
         self.fetcher = self.client.fetcher
@@ -37,24 +42,26 @@ class GreekMaster:
         self.contracts = {}
 
         # Set up logger here (not using basicConfig inside init)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("greekMaster")
 
-        if verbose:
-            # Create a StreamHandler to output logs to console
-            console_handler = logging.StreamHandler(sys.stdout)
-            formatter = logging.Formatter(
-                "\033[36m%(asctime)s\033[0m - %(name)s - \033[33m%(levelname)s\033[0m - %(message)s"
-            )
-            console_handler.setFormatter(formatter)
-            self.logger.addHandler(console_handler)
+        # Default to WARNING level
+        log_level = logging.WARNING
 
-            # Add the handler to the logger and set the level
-            if verbose == 1:
-                self.logger.setLevel(logging.INFO)
-            else:
-                self.logger.setLevel(logging.DEBUG)
-        else:
-            self.logger.setLevel(logging.WARNING)  # Default to WARNING if not verbose
+        # Configure verbosity levels
+        if verbose == 1:
+            log_level = logging.INFO
+        elif verbose >= 2:
+            log_level = logging.DEBUG
+
+        self.logger.setLevel(log_level)
+
+        # Create a StreamHandler for console output
+        console_handler = logging.StreamHandler(sys.stdout)
+        formatter = ColorFormatter("\033[36m%(asctime)s\033[0m - %(name)s - %(levelname)s - %(message)s")
+        console_handler.setFormatter(formatter)
+
+        # Add handler to the logger
+        self.logger.addHandler(console_handler)
 
         self.logger.info("GreekMaster initialized")
 
@@ -165,6 +172,30 @@ class GreekMaster:
 
         await asyncio.gather(*tasks)
 
+    def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25):
+        """
+        Find the best gap for a pair of contracts
+
+        Args:
+            perpetual (bool): will get the perpetual contracts
+            spot (bool): will get the spot contracts
+            maxDays (int): The maximum number of days left before delivery
+        Returns:
+            dict: The best gap
+        """
+        gaps = self.all_gaps_pd(inverse=False, perpetual=perpetual, pretty=False, applyFees=True, spot=spot)
+
+        # Keep the positive coeffs
+        gaps = gaps.loc[gaps["Coeff"] > 0]
+
+        # Take the best proportion (short time, good gap)
+        gaps = gaps.loc[gaps["DaysLeft"] < maxDays]
+        bestGap = gaps.loc[gaps["Coeff"].idxmax()]
+
+        self.logger.info(f"Best gap\n{bestGap}")
+
+        return bestGap
+
     # TODO: callables should be a pydantic object to reference the existing strategies
     @beartype
     async def one_shot_PF(self, strategy: Callable, quantityUSDC: float | int, leverage: str = "1"):
@@ -185,25 +216,24 @@ class GreekMaster:
             leverage (str): The leverage to use, default is "1"
         """
 
-        # Get all gaps
-        gaps = self.all_gaps_pd(inverse=False, perpetual=True, pretty=False, applyFees=True)
-
-        # Retrieve the one with best coeff that has BTCUSDT on buy side
-        bestGap = gaps.loc[gaps["Buy"] == "BTCUSDT"]
-
-        # Keep the positive coeffs
-        bestGap = bestGap.loc[bestGap["Coeff"] > 0]
-        self.logger.info(f"Best gap: {bestGap.head()}")
-
-        # Take the best proportion (short time, good gap)
-        bestGap = bestGap.loc[bestGap["DaysLeft"] < 25]
-        bestGap = bestGap.loc[bestGap["Coeff"].idxmax()]
-
-        self.logger.info(f"Best gap\n{bestGap}")
+        # Get best gap
+        bestGap = self.CT_best_gap(perpetual=True, spot=False)
 
         self.logger.info(f"Starting {strategy.__name__} with {quantityUSDC} USDC and {leverage}x leverage")
         # Invoke strategy
-        await strategy(bestGap["Buy"], bestGap["Sell"], quantityUSDC, leverage)
+        try:
+            resp = await self.client.Ulysse(
+                longContract=bestGap["Buy"],
+                shortContract=bestGap["Sell"],
+                strategy=strategy,
+                quantityUSDC=quantityUSDC,
+                leverage=leverage,
+            )
+        except Exception as e:
+            self.logger.error(f"Error: {e}")
+            raise e
+
+        self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
 
     @beartype
     async def stay_alive_SF(self, quantityUSDC: float | int):
@@ -228,20 +258,17 @@ class GreekMaster:
         Args:
             quantityUSDC (float): The quantity in USDC
         """
-        # Get all gaps
-        gaps = self.all_gaps_pd(inverse=False, pretty=False, applyFees=True, spot=True)
-
-        # Retrieve the one with best coeff that has BTCUSDT on buy side
-        bestGap = gaps.loc[gaps["Buy"] == "BTCUSDT (Spot)"]
-
-        # Keep the positive coeffs
-        self.logger.info(f"Best gap\n{bestGap}")
-
-        # Take the best proportion (short time, good gap)
-        bestGap = bestGap.loc[bestGap["DaysLeft"] < 25]
-        bestGap = bestGap.loc[bestGap["Coeff"].idxmax()]
-
-        self.logger.info(f"Best gap\n{bestGap}")
+        # Get best gap
+        bestGap = self.CT_best_gap(perpetual=False, spot=True)
 
         # Invoke strategy
-        await self.client.Ulysse(bestGap["Buy"], bestGap["Sell"], quantityUSDC)
+        try:
+            await self.client.Ulysse(
+                longContract=bestGap["Buy"],
+                shortContract=bestGap["Sell"],
+                strategy=self.client.check_arbitrage,
+                quantityUSDC=quantityUSDC,
+            )
+        except Exception as e:
+            self.logger.error(f"Error: {e}")
+            raise e
