@@ -6,7 +6,7 @@ class bybitAnalyser:
 
     # TODO: Still not perfect (take history)
     @staticmethod
-    def get_gap(longTickers, shortTickers, applyFees=False):
+    def get_gap(longTickers: dict, shortTickers: dict, applyFees=False):
         """
         Get the gap between two future contracts with their tickers
         CAREFUL: We suppose the longTickers is closer to delivery than shortTickers
@@ -72,7 +72,7 @@ class bybitAnalyser:
         }
 
     @staticmethod
-    def position_calculator(ticker, side, quantityUSDC, leverage=1):
+    def position_calculator(ticker, side: str, quantityUSDC: float | int, leverage: int = 1):
         """
         Checks information about a position before entering it
         User submits a USDC quantity, and we calculate the amount of contracts to buy/sell
@@ -83,7 +83,7 @@ class bybitAnalyser:
         Args:
             contract (str): The future contract to enter a position on
             side (str): Either "Buy" or "Sell"
-            quantityUSDC (int): Price in USDC of contracts to buy/sell
+            quantityUSDC (float | int): Price in USDC of contracts to buy/sell
             leverage (int): The leverage to use
         Returns:
             dict: The response from the API
