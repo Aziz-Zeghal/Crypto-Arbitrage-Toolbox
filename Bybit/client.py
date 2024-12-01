@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import logging
+from beartype import beartype
 
 # Custom imports
 from apiFetcher import bybitFetcher
@@ -10,16 +11,18 @@ from analyser import bybitAnalyser
 class BybitClient:
     __slots__ = ["fetcher", "longContract", "shortContract", "logger"]
 
+    @beartype
     def __init__(self, demo=False):
         """
         Logic for a pair of products.
         It contains all the strategies for a pair of products.
         This will run as a systemd process (a daemon in the background).
 
-        fetcher (bybitFetcher): Fetcher for the Bybit API
-        longContract (str): last long contract message
-        shortContract (str): last short contract message
-        logger (logging.Logger): Logger for the client
+        Makes:
+            fetcher (bybitFetcher): Fetcher for the Bybit API
+            longContract (str): last long contract message
+            shortContract (str): last short contract message
+            logger (logging.Logger): Logger for the client
 
         """
         self.fetcher = bybitFetcher(demo=demo)
@@ -29,15 +32,14 @@ class BybitClient:
 
         self.logger = logging.getLogger("Bybit.greekMaster")
 
-    def check_arbitrage(self, minimumGap):
+    def check_arbitrage(self, minimumGap: float | int):
         """
         Callback function for both products' channels
 
         Checks if conditions are met for the arbitrage.
 
         Args:
-            quantityUSDC (float): The quantity in USDC
-            minimumGap (float): The minimum gap to consider for the arbitrage
+            minimumGap (float | int): The minimum gap to consider for the arbitrage
         Returns:
             None
         """
@@ -65,7 +67,15 @@ class BybitClient:
     # TODO: In the long run, this will be the strategy selector too
     # TODO: If connection ends too fast, program takes time to end
     # Could make threaded websocket call_backs, and when we are done SIGINT them
-    async def Ulysse(self, longContract: str, shortContract: str, quantityUSDC: float, leverage="1", minimumGap=0.12):
+    @beartype
+    async def Ulysse(
+        self,
+        longContract: str,
+        shortContract: str,
+        quantityUSDC: float | int,
+        leverage: str = "1",
+        minimumGap: float | int = 0.12,
+    ):
         """
         The main executor, Ulysse
         Main character to spawn the strategy
@@ -80,7 +90,9 @@ class BybitClient:
         Args:
             longContract (str): The long contract's name
             shortContract (str): The short contract's name
-            quantityUSDC (float): The quantity in USDC
+            quantityUSDC (float | int): The quantity in USDC
+            leverage (str): The leverage to use, default is "1"
+            minimumGap (float | int): The minimum gap to consider for the arbitrage
         Returns:
             dict: The response from the API
         """

@@ -2,6 +2,8 @@ import logging
 import sys
 import pandas as pd
 import asyncio
+from beartype import beartype
+from typing import Callable
 
 from client import BybitClient
 from analyser import bybitAnalyser
@@ -11,6 +13,7 @@ from utils import format_volume
 class GreekMaster:
     __slots__ = ["client", "fetcher", "contracts", "logger"]
 
+    @beartype
     def __init__(self, demo=False, verbose=0):
         """
         Logic for all products.
@@ -55,6 +58,7 @@ class GreekMaster:
 
         self.logger.info("GreekMaster initialized")
 
+    @beartype
     def all_gaps_pd(self, pretty=True, applyFees=False, inverse=False, perpetual=False, spot=False):
         """
         Get all the gaps for all the future contracts
@@ -126,7 +130,8 @@ class GreekMaster:
         return df_gaps
 
     # TODO: Does not fetch in parallel. Should be done in parallel
-    async def save_klines(self, dest):
+    @beartype
+    async def save_klines(self, dest: str):
         """
         Save the klines of all the future contracts in parquet format
         Checks if a parquet file exists to update it, else creates a new one
@@ -161,7 +166,8 @@ class GreekMaster:
         await asyncio.gather(*tasks)
 
     # TODO: callables should be a pydantic object to reference the existing strategies
-    async def one_shot_PF(self, strategy: callable, quantityUSDC: float, leverage="1"):
+    @beartype
+    async def one_shot_PF(self, strategy: Callable, quantityUSDC: float | int, leverage: str = "1"):
         """
         One shot strategy with perpetual and future contracts
 
@@ -176,7 +182,7 @@ class GreekMaster:
         Args:
             strategy (callable): The strategy to use
             quantityUSDC (float): The quantity in USDC
-            leverage (int): The leverage to use
+            leverage (str): The leverage to use, default is "1"
         """
 
         # Get all gaps
@@ -199,7 +205,8 @@ class GreekMaster:
         # Invoke strategy
         await strategy(bestGap["Buy"], bestGap["Sell"], quantityUSDC, leverage)
 
-    async def stay_alive_SF(self, quantityUSDC: float):
+    @beartype
+    async def stay_alive_SF(self, quantityUSDC: float | int):
         """
         The classic strategy !
         Buy the spot, short the future.

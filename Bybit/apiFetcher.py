@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import asyncio
 import logging
+from beartype import beartype
 
 from pybit.unified_trading import HTTP, WebSocket
 
@@ -16,12 +17,17 @@ import keys
 class bybitFetcher:
     __slots__ = ["session", "ws", "logger"]
 
+    @beartype
     def __init__(self, demo=False):
         """
         Initialize the Bybit session
 
-        session (HTTP): The HTTP session
-        ws (WebSocket): The WebSocket session
+        Args:
+            demo (bool): If True, will use the demo keys
+
+        Makes:
+            session (HTTP): The HTTP session
+            logger (logging.Logger): Logger for the fetcher
         """
         if demo:
             self.session = HTTP(api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, demo=True)
@@ -83,7 +89,8 @@ class bybitFetcher:
         return {"Balance": totalBalance, "BTC": btcValue, "USDC": usdcValue}
 
     # TODO: Maybe add error handling for the case where the contract does not exist
-    def get_spot(self, coin="BTC"):
+    @beartype
+    def get_spot(self, coin: str = "BTC"):
         """
         Get spot for a given coin
 
@@ -100,7 +107,8 @@ class bybitFetcher:
 
         return markets
 
-    def get_futureNames(self, coin="BTC", inverse=False, perpetual=False):
+    @beartype
+    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False):
         """
         Get all the future contracts for a given coin
 
@@ -142,7 +150,15 @@ class bybitFetcher:
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
     # TODO: Add a verbose parameter
-    async def get_history_pd(self, product, interval="m", dateLimit="01/01/2021", category="linear", dest=None):
+    @beartype
+    async def get_history_pd(
+        self,
+        product: str,
+        interval: str = "m",
+        dateLimit: str = "01/01/2021",
+        category: str = "linear",
+        dest: str | None = None,
+    ):
         """
         Get the history of a future product until dateLimit
         If we do not have any data, we start from the oldest data point, and fetch the data before it
@@ -158,7 +174,7 @@ class bybitFetcher:
             interval (str): The interval of the data
             dateLimit (str): The last date of fetched data
             category (str): The category of the product
-            dest (str): The destination folder to save the data
+            dest (str | None): The destination folder to save the data
         Returns:
             A DataFrame containing the accumulated data
         """
@@ -229,6 +245,7 @@ class bybitFetcher:
             save_klines_parquet(file_name, acc_data)
         return acc_data
 
+    @beartype
     async def set_leverage(self, symbol: str, leverage: str):
         """
         Set the leverage for a given symbol
@@ -253,7 +270,10 @@ class bybitFetcher:
 
         return None
 
-    async def enter_both_position(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
+    @beartype
+    async def enter_both_position(
+        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
+    ):
         """
         Enter a position in both contracts.
 
@@ -262,8 +282,8 @@ class bybitFetcher:
         Args:
             longSymbol (str): The symbol to long
             shortSymbol (str): The symbol to short
-            longQuantity (int): The quantity to long
-            shortQuantity (int): The quantity to short
+            longQuantity (float | int): The quantity to long
+            shortQuantity (float | int): The quantity to short
         Returns:
             dict: The response from the API
         """
