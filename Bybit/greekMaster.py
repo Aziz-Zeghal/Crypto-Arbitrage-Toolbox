@@ -14,7 +14,7 @@ class GreekMaster:
     __slots__ = ["client", "fetcher", "contracts", "logger"]
 
     @beartype
-    def __init__(self, demo=False, verbose=0):
+    def __init__(self, demo=False):
         """
         Logic for all products.
         Monitors the account and calls ephemeral client processes to orchestrate arbitrage entry.
@@ -34,34 +34,14 @@ class GreekMaster:
             - logger (logging.Logger): Logger for the client
 
         """
-        self.client = BybitClient(demo=demo, verbose=verbose)
+        self.client = BybitClient(demo=demo)
 
         # Just for easy reference
         self.fetcher = self.client.fetcher
 
         self.contracts = {}
 
-        # Set up logger here (not using basicConfig inside init)
         self.logger = logging.getLogger("greekMaster")
-
-        # Default to WARNING level
-        log_level = logging.WARNING
-
-        # Configure verbosity levels
-        if verbose == 1:
-            log_level = logging.INFO
-        elif verbose >= 2:
-            log_level = logging.DEBUG
-
-        self.logger.setLevel(log_level)
-
-        # Create a StreamHandler for console output
-        console_handler = logging.StreamHandler(sys.stdout)
-        formatter = ColorFormatter("\033[36m%(asctime)s\033[0m - %(name)s - %(levelname)s - %(message)s")
-        console_handler.setFormatter(formatter)
-
-        # Add handler to the logger
-        self.logger.addHandler(console_handler)
 
         self.logger.info("GreekMaster initialized")
 

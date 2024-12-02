@@ -18,7 +18,7 @@ class bybitFetcher:
     __slots__ = ["session", "ws", "logger"]
 
     @beartype
-    def __init__(self, demo=False, verbose=0):
+    def __init__(self, demo=False):
         """
         Initialize the Bybit session
 
@@ -37,14 +37,6 @@ class bybitFetcher:
         self.ws = None
 
         self.logger = logging.getLogger("greekMaster.client.fetcher")
-
-        # Set the logger level
-        if verbose == 1:
-            self.logger.setLevel(logging.INFO)
-        elif verbose >= 2:
-            self.logger.setLevel(logging.DEBUG)
-
-        # Change the logger config to say fetcher talked
 
     def start_ws(self):
         """

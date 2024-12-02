@@ -1,4 +1,5 @@
 import json
+import sys
 import pandas as pd
 import logging
 import plotly.graph_objects as go
@@ -302,3 +303,42 @@ class ColorFormatter(logging.Formatter):
         # Apply color to levelname
         record.levelname = f"{level_colors.get(record.levelname, '')}{record.levelname}{reset}"
         return super().format(record)
+
+
+def configure_logging(run_name: str = "test.log", verbose: int = 0):
+    """
+    Configures logging for all loggers in the application.
+
+    Args:
+        verbose (int): Controls the verbosity level:
+            0 - WARNING (default)
+            1 - INFO
+            2 or more - DEBUG
+        run_name (str): Name of the logging file
+    """
+    # Default log level
+    log_level = logging.WARNING
+    if verbose == 1:
+        log_level = logging.INFO
+    elif verbose >= 2:
+        log_level = logging.DEBUG
+
+    # Formatter with colors
+    formatter = ColorFormatter("\033[36m%(asctime)s\033[0m - %(name)s - %(levelname)s - %(message)s")
+
+    # Stream handler for console output
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(formatter)
+
+    # Stream handler for file output
+    file_handler = logging.FileHandler(run_name)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+
+    # Apply the configuration to the root logger
+    logging.basicConfig(
+        level=log_level,
+        handlers=[console_handler, file_handler],
+    )
+
+    # Test message to confirm configuration
+    logging.getLogger().info("Global logging configuration applied with verbosity level %d", verbose)

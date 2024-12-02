@@ -13,7 +13,7 @@ class BybitClient:
     __slots__ = ["fetcher", "longContract", "shortContract", "logger"]
 
     @beartype
-    def __init__(self, demo=False, verbose=0):
+    def __init__(self, demo=False):
         """
         Logic for a pair of products.
         It contains all the strategies for a pair of products.
@@ -30,18 +30,12 @@ class BybitClient:
             - logger (logging.Logger): Logger for the client
 
         """
-        self.fetcher = bybitFetcher(demo=demo, verbose=verbose)
+        self.fetcher = bybitFetcher(demo=demo)
 
         self.longContract: str = None
         self.shortContract: str = None
 
         self.logger = logging.getLogger("greekMaster.client")
-
-        # Set the logger level
-        if verbose == 1:
-            self.logger.setLevel(logging.INFO)
-        elif verbose >= 2:
-            self.logger.setLevel(logging.DEBUG)
 
     def check_arbitrage(self, minimumGap: float | int):
         """
@@ -67,10 +61,7 @@ class BybitClient:
         # - Calculate the gap
         coeff = (shortPrice / longPrice - 1) * 100
 
-        # Here, we put a check so that it will not process the log and use a buffer.
-        print(self.logger.level)
-        if self.logger.level == logging.INFO:
-            self.logger.info(f"Gap: {coeff:.4f} %")
+        # TODO: Add logging ?
 
         # Check if the gap is enough
         if coeff >= minimumGap:
