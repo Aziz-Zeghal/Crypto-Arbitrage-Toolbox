@@ -15,7 +15,7 @@ import keys
 
 
 class bybitFetcher:
-    __slots__ = ["session", "ws", "logger"]
+    __slots__ = ["session", "ws", "ws_spot", "logger"]
 
     @beartype
     def __init__(self, demo=False):
@@ -35,15 +35,25 @@ class bybitFetcher:
             self.session = HTTP(api_key=keys.bybitPKey, api_secret=keys.bybitSKey)
 
         self.ws = None
+        # TODO: In the future, have a dictionary of WebSocket sessions
+        self.ws_spot = None
 
         self.logger = logging.getLogger("greekMaster.client.fetcher")
 
-    def start_ws(self):
+    def start_linear_ws(self):
         """
-        Start the WebSocket session
+        Start the WebSocket session for linear contracts
         """
         self.ws = WebSocket(
             api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="linear"
+        )
+
+    def start_spot_ws(self):
+        """
+        Start the WebSocket session for spot contracts
+        """
+        self.ws_spot = WebSocket(
+            api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="spot"
         )
 
     def get_USDC_BTC(self):
@@ -106,7 +116,7 @@ class bybitFetcher:
         return markets
 
     @beartype
-    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False):
+    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False, quoteCoins=["USDT", "USDC"]):
         """
         Get all the future contracts for a given coin
 
@@ -115,6 +125,7 @@ class bybitFetcher:
             coin (str): Either BTC or ETH
             inverse (bool): If True, will return inverse futures
             perpetual (bool): If True, will return perpetual
+            quoteCoins (list[str]): The quote coins to consider
         Return:
             list: List of all the future contracts for the given coin sorted by expiry date
         """
@@ -125,12 +136,13 @@ class bybitFetcher:
         markets = []
         for p in pairs["result"]["list"]:
             # Looks like BTC-01NOV24
-            if p["contractType"] == "LinearFutures":
-                markets.append(p["symbol"])
-            elif perpetual and p["contractType"] == "LinearPerpetual":
-                markets.append(p["symbol"])
-            elif inverse and p["contractType"] == "InverseFutures":
-                markets.append(p["symbol"])
+            if p["quoteCoin"] in quoteCoins:
+                if p["contractType"] == "LinearFutures":
+                    markets.append(p["symbol"])
+                elif perpetual and p["contractType"] == "LinearPerpetual":
+                    markets.append(p["symbol"])
+                elif inverse and p["contractType"] == "InverseFutures":
+                    markets.append(p["symbol"])
 
         # Function to extract and convert the date part to a datetime object
         def extract_date(contract):
@@ -242,6 +254,21 @@ class bybitFetcher:
         if not acc_data.empty:
             save_klines_parquet(file_name, acc_data)
         return acc_data
+
+    async def get_greeks(self, symbol: str = None):
+        """
+        Get the greeks for a given symbol
+
+        Link: https://bybit-exchange.github.io/docs/v5/account/coin-greeks
+        Args:
+            symbol (str): The symbol to get the greeks from
+        Returns:
+            dict: The response from the API
+        """
+        if symbol:
+            return self.session.get_coin_greeks(symbol=symbol)
+        else:
+            return self.session.get_coin_greeks()
 
     @beartype
     async def set_leverage(self, symbol: str, leverage: str):

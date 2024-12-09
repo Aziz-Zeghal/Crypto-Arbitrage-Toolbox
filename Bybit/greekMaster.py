@@ -1,17 +1,17 @@
 import logging
-import sys
 import pandas as pd
 import asyncio
+import schedule as sch
 from beartype import beartype
 from typing import Callable
 
 from client import BybitClient
 from analyser import bybitAnalyser
-from utils import format_volume, ColorFormatter
+from utils import format_volume
 
 
 class GreekMaster:
-    __slots__ = ["client", "fetcher", "contracts", "logger"]
+    __slots__ = ["client", "fetcher", "logger", "position_info"]
 
     @beartype
     def __init__(self, demo=False):
@@ -24,14 +24,15 @@ class GreekMaster:
         GreekMaster is supposed to live forever. Context will be stopped here, not in main.
 
         3 types of methods:
+            - Selectors: The method to choose the best pair of contracts
             - Strategies: Called by the executor
-            - Executors: Setup application, then call the strategy
-            - Callables: Reference to the existing strategies
+            - Executors: Setup application, then call the strategy, monitor then repeat
         Defines:
             - client (BybitClient): Client for the Bybit API
             - fetcher (bybitFetcher): Fetcher for the Bybit API
             - contracts (list): List of all the current contracts
             - logger (logging.Logger): Logger for the client
+            - position_info: Dictionnary with live updates
 
         """
         self.client = BybitClient(demo=demo)
@@ -39,16 +40,79 @@ class GreekMaster:
         # Just for easy reference
         self.fetcher = self.client.fetcher
 
-        self.contracts = {}
+        self.position_info = {}
 
         self.logger = logging.getLogger("greekMaster")
 
         self.logger.info("GreekMaster initialized")
 
+    # TODO: Does not fetch in parallel. Should be done in parallel
     @beartype
-    def all_gaps_pd(self, pretty=True, applyFees=False, inverse=False, perpetual=False, spot=False):
+    async def save_klines(self, dest: str):
         """
-        Get all the gaps for all the future contracts
+        Save the klines of all the future contracts in parquet format
+        Checks if a parquet file exists to update it, else creates a new one
+
+        Args:
+            dest (str): The destination folder
+        """
+        allContracts = self.client.fetcher.get_futureNames()
+
+        async def fetch_history(contract, interval, category="linear"):
+            await self.client.fetcher.get_history_pd(
+                contract, interval=interval, dest=dest, dateLimit="2024-01-01 00:00", category=category
+            )
+
+        tasks = []
+
+        for contract in allContracts:
+            tasks.extend([fetch_history(contract, "15"), fetch_history(contract, "5"), fetch_history(contract, "1")])
+
+        # spot
+        tasks.extend(
+            [
+                fetch_history("BTCUSDT", "15", category="spot"),
+                fetch_history("BTCUSDT", "5", category="spot"),
+                fetch_history("BTCUSDT", "1", category="spot"),
+            ]
+        )
+
+        # Perpetual contracts
+        tasks.extend(
+            [
+                fetch_history("BTCUSDT", "15"),
+                fetch_history("BTCUSDT", "5"),
+                fetch_history("BTCUSDT", "1"),
+                fetch_history("BTCPERP", "15"),
+                fetch_history("BTCPERP", "5"),
+                fetch_history("BTCPERP", "1"),
+            ]
+        )
+
+        await asyncio.gather(*tasks)
+
+    def monitor(self):
+        """
+        Monitor the accounts, check the positions, the liquidation risk, etc.
+
+        Writes inside position_info
+
+        """
+        self.logger.info("Monitoring the account")
+
+    # TODO: boolean for future, and upgrade function
+    @beartype
+    def all_gaps_pd(
+        self,
+        pretty=True,
+        applyFees=False,
+        inverse=False,
+        perpetual=False,
+        spot=False,
+        quoteCoins: list[str] = ["USDC", "USDT"],
+    ):
+        """
+        Get all the gaps for multiple products in a DataFrame
 
         Careful: All flags should not be activated at the same time
         Args:
@@ -57,11 +121,15 @@ class GreekMaster:
             inverse (bool): will get the inverse contracts
             perpetual (bool): will get the perpetual contracts
             spot (bool): will get the spot contracts
+            quoteCoins (list[str]): The quote coins to consider. Can be ["USDC", "USDT"]
         Returns:
             pd.DataFrame: DataFrame containing all the gaps
         """
 
-        btcFutureContracts = self.fetcher.get_futureNames("BTC", inverse=inverse, perpetual=perpetual)
+        # WARNING: No perpetual with USDT, so remove it here
+        btcFutureContracts = self.fetcher.get_futureNames(
+            "BTC", inverse=inverse, perpetual=perpetual, quoteCoins=quoteCoins
+        )
 
         # First, get the tickers of every future contract in a dataframe
         btcTickers = pd.DataFrame(
@@ -73,11 +141,19 @@ class GreekMaster:
 
         # Then the spot contracts (Take only USDT)
         if spot:
-            response = self.fetcher.session.get_tickers(symbol="BTCUSDT", category="spot")["result"]["list"][0]
-            # Put deliveryTime to 0
-            response["deliveryTime"] = 0
-            response["symbol"] = "BTCUSDT (Spot)"
-            btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
+            if "USDT" in quoteCoins:
+                response = self.fetcher.session.get_tickers(symbol="BTCUSDT", category="spot")["result"]["list"][0]
+                # Put deliveryTime to 0
+                response["deliveryTime"] = 0
+                response["symbol"] = "BTCUSDT (Spot)"
+                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
+
+            if "USDC" in quoteCoins:
+                response = self.fetcher.session.get_tickers(symbol="BTCUSDC", category="spot")["result"]["list"][0]
+                # Put deliveryTime to 0
+                response["deliveryTime"] = 0
+                response["symbol"] = "BTCUSDC (Spot)"
+                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
 
         # Define an empty DataFrame with specified columns and data types
         column_types = {
@@ -116,43 +192,7 @@ class GreekMaster:
         df_gaps = df_gaps.astype(column_types)
         return df_gaps
 
-    # TODO: Does not fetch in parallel. Should be done in parallel
-    @beartype
-    async def save_klines(self, dest: str):
-        """
-        Save the klines of all the future contracts in parquet format
-        Checks if a parquet file exists to update it, else creates a new one
-
-        Args:
-            dest (str): The destination folder
-        """
-        allContracts = self.client.fetcher.get_futureNames()
-
-        async def fetch_history(contract, interval, category="linear"):
-            await self.client.fetcher.get_history_pd(
-                contract, interval=interval, dest=dest, dateLimit="2024-01-01 00:00", category=category
-            )
-
-        tasks = []
-
-        for contract in allContracts:
-            tasks.append(fetch_history(contract, "15"))
-            tasks.append(fetch_history(contract, "5"))
-            tasks.append(fetch_history(contract, "1"))
-
-        # spot
-        tasks.append(fetch_history("BTCUSDT", "15", category="spot"))
-        tasks.append(fetch_history("BTCUSDT", "5", category="spot"))
-        tasks.append(fetch_history("BTCUSDT", "1", category="spot"))
-
-        # Perpetual contracts
-        tasks.append(fetch_history("BTCUSDT", "15"))
-        tasks.append(fetch_history("BTCUSDT", "5"))
-        tasks.append(fetch_history("BTCUSDT", "1"))
-
-        await asyncio.gather(*tasks)
-
-    def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25):
+    def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25, quoteCoins: list[str] = ["USDC"]):
         """
         Find the best gap for a pair of contracts
 
@@ -160,11 +200,22 @@ class GreekMaster:
             perpetual (bool): will get the perpetual contracts
             spot (bool): will get the spot contracts
             maxDays (int): The maximum number of days left before delivery
+            quoteCoins (list[str]): The quote coins to consider
         Returns:
             dict: The best gap
         """
-        gaps = self.all_gaps_pd(inverse=False, perpetual=perpetual, pretty=False, applyFees=True, spot=spot)
+        gaps = self.all_gaps_pd(
+            inverse=False, perpetual=perpetual, pretty=False, applyFees=True, spot=spot, quoteCoins=quoteCoins
+        )
 
+        # TODO: This filtering should be in all_gaps_pd
+        if spot:
+            # Keep only the spot contracts
+            gaps = gaps.loc[gaps["Buy"].str.contains("Spot")]
+
+        # Buy should have USDC or PERP inside it
+        # TODO will remove this as soon as all_gaps_pd is updated
+        gaps = gaps.loc[gaps["Buy"].str.contains("USDT|USDC|PERP")]
         # Keep the positive coeffs
         gaps = gaps.loc[gaps["Coeff"] > 0]
 
@@ -216,7 +267,7 @@ class GreekMaster:
         self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
 
     @beartype
-    async def stay_alive_SF(self, quantityUSDC: float | int):
+    async def stay_alive_SF(self, collateral: str = "USDC", quantityUSDC: float | int = 1000):
         """
         The classic strategy !
         Buy the spot, short the future.
@@ -237,13 +288,18 @@ class GreekMaster:
 
         Args:
             quantityUSDC (float): The quantity in USDC
+            collateral (str): The collateral to use, either "USDC" or "USDT
         """
+
+        # Clear the schedule
+        sch.clear()
+
         # Get best gap
-        bestGap = self.CT_best_gap(perpetual=False, spot=True)
+        bestGap = self.CT_best_gap(perpetual=False, spot=True, quoteCoins=[collateral])
 
         # Invoke strategy
         try:
-            await self.client.Ulysse(
+            resp = await self.client.Ulysse_spot(
                 longContract=bestGap["Buy"],
                 shortContract=bestGap["Sell"],
                 strategy=self.client.check_arbitrage,
@@ -252,3 +308,16 @@ class GreekMaster:
         except Exception as e:
             self.logger.error(f"Error: {e}")
             raise e
+
+        self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
+
+        self.logger.info("Now we wait...")
+
+        # Monitor the position (write perceived position, compare with real position, log)
+
+        # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)
+        sch.every().day.at("12:00").do(self.monitor)
+
+        # Schedule the delivery day (cashout, write the position in the books, etc.)
+        sch.every().day.at("21:00").do(lambda: self.client.fetcher.exit_both_position(resp["long"], resp["short"]))
+        # Repeat by calling this function

@@ -20,7 +20,9 @@ async def main():
     print(f"Time taken to create the client: {then - now}")
     # BTCUSDT	BTC-29NOV24
     try:
-        await Master.one_shot_PF(strategy=Master.client.check_arbitrage, quantityUSDC=1000, leverage="1")
+        # Master.CT_best_gap(perpetual=True, spot=False)
+        # await Master.one_shot_PF(quantityUSDC=1000, leverage="1", strategy=Master.client.check_arbitrage)
+        await Master.save_klines(dest="store")
     except Exception:
         print("Something happened, exiting")
         sys.exit(1)
