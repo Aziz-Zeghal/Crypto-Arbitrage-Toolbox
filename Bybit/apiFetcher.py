@@ -116,7 +116,7 @@ class bybitFetcher:
         return markets
 
     @beartype
-    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False, quoteCoins=["USDT", "USDC"]):
+    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False, quoteCoins=["USDT", "USDC", "USD"]):
         """
         Get all the future contracts for a given coin
 

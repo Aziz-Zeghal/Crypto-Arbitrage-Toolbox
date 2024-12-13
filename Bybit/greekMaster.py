@@ -109,7 +109,7 @@ class GreekMaster:
         inverse=False,
         perpetual=False,
         spot=False,
-        quoteCoins: list[str] = ["USDC", "USDT"],
+        quoteCoins: list[str] = ["USDC", "USDT", "USD"],
     ):
         """
         Get all the gaps for multiple products in a DataFrame
