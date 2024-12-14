@@ -45,7 +45,12 @@ class bybitFetcher:
         Start the WebSocket session for linear contracts
         """
         self.ws = WebSocket(
-            api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="linear"
+            api_key=keys.demobybitPKey,
+            api_secret=keys.demobybitSKey,
+            testnet=False,
+            channel_type="linear",
+            ping_interval=5,
+            ping_timeout=4,
         )
 
     def start_spot_ws(self):
@@ -53,8 +58,22 @@ class bybitFetcher:
         Start the WebSocket session for spot contracts
         """
         self.ws_spot = WebSocket(
-            api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="spot"
+            api_key=keys.demobybitPKey,
+            api_secret=keys.demobybitSKey,
+            testnet=False,
+            channel_type="spot",
+            ping_interval=5,
+            ping_timeout=4,
         )
+
+    def close_websockets(self):
+        if self.ws:
+            self.ws.exit()
+            self.logger.info("Linear WebSocket closed")
+
+        if self.ws_spot:
+            self.ws_spot.exit()
+            self.logger.info("Spot WebSocket closed")
 
     def get_USDC_BTC(self):
         """
@@ -295,6 +314,30 @@ class bybitFetcher:
 
         return None
 
+    async def _place_order(
+        self, symbol: str, quantity: float | int, side: str, category: str, reduce_only: bool = False
+    ):
+        """
+        Place an order in the specified category.
+
+        Args:
+            symbol (str): The symbol to trade
+            quantity (float | int): The quantity to trade
+            side (str): The side of the trade, either "Buy" or "Sell"
+            category (str): The category of the trade, either "spot" or "linear"
+            reduce_only (bool): Whether the order is reduce-only
+        Returns:
+            dict: The response from the API
+        """
+        return self.session.place_order(
+            symbol=symbol,
+            category=category,
+            side=side,
+            qty=quantity,
+            orderType="Market",
+            reduceOnly=reduce_only,
+        )
+
     @beartype
     async def enter_spot_linear(
         self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
@@ -308,19 +351,9 @@ class bybitFetcher:
             longQuantity (float | int): The quantity to long
             shortQuantity (float | int): The quantity to short
         """
-
-        async def enter_position(symbol, quantity, side, category):
-            return self.session.place_order(
-                symbol=symbol,
-                category=category,
-                side=side,
-                qty=quantity,
-                orderType="Market",
-            )
-
         # Make both API calls concurrently
-        short_task = asyncio.create_task(enter_position(shortSymbol, shortQuantity, "Sell", "linear"))
-        long_task = asyncio.create_task(enter_position(longSymbol, longQuantity, "Buy", "spot"))
+        short_task = asyncio.create_task(self._place_order(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Buy", "spot"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
@@ -339,20 +372,11 @@ class bybitFetcher:
             longQuantity (float | int): The quantity to long
             shortQuantity (float | int): The quantity to short
         """
-
-        async def close_position(symbol, quantity, side, category):
-            return self.session.place_order(
-                symbol=symbol,
-                category=category,
-                side=side,
-                qty=quantity,
-                orderType="Market",
-                reduceOnly=True,
-            )
-
         # Make both API calls concurrently
-        long_task = asyncio.create_task(close_position(longSymbol, longQuantity, "Sell", "spot"))
-        short_task = asyncio.create_task(close_position(shortSymbol, shortQuantity, "Buy", "linear"))
+        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Sell", "spot", reduce_only=True))
+        short_task = asyncio.create_task(
+            self._place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+        )
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
@@ -375,19 +399,9 @@ class bybitFetcher:
         Returns:
             dict: The response from the API
         """
-
-        async def enter_position(symbol, quantity, side):
-            return self.session.place_order(
-                symbol=symbol,
-                category="linear",
-                side=side,
-                qty=quantity,
-                orderType="Market",
-            )
-
         # Make both API calls concurrently
-        short_task = asyncio.create_task(enter_position(shortSymbol, shortQuantity, "Sell"))
-        long_task = asyncio.create_task(enter_position(longSymbol, longQuantity, "Buy"))
+        short_task = asyncio.create_task(self._place_order(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Buy", "linear"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
@@ -403,22 +417,13 @@ class bybitFetcher:
         Returns:
             dict: The response from the API
         """
-
-        # We will use asyncio to make calls at the same time.
-
-        async def close_position(symbol, quantity, side):
-            return self.session.place_order(
-                symbol=symbol,
-                category="linear",
-                side=side,
-                qty=quantity,
-                orderType="Market",
-                reduceOnly=True,
-            )
-
         # Make both API calls concurrently
-        long_task = asyncio.create_task(close_position(longSymbol, longQuantity, "Sell"))
-        short_task = asyncio.create_task(close_position(shortSymbol, shortQuantity, "Buy"))
+        long_task = asyncio.create_task(
+            self._place_order(longSymbol, longQuantity, "Sell", "linear", reduce_only=True)
+        )
+        short_task = asyncio.create_task(
+            self._place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+        )
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)

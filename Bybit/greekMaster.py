@@ -312,7 +312,6 @@ class GreekMaster:
         self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
 
         self.logger.info("Now we wait...")
-
         # Monitor the position (write perceived position, compare with real position, log)
 
         # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)

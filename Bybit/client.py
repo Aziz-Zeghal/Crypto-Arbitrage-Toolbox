@@ -10,7 +10,7 @@ from analyser import bybitAnalyser
 
 
 class BybitClient:
-    __slots__ = ["fetcher", "longContract", "shortContract", "logger"]
+    __slots__ = ["fetcher", "longContract", "shortContract", "logger", "active"]
 
     @beartype
     def __init__(self, demo=False):
@@ -34,6 +34,7 @@ class BybitClient:
 
         self.longContract: str = None
         self.shortContract: str = None
+        self.active = False
 
         self.logger = logging.getLogger("greekMaster.client")
 
@@ -66,7 +67,72 @@ class BybitClient:
         # Check if the gap is enough
         if coeff >= minimumGap:
             self.logger.info("Arbitrage found")
-            self.fetcher.ws.exit()
+            self.active = False
+
+    async def _setup_contracts(
+        self,
+        longContract: str,
+        shortContract: str,
+        strategy: Callable,
+        leverage: str = "1",
+        minimumGap: float | int = 0.12,
+    ):
+        """
+        Setup the contracts for the client
+
+        Args:
+            longContract (str): The long contract's name
+            shortContract (str): The short contract's name
+        Returns:
+            longContract, shortContract (str, str): The contracts (renamed if needed)
+        """
+
+        if strategy.__name__ not in dir(self):
+            self.logger.error("Strategy not implemented")
+            raise NotImplementedError
+
+        # Define handlers
+        def short_handler(message):
+            if self.active:
+                self.shortContract = message
+                strategy(minimumGap=minimumGap)
+            else:
+                self.logger.warning("Not active anymore. Ignoring short websocket...")
+
+        def long_handler(message):
+            if self.active:
+                self.longContract = message
+                strategy(minimumGap=minimumGap)
+            else:
+                self.logger.warning("Not active anymore. Ignoring long websocket...")
+
+        # Determine if the long contract is spot
+        is_spot = longContract.endswith("(Spot)")
+
+        self.fetcher.start_linear_ws()  # Always start linear ws (for futures)
+        await self.fetcher.set_leverage(shortContract, leverage)
+
+        if is_spot:
+            longContract = longContract.replace(" (Spot)", "")
+            self.fetcher.start_spot_ws()  # Only start spot ws if it's a spot contract
+        else:
+            await self.fetcher.set_leverage(longContract, leverage)
+
+        # Sleep to give websockets time to initialize
+        await asyncio.sleep(5)
+
+        # Stream tickers for both contracts using the same handler
+        self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
+
+        if is_spot:
+            self.fetcher.ws_spot.ticker_stream(symbol=longContract, callback=long_handler)
+        else:
+            self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
+
+        self.active = True
+        self.logger.info("Listening to the tickers")
+
+        return longContract, shortContract
 
     @beartype
     async def Ulysse_spot(
@@ -100,41 +166,15 @@ class BybitClient:
             dict: The response from the API
         """
 
-        if strategy.__name__ not in dir(self):
-            self.logger.error("Strategy not implemented")
-            raise NotImplementedError
+        # Setup the contracts
+        longContract, shortContract = await self._setup_contracts(
+            longContract, shortContract, strategy, leverage, minimumGap
+        )
 
-        await self.fetcher.set_leverage(shortContract, leverage)
-        # Remove the (spot) from the long contract
-        longContract = longContract.replace(" (Spot)", "")
+        # TODO: Find a way to call entry in callbacks to avoid busy waiting
+        while self.active:
+            asyncio.sleep(0.1)
 
-        # Define handlers
-        def short_handler(message):
-            if not self.fetcher.ws.exited:
-                self.shortContract = message
-                strategy(minimumGap=minimumGap)
-
-        def long_handler(message):
-            if not self.fetcher.ws.exited:
-                self.longContract = message
-            else:
-                self.fetcher.ws_spot.exit()
-
-        # Start socket
-        self.fetcher.start_linear_ws()
-        self.fetcher.start_spot_ws()
-
-        # Listen to channels
-        self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
-        self.fetcher.ws_spot.ticker_stream(symbol=longContract, callback=long_handler)
-
-        self.logger.info("Listening to the tickers")
-        # Now, hold the program
-        while not self.fetcher.ws.exited or not self.fetcher.ws_spot.exited:
-            await asyncio.sleep(1)
-
-        # Either arbitrage found or something bad happened
-        # TODO: Need to be sure of arbitrage (boolean or better solution)
         try:
             # We do not need the long info, because we can take how much we want
             shortTickers = self.shortContract["data"]
@@ -146,17 +186,14 @@ class BybitClient:
             resp = await self.fetcher.enter_spot_linear(
                 longContract, shortContract, round(shortPosition["value"], 2), shortPosition["quantityContracts"]
             )
-
         except Exception as e:
-            self.logger.error(f"Error: {e}")
+            self.logger.error(f"Error when entering: {e}")
             self.logger.error("Exiting")
-            self.fetcher.ws.exit()
-            self.fetcher.ws_spot.exit()
+            self.fetcher.close_websockets()
             raise e
 
-        # Exit the websocket
-        self.fetcher.ws.exit()
-        self.fetcher.ws_spot.exit()
+        # Not active anymore, close the Websockets
+        self.fetcher.close_websockets()
 
         # Return the response
         return {
@@ -199,39 +236,14 @@ class BybitClient:
             dict: The response from the API
         """
 
-        if strategy.__name__ not in dir(self):
-            self.logger.error("Strategy not implemented")
-            raise NotImplementedError
-
-        await asyncio.gather(
-            self.fetcher.set_leverage(longContract, leverage), self.fetcher.set_leverage(shortContract, leverage)
+        # Setup the contracts
+        longContract, shortContract = await self._setup_contracts(
+            longContract, shortContract, strategy, leverage, minimumGap
         )
 
-        # Define handlers
-        def short_handler(message):
-            if not self.fetcher.ws.exited:
-                self.shortContract = message
-
-        # We position the arbitrage here, because more messages
-        def long_handler(message):
-            if not self.fetcher.ws.exited:
-                self.longContract = message
-                strategy(minimumGap=minimumGap)
-
-        # Start socket
-        self.fetcher.start_linear_ws()
-
-        # Listen to channels
-        self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
-        self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
-
-        self.logger.info("Listening to the tickers")
-        # Now, hold the program
-        while not self.fetcher.ws.exited:
-            await asyncio.sleep(1)
-
-        # Either arbitrage found or something bad happened
-        # TODO: Need to be sure of arbitrage (boolean or better solution)
+        # TODO: Find a way to call entry in callbacks to avoid busy waiting
+        while self.active:
+            asyncio.sleep(0.1)
 
         try:
             longTickers = self.longContract["data"]
@@ -251,8 +263,8 @@ class BybitClient:
             self.fetcher.ws.exit()
             raise e
 
-        # Exit the websocket
-        self.fetcher.ws.exit()
+        # Not active anymore, close the Websockets
+        self.fetcher.close_websockets()
 
         # Return the response
         return {
