@@ -380,3 +380,264 @@ Short: {'value': 976.485, 'orderCost': 978.09620025, 'quantityContracts': 0.01}
 2024-12-09 21:28:43,484 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCPERP[0m.
 2024-12-09 21:28:43,956 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 490387 existing data points.
 2024-12-09 21:28:44,786 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2024-12-14 09:52:41,248 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 09:52:41,251 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 09:52:51,551 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 09:52:51,552 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 09:52:54,208 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  985.49
+Coeff                  0.75
+APR               13.084566
+DaysLeft                 20
+CumVolume         128638182
+Name: 2, dtype: object
+2024-12-14 09:52:54,387 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 09:52:55,095 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 09:52:55,096 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 09:52:55,097 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 09:52:55,778 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 09:52:55,778 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 09:52:55,779 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 09:52:55,954 - pybit._websocket_stream - [31mERROR[0m - Couldn't subscribe to topic.Error: Invalid symbol :[tickers.BTCUSDC ].
+2024-12-14 09:52:55,955 - websocket - [31mERROR[0m - error from callback <function _WebSocketManager._connect.<locals>.<lambda> at 0x705ead3c49d0>: '{'
+2024-12-14 09:52:56,130 - websocket - [31mERROR[0m - error from callback <function _WebSocketManager._connect.<locals>.<lambda> at 0x705ead3c4b80>: '{'
+2024-12-14 09:52:56,131 - websocket - [32mINFO[0m - tearing down on exception '{'
+2024-12-14 09:57:27,288 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 09:57:27,289 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 09:57:29,707 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  946.65
+Coeff                 0.712
+APR               12.423508
+DaysLeft                 20
+CumVolume         128552673
+Name: 2, dtype: object
+2024-12-14 09:57:30,058 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 09:57:30,693 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 09:57:30,695 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 09:57:30,696 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 09:57:31,285 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 09:57:31,286 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 09:57:31,288 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 09:57:31,975 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 09:59:21,713 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 09:59:21,714 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 09:59:23,827 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                   910.5
+Coeff                 0.676
+APR               11.796098
+DaysLeft                 20
+CumVolume         128560106
+Name: 2, dtype: object
+2024-12-14 09:59:24,178 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 09:59:24,843 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 09:59:24,843 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 09:59:24,844 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 09:59:25,444 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 09:59:25,445 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 09:59:25,446 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 09:59:26,166 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:00:01,840 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:00:01,840 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:00:03,633 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  916.48
+Coeff                 0.682
+APR                11.90106
+DaysLeft                 20
+CumVolume         128512838
+Name: 2, dtype: object
+2024-12-14 10:00:03,982 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:00:04,791 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:00:04,791 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:00:04,792 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:00:05,484 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:00:05,485 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:00:05,487 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:00:05,661 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:00:33,260 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:00:33,260 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:00:35,360 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                   910.5
+Coeff                 0.676
+APR               11.796565
+DaysLeft                 20
+CumVolume         128526400
+Name: 2, dtype: object
+2024-12-14 10:00:35,694 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:00:36,271 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:00:36,272 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:00:36,273 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:00:37,117 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:00:37,117 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:00:37,119 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:00:38,177 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:01:28,184 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:01:28,185 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:01:30,615 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  949.65
+Coeff                 0.715
+APR               12.477518
+DaysLeft                 20
+CumVolume         128557945
+Name: 2, dtype: object
+2024-12-14 10:01:30,956 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:01:31,602 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:01:31,602 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:01:31,603 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:01:32,468 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:01:32,468 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:01:32,469 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:01:33,167 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:01:34,820 - greekMaster.client - [31mERROR[0m - Error: params error: symbol invalid BTCUSDC (ErrCode: 10001) (ErrTime: 10:01:34).
+Request → POST https://api-demo.bybit.com/v5/order/create: {"symbol": "BTCUSDC", "category": "linear", "side": "Buy", "qty": "0.009", "orderType": "Market"}.
+2024-12-14 10:01:34,821 - greekMaster.client - [31mERROR[0m - Exiting
+2024-12-14 10:01:34,821 - greekMaster - [31mERROR[0m - Error: params error: symbol invalid BTCUSDC (ErrCode: 10001) (ErrTime: 10:01:34).
+Request → POST https://api-demo.bybit.com/v5/order/create: {"symbol": "BTCUSDC", "category": "linear", "side": "Buy", "qty": "0.009", "orderType": "Market"}.
+2024-12-14 10:24:04,589 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:24:04,589 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:24:06,393 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  902.02
+Coeff                  0.67
+APR               11.700998
+DaysLeft                 20
+CumVolume         131033469
+Name: 2, dtype: object
+2024-12-14 10:24:06,739 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:24:07,525 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:24:07,525 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:24:07,526 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:24:08,338 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:24:08,338 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:24:08,340 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:24:08,506 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:24:09,697 - greekMaster.client - [31mERROR[0m - Error: Order value exceeded lower limit. (ErrCode: 170140) (ErrTime: 10:24:09).
+Request → POST https://api-demo.bybit.com/v5/order/create: {"symbol": "BTCUSDC", "category": "spot", "side": "Buy", "qty": "0.009", "orderType": "Market"}.
+2024-12-14 10:24:09,697 - greekMaster.client - [31mERROR[0m - Exiting
+2024-12-14 10:24:09,698 - greekMaster - [31mERROR[0m - Error: Order value exceeded lower limit. (ErrCode: 170140) (ErrTime: 10:24:09).
+Request → POST https://api-demo.bybit.com/v5/order/create: {"symbol": "BTCUSDC", "category": "spot", "side": "Buy", "qty": "0.009", "orderType": "Market"}.
+2024-12-14 10:25:13,682 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:25:13,682 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:25:15,470 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  863.99
+Coeff                 0.632
+APR               11.037782
+DaysLeft                 20
+CumVolume         131162457
+Name: 2, dtype: object
+2024-12-14 10:25:15,821 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:25:16,669 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:25:16,669 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:25:16,670 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:25:17,419 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:25:17,419 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:25:17,420 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:25:17,592 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:25:18,774 - greekMaster.client - [31mERROR[0m - Error: Market order amount decimal too long (ErrCode: 170148) (ErrTime: 10:25:18).
+Request → POST https://api-demo.bybit.com/v5/order/create: {"symbol": "BTCUSDC", "category": "spot", "side": "Buy", "qty": "912.9301199999999", "orderType": "Market"}.
+2024-12-14 10:25:18,774 - greekMaster.client - [31mERROR[0m - Exiting
+2024-12-14 10:25:18,774 - greekMaster - [31mERROR[0m - Error: Market order amount decimal too long (ErrCode: 170148) (ErrTime: 10:25:18).
+Request → POST https://api-demo.bybit.com/v5/order/create: {"symbol": "BTCUSDC", "category": "spot", "side": "Buy", "qty": "912.9301199999999", "orderType": "Market"}.
+2024-12-14 10:26:05,225 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:26:05,226 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:26:07,341 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                   887.5
+Coeff                 0.655
+APR               11.439802
+DaysLeft                 20
+CumVolume         131380616
+Name: 2, dtype: object
+2024-12-14 10:26:07,685 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:26:08,377 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:26:08,378 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:26:08,378 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:26:09,104 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:26:09,104 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:26:09,105 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:26:09,271 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:26:10,450 - root - [32mINFO[0m - [{'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '1840762336491867392', 'orderLinkId': '1840762336491867393'}, 'retExtInfo': {}, 'time': 1734171970366}, {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '93a3fb25-f72b-4b30-aa0c-9c6af006acf4', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734171970186}]
+2024-12-14 10:26:10,450 - greekMaster - [32mINFO[0m - 
+Long: {'value': 912.74391, 'orderCost': 913.2459191505001, 'quantityContracts': 0.009}
+Short: {'value': 920.7404999999999, 'orderCost': 922.2597218249999, 'quantityContracts': 0.009}
+2024-12-14 10:26:10,450 - greekMaster - [32mINFO[0m - Now we wait...
+2024-12-14 10:27:50,039 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:27:50,040 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:27:51,841 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  829.91
+Coeff                 0.598
+APR               10.444881
+DaysLeft                 20
+CumVolume         131780150
+Name: 2, dtype: object
+2024-12-14 10:27:52,184 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:27:52,949 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:27:52,949 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:27:52,951 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:27:53,520 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:27:53,521 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:27:53,521 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:27:53,686 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:27:56,878 - root - [32mINFO[0m - [{'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '1840763229190753536', 'orderLinkId': '1840763229199142144'}, 'retExtInfo': {}, 'time': 1734172076784}, {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'c5471e2a-0a45-445f-aa7f-3e293825b587', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734172076613}]
+2024-12-14 10:27:56,878 - greekMaster - [31mERROR[0m - Error: name 'longPosition' is not defined
+2024-12-14 10:30:56,608 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:30:56,608 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:30:59,087 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-03JAN25
+Gap                  856.49
+Coeff                 0.624
+APR               10.900137
+DaysLeft                 20
+CumVolume         131902784
+Name: 2, dtype: object
+2024-12-14 10:30:59,440 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:31:00,228 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:31:00,228 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:31:00,229 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:31:01,022 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:31:01,022 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:31:01,024 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:31:02,169 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:31:04,377 - root - [32mINFO[0m - [{'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '1840764802071530752', 'orderLinkId': '1840764802071530753'}, 'retExtInfo': {}, 'time': 1734172264285}, {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '9ba2cca4-318d-4516-888d-73ea4979a3da', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734172264116}]
+2024-12-14 10:31:04,377 - greekMaster - [32mINFO[0m - 
+Long: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '1840764802071530752', 'orderLinkId': '1840764802071530753'}, 'retExtInfo': {}, 'time': 1734172264285}
+Short: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '9ba2cca4-318d-4516-888d-73ea4979a3da', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734172264116}
+2024-12-14 10:31:04,377 - greekMaster - [32mINFO[0m - Now we wait...
+2024-12-14 10:33:21,186 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 10:33:21,187 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 10:33:23,353 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                829.2
+Coeff              0.597
+APR             10.42933
+DaysLeft              20
+CumVolume       26041166
+Name: 2, dtype: object
+2024-12-14 10:33:23,353 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 10:33:24,036 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 10:33:24,293 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 10:33:24,294 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 10:33:24,295 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 10:33:24,462 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 10:33:25,644 - greekMaster - [32mINFO[0m - 
+Long: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'e0f0da4c-0d18-4243-9f35-f2572768a3cd', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734172405552}
+Short: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '0d988c8f-4b63-44a0-9925-866fe20cb0c4', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734172405383}

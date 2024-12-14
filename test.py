@@ -22,7 +22,8 @@ async def main():
     try:
         # Master.CT_best_gap(perpetual=True, spot=False)
         # await Master.one_shot_PF(quantityUSDC=1000, leverage="1", strategy=Master.client.check_arbitrage)
-        await Master.save_klines(dest="store")
+        # await Master.save_klines(dest="store")
+        await Master.stay_alive_SF(quantityUSDC=1000)
     except Exception:
         print("Something happened, exiting")
         sys.exit(1)

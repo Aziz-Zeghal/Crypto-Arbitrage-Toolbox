@@ -106,7 +106,7 @@ class BybitClient:
 
         await self.fetcher.set_leverage(shortContract, leverage)
         # Remove the (spot) from the long contract
-        longContract = longContract.replace("(Spot)", "")
+        longContract = longContract.replace(" (Spot)", "")
 
         # Define handlers
         def short_handler(message):
@@ -115,8 +115,10 @@ class BybitClient:
                 strategy(minimumGap=minimumGap)
 
         def long_handler(message):
-            if not self.fetcher.ws_spot.exited:
+            if not self.fetcher.ws.exited:
                 self.longContract = message
+            else:
+                self.fetcher.ws_spot.exit()
 
         # Start socket
         self.fetcher.start_linear_ws()
@@ -133,17 +135,16 @@ class BybitClient:
 
         # Either arbitrage found or something bad happened
         # TODO: Need to be sure of arbitrage (boolean or better solution)
-
         try:
-            longTickers = self.longContract["data"]
+            # We do not need the long info, because we can take how much we want
             shortTickers = self.shortContract["data"]
 
             # Calculate the position
-            longPosition = bybitAnalyser.position_calculator(longTickers, "Buy", quantityUSDC)
             shortPosition = bybitAnalyser.position_calculator(shortTickers, "Sell", quantityUSDC)
+
             # Open the positions
-            await self.fetcher.enter_both_position(
-                longContract, shortContract, longPosition["quantityContracts"], shortPosition["quantityContracts"]
+            resp = await self.fetcher.enter_spot_linear(
+                longContract, shortContract, round(shortPosition["value"], 2), shortPosition["quantityContracts"]
             )
 
         except Exception as e:
@@ -159,8 +160,8 @@ class BybitClient:
 
         # Return the response
         return {
-            "long": longPosition,
-            "short": shortPosition,
+            "long": resp[0],
+            "short": resp[1],
         }
 
     # TODO: In the long run, this will be the strategy selector too
@@ -240,7 +241,7 @@ class BybitClient:
             longPosition = bybitAnalyser.position_calculator(longTickers, "Buy", quantityUSDC)
             shortPosition = bybitAnalyser.position_calculator(shortTickers, "Sell", quantityUSDC)
             # Open the positions
-            await self.fetcher.enter_both_position(
+            resp = await self.fetcher.enter_double_linear(
                 longContract, shortContract, longPosition["quantityContracts"], shortPosition["quantityContracts"]
             )
 
@@ -255,6 +256,6 @@ class BybitClient:
 
         # Return the response
         return {
-            "long": longPosition,
-            "short": shortPosition,
+            "long": resp[0],
+            "short": resp[1],
         }

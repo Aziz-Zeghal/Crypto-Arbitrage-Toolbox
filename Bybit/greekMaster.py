@@ -319,5 +319,5 @@ class GreekMaster:
         sch.every().day.at("12:00").do(self.monitor)
 
         # Schedule the delivery day (cashout, write the position in the books, etc.)
-        sch.every().day.at("21:00").do(lambda: self.client.fetcher.exit_both_position(resp["long"], resp["short"]))
+        sch.every().day.at("21:00").do(lambda: self.client.fetcher.exit_double_linear(resp["long"], resp["short"]))
         # Repeat by calling this function

@@ -296,7 +296,70 @@ class bybitFetcher:
         return None
 
     @beartype
-    async def enter_both_position(
+    async def enter_spot_linear(
+        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
+    ):
+        """
+        Enter a long position in a spot contract and a short position in a linear contract.
+
+        Args:
+            longSymbol (str): The symbol to long
+            shortSymbol (str): The symbol to short
+            longQuantity (float | int): The quantity to long
+            shortQuantity (float | int): The quantity to short
+        """
+
+        async def enter_position(symbol, quantity, side, category):
+            return self.session.place_order(
+                symbol=symbol,
+                category=category,
+                side=side,
+                qty=quantity,
+                orderType="Market",
+            )
+
+        # Make both API calls concurrently
+        short_task = asyncio.create_task(enter_position(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(enter_position(longSymbol, longQuantity, "Buy", "spot"))
+
+        # Gather the results
+        responses = await asyncio.gather(long_task, short_task)
+        return responses
+
+    @beartype
+    async def exit_spot_linear(
+        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
+    ):
+        """
+        Exit a long position in a spot contract and a short position in a linear contract.
+
+        Args:
+            longSymbol (str): The symbol to long
+            shortSymbol (str): The symbol to short
+            longQuantity (float | int): The quantity to long
+            shortQuantity (float | int): The quantity to short
+        """
+
+        async def close_position(symbol, quantity, side, category):
+            return self.session.place_order(
+                symbol=symbol,
+                category=category,
+                side=side,
+                qty=quantity,
+                orderType="Market",
+                reduceOnly=True,
+            )
+
+        # Make both API calls concurrently
+        long_task = asyncio.create_task(close_position(longSymbol, longQuantity, "Sell", "spot"))
+        short_task = asyncio.create_task(close_position(shortSymbol, shortQuantity, "Buy", "linear"))
+
+        # Gather the results
+        responses = await asyncio.gather(long_task, short_task)
+        return responses
+
+    @beartype
+    async def enter_double_linear(
         self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
     ):
         """
@@ -313,26 +376,24 @@ class bybitFetcher:
             dict: The response from the API
         """
 
-        # We will use asyncio to make calls at the same time.
-
-        async def enter_position(symbol, quantity):
+        async def enter_position(symbol, quantity, side):
             return self.session.place_order(
                 symbol=symbol,
                 category="linear",
-                side="Buy" if symbol == longSymbol else "Sell",
+                side=side,
                 qty=quantity,
                 orderType="Market",
             )
 
         # Make both API calls concurrently
-        long_task = enter_position(longSymbol, longQuantity)
-        short_task = enter_position(shortSymbol, shortQuantity)
+        short_task = asyncio.create_task(enter_position(shortSymbol, shortQuantity, "Sell"))
+        long_task = asyncio.create_task(enter_position(longSymbol, longQuantity, "Buy"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
         return responses
 
-    async def exit_both_position(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
+    async def exit_double_linear(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
         """
         Exit a position in both contracts.
 
@@ -345,19 +406,19 @@ class bybitFetcher:
 
         # We will use asyncio to make calls at the same time.
 
-        async def close_position(symbol, quantity):
+        async def close_position(symbol, quantity, side):
             return self.session.place_order(
                 symbol=symbol,
                 category="linear",
-                side="Sell" if symbol == longSymbol else "Buy",
+                side=side,
                 qty=quantity,
                 orderType="Market",
                 reduceOnly=True,
             )
 
         # Make both API calls concurrently
-        long_task = close_position(longSymbol, longQuantity)
-        short_task = close_position(shortSymbol, shortQuantity)
+        long_task = asyncio.create_task(close_position(longSymbol, longQuantity, "Sell"))
+        short_task = asyncio.create_task(close_position(shortSymbol, shortQuantity, "Buy"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
