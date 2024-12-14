@@ -15,7 +15,7 @@ import keys
 
 
 class bybitFetcher:
-    __slots__ = ["session", "ws", "logger"]
+    __slots__ = ["session", "ws", "ws_spot", "logger"]
 
     @beartype
     def __init__(self, demo=False):
@@ -25,9 +25,9 @@ class bybitFetcher:
         Args:
             demo (bool): If True, will use the demo keys
 
-        Makes:
-            session (HTTP): The HTTP session
-            logger (logging.Logger): Logger for the fetcher
+        Defines:
+            - session (HTTP): The HTTP session
+            - logger (logging.Logger): Logger for the fetcher
         """
         if demo:
             self.session = HTTP(api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, demo=True)
@@ -35,18 +35,45 @@ class bybitFetcher:
             self.session = HTTP(api_key=keys.bybitPKey, api_secret=keys.bybitSKey)
 
         self.ws = None
+        # TODO: In the future, have a dictionary of WebSocket sessions
+        self.ws_spot = None
 
-        self.logger = logging.getLogger("Bybit.greekMaster.fetcher")
+        self.logger = logging.getLogger("greekMaster.client.fetcher")
 
-        # Change the logger config to say fetcher talked
-
-    def start_ws(self):
+    def start_linear_ws(self):
         """
-        Start the WebSocket session
+        Start the WebSocket session for linear contracts
         """
         self.ws = WebSocket(
-            api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, testnet=False, channel_type="linear"
+            api_key=keys.demobybitPKey,
+            api_secret=keys.demobybitSKey,
+            testnet=False,
+            channel_type="linear",
+            ping_interval=5,
+            ping_timeout=4,
         )
+
+    def start_spot_ws(self):
+        """
+        Start the WebSocket session for spot contracts
+        """
+        self.ws_spot = WebSocket(
+            api_key=keys.demobybitPKey,
+            api_secret=keys.demobybitSKey,
+            testnet=False,
+            channel_type="spot",
+            ping_interval=5,
+            ping_timeout=4,
+        )
+
+    def close_websockets(self):
+        if self.ws:
+            self.ws.exit()
+            self.logger.info("Linear WebSocket closed")
+
+        if self.ws_spot:
+            self.ws_spot.exit()
+            self.logger.info("Spot WebSocket closed")
 
     def get_USDC_BTC(self):
         """
@@ -108,7 +135,7 @@ class bybitFetcher:
         return markets
 
     @beartype
-    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False):
+    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False, quoteCoins=["USDT", "USDC", "USD"]):
         """
         Get all the future contracts for a given coin
 
@@ -117,6 +144,7 @@ class bybitFetcher:
             coin (str): Either BTC or ETH
             inverse (bool): If True, will return inverse futures
             perpetual (bool): If True, will return perpetual
+            quoteCoins (list[str]): The quote coins to consider
         Return:
             list: List of all the future contracts for the given coin sorted by expiry date
         """
@@ -127,12 +155,13 @@ class bybitFetcher:
         markets = []
         for p in pairs["result"]["list"]:
             # Looks like BTC-01NOV24
-            if p["contractType"] == "LinearFutures":
-                markets.append(p["symbol"])
-            elif perpetual and p["contractType"] == "LinearPerpetual":
-                markets.append(p["symbol"])
-            elif inverse and p["contractType"] == "InverseFutures":
-                markets.append(p["symbol"])
+            if p["quoteCoin"] in quoteCoins:
+                if p["contractType"] == "LinearFutures":
+                    markets.append(p["symbol"])
+                elif perpetual and p["contractType"] == "LinearPerpetual":
+                    markets.append(p["symbol"])
+                elif inverse and p["contractType"] == "InverseFutures":
+                    markets.append(p["symbol"])
 
         # Function to extract and convert the date part to a datetime object
         def extract_date(contract):
@@ -245,6 +274,21 @@ class bybitFetcher:
             save_klines_parquet(file_name, acc_data)
         return acc_data
 
+    async def get_greeks(self, symbol: str = None):
+        """
+        Get the greeks for a given symbol
+
+        Link: https://bybit-exchange.github.io/docs/v5/account/coin-greeks
+        Args:
+            symbol (str): The symbol to get the greeks from
+        Returns:
+            dict: The response from the API
+        """
+        if symbol:
+            return self.session.get_coin_greeks(symbol=symbol)
+        else:
+            return self.session.get_coin_greeks()
+
     @beartype
     async def set_leverage(self, symbol: str, leverage: str):
         """
@@ -270,8 +314,76 @@ class bybitFetcher:
 
         return None
 
+    async def _place_order(
+        self, symbol: str, quantity: float | int, side: str, category: str, reduce_only: bool = False
+    ):
+        """
+        Place an order in the specified category.
+
+        Args:
+            symbol (str): The symbol to trade
+            quantity (float | int): The quantity to trade
+            side (str): The side of the trade, either "Buy" or "Sell"
+            category (str): The category of the trade, either "spot" or "linear"
+            reduce_only (bool): Whether the order is reduce-only
+        Returns:
+            dict: The response from the API
+        """
+        return self.session.place_order(
+            symbol=symbol,
+            category=category,
+            side=side,
+            qty=quantity,
+            orderType="Market",
+            reduceOnly=reduce_only,
+        )
+
     @beartype
-    async def enter_both_position(
+    async def enter_spot_linear(
+        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
+    ):
+        """
+        Enter a long position in a spot contract and a short position in a linear contract.
+
+        Args:
+            longSymbol (str): The symbol to long
+            shortSymbol (str): The symbol to short
+            longQuantity (float | int): The quantity to long
+            shortQuantity (float | int): The quantity to short
+        """
+        # Make both API calls concurrently
+        short_task = asyncio.create_task(self._place_order(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Buy", "spot"))
+
+        # Gather the results
+        responses = await asyncio.gather(long_task, short_task)
+        return responses
+
+    @beartype
+    async def exit_spot_linear(
+        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
+    ):
+        """
+        Exit a long position in a spot contract and a short position in a linear contract.
+
+        Args:
+            longSymbol (str): The symbol to long
+            shortSymbol (str): The symbol to short
+            longQuantity (float | int): The quantity to long
+            shortQuantity (float | int): The quantity to short
+        """
+        # Make both API calls concurrently
+        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Sell", "spot", reduce_only=True))
+        short_task = asyncio.create_task(
+            self._place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+        )
+
+        # Gather the results
+        responses = await asyncio.gather(long_task, short_task)
+        return responses
+
+    @beartype
+    async def enter_double_linear(
         self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
     ):
         """
@@ -287,27 +399,15 @@ class bybitFetcher:
         Returns:
             dict: The response from the API
         """
-
-        # We will use asyncio to make calls at the same time.
-
-        async def enter_position(symbol, quantity):
-            return self.session.place_order(
-                symbol=symbol,
-                category="linear",
-                side="Buy" if symbol == longSymbol else "Sell",
-                qty=quantity,
-                orderType="Market",
-            )
-
         # Make both API calls concurrently
-        long_task = enter_position(longSymbol, longQuantity)
-        short_task = enter_position(shortSymbol, shortQuantity)
+        short_task = asyncio.create_task(self._place_order(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Buy", "linear"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
         return responses
 
-    async def exit_both_position(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
+    async def exit_double_linear(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
         """
         Exit a position in both contracts.
 
@@ -317,22 +417,13 @@ class bybitFetcher:
         Returns:
             dict: The response from the API
         """
-
-        # We will use asyncio to make calls at the same time.
-
-        async def close_position(symbol, quantity):
-            return self.session.place_order(
-                symbol=symbol,
-                category="linear",
-                side="Sell" if symbol == longSymbol else "Buy",
-                qty=quantity,
-                orderType="Market",
-                reduceOnly=True,
-            )
-
         # Make both API calls concurrently
-        long_task = close_position(longSymbol, longQuantity)
-        short_task = close_position(shortSymbol, shortQuantity)
+        long_task = asyncio.create_task(
+            self._place_order(longSymbol, longQuantity, "Sell", "linear", reduce_only=True)
+        )
+        short_task = asyncio.create_task(
+            self._place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+        )
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
