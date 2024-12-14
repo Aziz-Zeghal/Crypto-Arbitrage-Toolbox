@@ -2155,3 +2155,173 @@ Name: 2, dtype: object
 Long: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '1840983980795759872', 'orderLinkId': '1840983980795759873'}, 'retExtInfo': {}, 'time': 1734198392425}
 Short: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'ae461c44-56a2-48ff-8a22-36510e631785', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734198392244}
 2024-12-14 17:46:32,824 - greekMaster - [32mINFO[0m - Now we wait...
+2024-12-14 18:23:52,398 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:23:52,398 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 18:23:54,584 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                800.3
+Coeff              0.571
+APR            10.133599
+DaysLeft              20
+CumVolume       16906583
+Name: 2, dtype: object
+2024-12-14 18:23:54,585 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 18:23:54,585 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 18:23:55,474 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 18:23:55,475 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 18:24:01,176 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 18:24:01,371 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 18:24:01,883 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2024-12-14 18:24:01,884 - greekMaster - [32mINFO[0m - 
+Long: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '7f72709c-9f3b-4727-8b39-364195cf406a', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734200641643}
+Short: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'f09e3559-08fd-4eb5-b55a-fbcd307067f9', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734200641478}
+2024-12-14 18:24:53,053 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:24:53,053 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 18:24:55,178 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                785.6
+Coeff              0.557
+APR             9.885477
+DaysLeft              20
+CumVolume       16895926
+Name: 2, dtype: object
+2024-12-14 18:24:55,178 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 18:24:55,179 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 18:24:55,876 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 18:24:55,877 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 18:25:01,573 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 18:25:01,738 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 18:25:01,739 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,739 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,739 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,739 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,740 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,740 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,818 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:01,918 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:02,017 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:25:02,053 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2024-12-14 18:25:02,280 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2024-12-14 18:25:02,281 - greekMaster - [32mINFO[0m - 
+Long: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': '51e97ad4-6959-4089-923b-91fbc33a82e7', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734200702041}
+Short: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'fe03ecd1-c024-4c39-8182-953cb24fd642', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734200701869}
+2024-12-14 18:27:46,336 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:27:46,336 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 18:27:48,806 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                870.6
+Coeff              0.642
+APR            11.395146
+DaysLeft              20
+CumVolume       16744449
+Name: 2, dtype: object
+2024-12-14 18:27:48,806 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 18:27:48,806 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 18:27:49,409 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 18:27:49,410 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 18:27:55,115 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 18:27:55,280 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 18:27:55,281 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:27:55,325 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:27:55,360 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2024-12-14 18:27:55,425 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:27:55,822 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2024-12-14 18:27:55,822 - greekMaster - [32mINFO[0m - 
+Long: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'b1c37595-cf87-45ba-be03-f3af28c06fbf', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734200875582}
+Short: {'retCode': 0, 'retMsg': 'OK', 'result': {'orderId': 'e0713674-eca6-4cd7-987c-8ca390036596', 'orderLinkId': ''}, 'retExtInfo': {}, 'time': 1734200875413}
+2024-12-14 18:29:04,598 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:29:04,599 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 18:29:06,379 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                859.7
+Coeff              0.631
+APR            11.200391
+DaysLeft              20
+CumVolume       16704850
+Name: 2, dtype: object
+2024-12-14 18:29:06,379 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 18:29:06,379 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 18:29:07,073 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 18:29:07,073 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 18:29:12,776 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 18:29:12,941 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 18:29:12,941 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,941 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,942 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,942 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,942 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,942 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,942 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,943 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,943 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,943 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:12,943 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:13,025 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:29:13,160 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2024-12-14 18:29:13,501 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2024-12-14 18:29:13,501 - greekMaster - [32mINFO[0m - 
+Long: {'value': 909.0522, 'orderCost': 909.55217871, 'quantityContracts': 0.009}
+Short: {'value': 916.9784999999999, 'orderCost': 918.491514525, 'quantityContracts': 0.009}
+2024-12-14 18:30:24,250 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:30:24,251 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 18:30:26,043 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                922.7
+Coeff              0.694
+APR            12.319208
+DaysLeft              20
+CumVolume       16714341
+Name: 2, dtype: object
+2024-12-14 18:30:26,043 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 18:30:26,043 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 18:30:26,750 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 18:30:26,750 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 18:30:32,441 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 18:30:32,621 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 18:30:32,621 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,621 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,623 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,626 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,661 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2024-12-14 18:30:32,726 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,827 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:32,860 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2024-12-14 18:30:32,926 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:30:33,151 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2024-12-14 18:30:33,152 - root - [32mINFO[0m - BTCPERP
+2024-12-14 18:30:33,152 - greekMaster - [32mINFO[0m - 
+Long: {'value': 908.7389999999999, 'orderCost': 909.23880645, 'quantityContracts': 0.009}
+Short: {'value': 916.9784999999999, 'orderCost': 918.491514525, 'quantityContracts': 0.009}
+2024-12-14 18:32:44,702 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:32:57,473 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2024-12-14 18:32:57,474 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2024-12-14 18:32:59,586 - greekMaster - [32mINFO[0m - Best gap
+Buy              BTCPERP
+Sell         BTC-03JAN25
+Gap                932.5
+Coeff              0.704
+APR            12.497798
+DaysLeft              20
+CumVolume       16711237
+Name: 2, dtype: object
+2024-12-14 18:32:59,586 - greekMaster - [32mINFO[0m - Starting check_arbitrage with 1000 USDC and 1x leverage
+2024-12-14 18:32:59,587 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2024-12-14 18:33:00,275 - websocket - [32mINFO[0m - Websocket connected
+2024-12-14 18:33:00,277 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2024-12-14 18:33:06,519 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2024-12-14 18:33:06,686 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2024-12-14 18:33:06,686 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2024-12-14 18:33:07,225 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2024-12-14 18:33:07,226 - root - [32mINFO[0m - {'topic': 'tickers.BTCPERP', 'type': 'snapshot', 'data': {'symbol': 'BTCPERP', 'tickDirection': 'ZeroMinusTick', 'price24hPcnt': '-0.007549', 'lastPrice': '100954.00', 'prevPrice24h': '101721.90', 'highPrice24h': '102716.50', 'lowPrice24h': '100854.90', 'prevPrice1h': '101279.60', 'markPrice': '100949.42', 'indexPrice': '100919.74', 'openInterest': '1375.288', 'openInterestValue': '138834525.93', 'turnover24h': '16574640.7702', 'volume24h': '163.0660', 'nextFundingTime': '1734220800000', 'fundingRate': '0.0001', 'bid1Price': '100948.10', 'bid1Size': '0.001', 'ask1Price': '100948.20', 'ask1Size': '0.007', 'preOpenPrice': '', 'preQty': '', 'curPreListingPhase': ''}, 'cs': 22395391834, 'ts': 1734201185051}
+2024-12-14 18:33:07,226 - greekMaster - [32mINFO[0m - 
+Long: {'value': 908.5859999999999, 'orderCost': 909.0857222999999, 'quantityContracts': 0.009}
+Short: {'value': 915.8399999999999, 'orderCost': 917.3511359999999, 'quantityContracts': 0.009}

@@ -192,6 +192,15 @@ class GreekMaster:
         df_gaps = df_gaps.astype(column_types)
         return df_gaps
 
+    def _new_round(self):
+        """
+        Cleanup for next arbitrage round
+        """
+        sch.clear()
+
+        self.client.longContractmsg = None
+        self.client.shortContractmsg = None
+
     def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25, quoteCoins: list[str] = ["USDC"]):
         """
         Find the best gap for a pair of contracts
@@ -292,7 +301,7 @@ class GreekMaster:
         """
 
         # Clear the schedule
-        sch.clear()
+        self._new_round()
 
         # Get best gap
         bestGap = self.CT_best_gap(perpetual=False, spot=True, quoteCoins=[collateral])

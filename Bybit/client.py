@@ -10,7 +10,7 @@ from analyser import bybitAnalyser
 
 
 class BybitClient:
-    __slots__ = ["fetcher", "longContract", "shortContract", "logger", "active"]
+    __slots__ = ["fetcher", "longContractmsg", "shortContractmsg", "logger", "active"]
 
     @beartype
     def __init__(self, demo=False):
@@ -32,8 +32,8 @@ class BybitClient:
         """
         self.fetcher = bybitFetcher(demo=demo)
 
-        self.longContract: str = None
-        self.shortContract: str = None
+        self.longContractmsg: str = None
+        self.shortContractmsg: str = None
         self.active = False
 
         self.logger = logging.getLogger("greekMaster.client")
@@ -51,10 +51,10 @@ class BybitClient:
         """
 
         # Check if the data is complete
-        if self.longContract is None or self.shortContract is None:
+        if self.longContractmsg is None or self.shortContractmsg is None:
             return
-        longTickers = self.longContract["data"]
-        shortTickers = self.shortContract["data"]
+        longTickers = self.longContractmsg["data"]
+        shortTickers = self.shortContractmsg["data"]
 
         # | Price of the future contract
         longPrice = float(longTickers["lastPrice"])
@@ -94,14 +94,14 @@ class BybitClient:
         # Define handlers
         def short_handler(message):
             if self.active:
-                self.shortContract = message
+                self.shortContractmsg = message
                 strategy(minimumGap=minimumGap)
             else:
                 self.logger.warning("Not active anymore. Ignoring short websocket...")
 
         def long_handler(message):
             if self.active:
-                self.longContract = message
+                self.longContractmsg = message
                 strategy(minimumGap=minimumGap)
             else:
                 self.logger.warning("Not active anymore. Ignoring long websocket...")
@@ -173,11 +173,11 @@ class BybitClient:
 
         # TODO: Find a way to call entry in callbacks to avoid busy waiting
         while self.active:
-            asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
 
         try:
             # We do not need the long info, because we can take how much we want
-            shortTickers = self.shortContract["data"]
+            shortTickers = self.shortContractmsg["data"]
 
             # Calculate the position
             shortPosition = bybitAnalyser.position_calculator(shortTickers, "Sell", quantityUSDC)
@@ -243,11 +243,11 @@ class BybitClient:
 
         # TODO: Find a way to call entry in callbacks to avoid busy waiting
         while self.active:
-            asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
 
         try:
-            longTickers = self.longContract["data"]
-            shortTickers = self.shortContract["data"]
+            longTickers = self.longContractmsg["data"]
+            shortTickers = self.shortContractmsg["data"]
 
             # Calculate the position
             longPosition = bybitAnalyser.position_calculator(longTickers, "Buy", quantityUSDC)
@@ -266,8 +266,9 @@ class BybitClient:
         # Not active anymore, close the Websockets
         self.fetcher.close_websockets()
 
+        logging.info(self.longContractmsg)
         # Return the response
         return {
-            "long": resp[0],
-            "short": resp[1],
+            "long": longPosition,
+            "short": shortPosition,
         }
