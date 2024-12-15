@@ -48,11 +48,13 @@ For now, the architecture looks like this:
 
 - **Utils**: Management of Parquet files. Currently, it only handles Klines for everything (spot, inverse, linear).
 - **Analyser**: Calculates fees, the amount of USDC required to balance quantities between two contracts, etc.
-- **ApiFetcher**: Handles all communication with a socket or the API. Also tracks the Klines of previous contracts in a dictionary.
+- **ApiFetcher**: Handles all communication with a socket or the API.
 - **Simulation**: In the long term, it could simulate an entry + exit. For this, it relies on the Analyser for calculations.
 - **Visualizer**: A laboratory for viewing data in different ways. It can display real data or simulated data (from Simulation).
-- **Client**: Executes the entry + exit arbitrage logic. This will run as a systemd process (a daemon in the background).
-- **GreekMaster**: Monitors the account and calls ephemeral client processes to orchestrate arbitrage entry. If the delta is unfavorable (meaning the arbitrage is no longer profitable), it sends a notification.
+- **Client**: Logic for a pair of products. Executes the entry + exit arbitrage logic. It contains all the strategies for a pair of products. This will run as a systemd process (a daemon in the background).
+- **GreekMaster**: Logic for all products. Monitors the account and calls ephemeral client processes to orchestrate arbitrage entry. Can talk with Bybit through the client. If delta is unfavorable (meaning the arbitrage is no longer profitable), it sends a notification.
+
+GreekMaster will be responsible of the arbitrage for one round. Looping will be orchestrated by main.py.
 
 ### Strategies
 - Funding rate arbitrage Spot & Perpetual
