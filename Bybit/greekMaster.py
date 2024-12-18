@@ -11,7 +11,7 @@ from utils import format_volume
 
 
 class GreekMaster:
-    __slots__ = ["client", "fetcher", "logger", "position_info"]
+    __slots__ = ["client", "fetcher", "logger", "position_info", "watching"]
 
     @beartype
     def __init__(self, demo=False):
@@ -21,18 +21,19 @@ class GreekMaster:
         Talks to Bybit through the client.
         Can send notifications and logs arbitrage events.
 
-        GreekMaster is supposed to live forever. Context will be stopped here, not in main.
+        GreekMaster will be invoked by main.py and called forever.
 
         3 types of methods:
             - Selectors: The method to choose the best pair of contracts
             - Strategies: Called by the executor
-            - Executors: Setup application, then call the strategy, monitor then repeat
+            - Executors: Setup application, call the strategy, monitor, then exit.
         Defines:
             - client (BybitClient): Client for the Bybit API
             - fetcher (bybitFetcher): Fetcher for the Bybit API
             - contracts (list): List of all the current contracts
             - logger (logging.Logger): Logger for the client
             - position_info: Dictionnary with live updates
+            - watching: Boolean to know if GreekMaster has control
 
         """
         self.client = BybitClient(demo=demo)
@@ -46,59 +47,7 @@ class GreekMaster:
 
         self.logger.info("GreekMaster initialized")
 
-    # TODO: Does not fetch in parallel. Should be done in parallel
-    @beartype
-    async def save_klines(self, dest: str):
-        """
-        Save the klines of all the future contracts in parquet format
-        Checks if a parquet file exists to update it, else creates a new one
-
-        Args:
-            dest (str): The destination folder
-        """
-        allContracts = self.client.fetcher.get_futureNames()
-
-        async def fetch_history(contract, interval, category="linear"):
-            await self.client.fetcher.get_history_pd(
-                contract, interval=interval, dest=dest, dateLimit="2024-01-01 00:00", category=category
-            )
-
-        tasks = []
-
-        for contract in allContracts:
-            tasks.extend([fetch_history(contract, "15"), fetch_history(contract, "5"), fetch_history(contract, "1")])
-
-        # spot
-        tasks.extend(
-            [
-                fetch_history("BTCUSDT", "15", category="spot"),
-                fetch_history("BTCUSDT", "5", category="spot"),
-                fetch_history("BTCUSDT", "1", category="spot"),
-            ]
-        )
-
-        # Perpetual contracts
-        tasks.extend(
-            [
-                fetch_history("BTCUSDT", "15"),
-                fetch_history("BTCUSDT", "5"),
-                fetch_history("BTCUSDT", "1"),
-                fetch_history("BTCPERP", "15"),
-                fetch_history("BTCPERP", "5"),
-                fetch_history("BTCPERP", "1"),
-            ]
-        )
-
-        await asyncio.gather(*tasks)
-
-    def monitor(self):
-        """
-        Monitor the accounts, check the positions, the liquidation risk, etc.
-
-        Writes inside position_info
-
-        """
-        self.logger.info("Monitoring the account")
+        self.watching = False
 
     # TODO: boolean for future, and upgrade function
     @beartype
@@ -201,6 +150,64 @@ class GreekMaster:
         self.client.longContractmsg = None
         self.client.shortContractmsg = None
 
+        self.position_info = {}
+
+    async def monitor(self):
+        """
+        Monitor the accounts, check the positions, the liquidation risk, etc.
+
+        Writes inside position_info
+
+        """
+        self.logger.info("Monitoring the account...")
+
+        logging.info(
+            f"""--------------------
+            {self.fetcher.get_USDC_BTC()}
+            --------------------"""
+        )
+
+        logging.info(
+            f"""--------------------
+            {await self.fetcher.get_greeks("BTC")}
+            --------------------"""
+        )
+
+    # TODO: Cannot run async on scheduler :(
+    # Use AsyncScheduler
+    # TODO: This handler will be for spot/(perpetual|future)
+    async def _handle_on_delivery(self):
+        """
+        Handler to exit on delivery day (Spot/Perpetual)
+        """
+
+        sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
+
+        # Need to get the actual amount of BTC we have in the long (which is spot)
+        longContract = self.position_info["longContract"]
+        # TODO: Small portion still not sold
+        longContract["qty"] = round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6)
+        shortContract = self.position_info["shortContract"]
+
+        # Schedule the delivery day (cashout, write the position in the books, etc.)
+        sch.every().day.at("23:10").do(
+            lambda: (
+                asyncio.ensure_future(
+                    self.fetcher.exit_spot_linear(
+                        longSymbol=longContract["symbol"],
+                        longQuantity=longContract["qty"],
+                        shortSymbol=shortContract["symbol"],
+                        shortQuantity=shortContract["qty"],
+                    )
+                ),
+                setattr(self, "watching", False),
+            )
+        )
+
+        while self.watching:
+            sch.run_pending()
+            await asyncio.sleep(3)
+
     def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25, quoteCoins: list[str] = ["USDC"]):
         """
         Find the best gap for a pair of contracts
@@ -297,7 +304,7 @@ class GreekMaster:
 
         Args:
             quantityUSDC (float): The quantity in USDC
-            collateral (str): The collateral to use, either "USDC" or "USDT
+            collateral (str): The collateral to use, either "USDC" or "USDT"
         """
 
         # Clear the schedule
@@ -318,14 +325,15 @@ class GreekMaster:
             self.logger.error(f"Error: {e}")
             raise e
 
-        self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
+        self.logger.info(
+            f"\n{resp['longContract']['symbol']}: {resp['longContract']['qty']}\n{resp['shortContract']['symbol']}: {resp['shortContract']['qty']}"
+        )
+        self.position_info = resp
 
         self.logger.info("Now we wait...")
         # Monitor the position (write perceived position, compare with real position, log)
 
-        # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)
-        sch.every().day.at("12:00").do(self.monitor)
+        self.watching = True
 
-        # Schedule the delivery day (cashout, write the position in the books, etc.)
-        sch.every().day.at("21:00").do(lambda: self.client.fetcher.exit_double_linear(resp["long"], resp["short"]))
-        # Repeat by calling this function
+        # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)
+        await self._handle_on_delivery()

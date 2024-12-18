@@ -184,7 +184,7 @@ class BybitClient:
 
             # Open the positions
             resp = await self.fetcher.enter_spot_linear(
-                longContract, shortContract, round(shortPosition["value"], 2), shortPosition["quantityContracts"]
+                longContract, shortContract, round(shortPosition["value"], 8), shortPosition["quantityContracts"]
             )
         except Exception as e:
             self.logger.error(f"Error when entering: {e}")
@@ -197,8 +197,8 @@ class BybitClient:
 
         # Return the response
         return {
-            "long": resp[0],
-            "short": resp[1],
+            "longContract": {"symbol": longContract, "qty": round(shortPosition["value"], 2)},
+            "shortContract": {"symbol": shortContract, "qty": shortPosition["quantityContracts"]},
         }
 
     # TODO: In the long run, this will be the strategy selector too

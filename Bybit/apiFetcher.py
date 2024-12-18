@@ -274,6 +274,52 @@ class bybitFetcher:
             save_klines_parquet(file_name, acc_data)
         return acc_data
 
+    # TODO: Does not fetch in parallel. Should be done in parallel
+    @beartype
+    async def save_klines(self, dest: str):
+        """
+        Save the klines of all the future contracts in parquet format
+        Checks if a parquet file exists to update it, else creates a new one
+
+        Args:
+            dest (str): The destination folder
+        """
+        allContracts = self.get_futureNames()
+
+        async def fetch_history(contract, interval, category="linear"):
+            await self.get_history_pd(
+                contract, interval=interval, dest=dest, dateLimit="2024-01-01 00:00", category=category
+            )
+
+        tasks = []
+
+        for contract in allContracts:
+            tasks.extend([fetch_history(contract, "15"), fetch_history(contract, "5"), fetch_history(contract, "1")])
+
+        # spot
+        tasks.extend(
+            [
+                fetch_history("BTCUSDT", "15", category="spot"),
+                fetch_history("BTCUSDT", "5", category="spot"),
+                fetch_history("BTCUSDT", "1", category="spot"),
+            ]
+        )
+
+        # Perpetual contracts
+        tasks.extend(
+            [
+                fetch_history("BTCUSDT", "15"),
+                fetch_history("BTCUSDT", "5"),
+                fetch_history("BTCUSDT", "1"),
+                fetch_history("BTCPERP", "15"),
+                fetch_history("BTCPERP", "5"),
+                fetch_history("BTCPERP", "1"),
+            ]
+        )
+
+        # TODO: This code will wait for other tasks, because we use I/O bound tasks
+        await asyncio.gather(*tasks)
+
     async def get_greeks(self, symbol: str = None):
         """
         Get the greeks for a given symbol
