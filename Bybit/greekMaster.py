@@ -1,17 +1,19 @@
+import datetime
 import logging
+import sys
 import pandas as pd
 import asyncio
-import schedule as sch
+import schedule
 from beartype import beartype
 from typing import Callable
 
 from client import BybitClient
 from analyser import bybitAnalyser
-from utils import format_volume
+from utils import format_volume, get_date, get_epoch
 
 
 class GreekMaster:
-    __slots__ = ["client", "fetcher", "logger", "position_info", "watching"]
+    __slots__ = ["client", "fetcher", "logger", "position_info", "watching", "sch"]
 
     @beartype
     def __init__(self, demo=False):
@@ -47,6 +49,7 @@ class GreekMaster:
 
         self.logger.info("GreekMaster initialized")
 
+        self.sch = schedule.Scheduler()
         self.watching = False
 
     # TODO: boolean for future, and upgrade function
@@ -145,12 +148,14 @@ class GreekMaster:
         """
         Cleanup for next arbitrage round
         """
-        sch.clear()
+        self.sch.clear()
 
         self.client.longContractmsg = None
         self.client.shortContractmsg = None
 
         self.position_info = {}
+
+        self.watching = False
 
     async def monitor(self):
         """
@@ -173,6 +178,45 @@ class GreekMaster:
             --------------------"""
         )
 
+    async def _exit_on_delivery(self):
+        """
+        Handler called every second to check if delivery arrived or not.
+        """
+        shortContract = self.position_info["shortContract"]
+        longContract = self.position_info["longContract"]
+
+        res = await self.fetcher.get_position(symbol=shortContract["symbol"])
+
+        # If the position is 0, delivery arrived, sell spot.
+        if res["qty"] == "0" or res["positionValue"] == "":
+
+            # Exit the spot
+            await self.fetcher.place_order(
+                symbol=longContract["symbol"],
+                side="Sell",
+                quantity=longContract["qty"],
+                category="spot",
+            )
+            setattr(self, "watching", False),
+            self.logger.info("Delivery arrived, spot sold !")
+
+            # Here, you would want to return self.sch.CancelJob.
+            # But, we are in an async function, so we cannot return it easily.
+
+    def _friday_job(self, epochTime: int):
+        self.logger.info(f"{epochTime - datetime.datetime.now().timestamp() * 1000}")
+        # If we are 30 minutes before the delivery time
+        if (epochTime - datetime.datetime.now().timestamp() * 1000) < 1200 * 1000:
+            self.logger.info("Delivery day ! Setting up surveillance...")
+
+            # When the position is 0, delivery arrived, sell spot.
+            self.sch.every().second.do(lambda: asyncio.ensure_future(self._exit_on_delivery()))
+
+            # Job is no longer useful, so remove it
+            return schedule.CancelJob
+
+        # Else, we are friday but not yet the delivery day
+
     # TODO: Cannot run async on scheduler :(
     # Use AsyncScheduler
     # TODO: This handler will be for spot/(perpetual|future)
@@ -180,33 +224,34 @@ class GreekMaster:
         """
         Handler to exit on delivery day (Spot/Perpetual)
         """
+        epochTime = int(
+            self.fetcher.session.get_tickers(symbol=self.position_info["shortContract"]["symbol"], category="linear")[
+                "result"
+            ]["list"][0]["deliveryTime"]
+        )
 
-        sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
+        self.logger.info(f"Delivery date at 8:00AM UTC for: {get_date(epochTime)}")
 
         # Need to get the actual amount of BTC we have in the long (which is spot)
         longContract = self.position_info["longContract"]
         # TODO: Small portion still not sold
         longContract["qty"] = round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6)
-        shortContract = self.position_info["shortContract"]
 
+        # SCHEDULING PART
+        self.sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
         # Schedule the delivery day (cashout, write the position in the books, etc.)
-        sch.every().day.at("23:10").do(
-            lambda: (
-                asyncio.ensure_future(
-                    self.fetcher.exit_spot_linear(
-                        longSymbol=longContract["symbol"],
-                        longQuantity=longContract["qty"],
-                        shortSymbol=shortContract["symbol"],
-                        shortQuantity=shortContract["qty"],
-                    )
-                ),
-                setattr(self, "watching", False),
-            )
-        )
+        self.sch.every().friday.at("7:50", "Europe/Paris").do(self._friday_job, epochTime=epochTime)
 
+        # WARNING: order of actions matters A LOT
+        # If you run_pending at the end, function will get called even if the job is cancelled
+        # Weirdest bug I have seen. Fixed it.
         while self.watching:
-            sch.run_pending()
-            await asyncio.sleep(3)
+            self.sch.run_pending()
+            n = self.sch.idle_seconds
+            await asyncio.sleep(n)
+
+        # Clear the schedule
+        self._new_round()
 
     def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25, quoteCoins: list[str] = ["USDC"]):
         """
@@ -309,10 +354,12 @@ class GreekMaster:
 
         # Clear the schedule
         self._new_round()
-
         # Get best gap
         bestGap = self.CT_best_gap(perpetual=False, spot=True, quoteCoins=[collateral])
 
+        # Set current information
+        self.position_info["longContract"] = bestGap["Buy"]
+        self.position_info["shortContract"] = bestGap["Sell"]
         # Invoke strategy
         try:
             resp = await self.client.Ulysse_spot(

@@ -1,5 +1,4 @@
 import asyncio
-import sys
 import logging
 from beartype import beartype
 from typing import Callable
@@ -124,12 +123,13 @@ class BybitClient:
         # Stream tickers for both contracts using the same handler
         self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
 
+        self.active = True
+
         if is_spot:
             self.fetcher.ws_spot.ticker_stream(symbol=longContract, callback=long_handler)
         else:
             self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
 
-        self.active = True
         self.logger.info("Listening to the tickers")
 
         return longContract, shortContract

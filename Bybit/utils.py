@@ -66,15 +66,19 @@ def get_epoch(date: str) -> int:
         return int(datetime.datetime.strptime(date, "%Y-%m-%d %H:%M").timestamp() * 1000)
 
 
-def get_date(epoch: int) -> str:
+def get_date(epoch: int | str) -> str:
     """
     Converts an epoch to a human-readable date.
+
+    WARNING: epoch must be in milliseconds.
 
     Args:
         epoch (int): Epoch time
     Returns:
         str: Date
     """
+    if isinstance(epoch, str):
+        epoch = int(epoch)
     return datetime.datetime.fromtimestamp(epoch / 1000).strftime("%d/%m/%Y")
 
 
