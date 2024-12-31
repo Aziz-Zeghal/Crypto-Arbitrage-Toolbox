@@ -274,20 +274,79 @@ class bybitFetcher:
             save_klines_parquet(file_name, acc_data)
         return acc_data
 
-    async def get_greeks(self, symbol: str = None):
+    # TODO: Does not fetch in parallel. Should be done in parallel
+    @beartype
+    async def save_klines(self, dest: str):
+        """
+        Save the klines of all the future contracts in parquet format
+        Checks if a parquet file exists to update it, else creates a new one
+
+        Args:
+            dest (str): The destination folder
+        """
+        allContracts = self.get_futureNames()
+
+        async def fetch_history(contract, interval, category="linear"):
+            await self.get_history_pd(product=contract, interval=interval, dest=dest, category=category)
+
+        tasks = []
+
+        for contract in allContracts:
+            tasks.extend([fetch_history(contract, "15"), fetch_history(contract, "5"), fetch_history(contract, "1")])
+
+        # spot
+        tasks.extend(
+            [
+                fetch_history("BTCUSDT", "15", category="spot"),
+                fetch_history("BTCUSDT", "5", category="spot"),
+                fetch_history("BTCUSDT", "1", category="spot"),
+            ]
+        )
+
+        # Perpetual contracts
+        tasks.extend(
+            [
+                fetch_history("BTCUSDT", "15"),
+                fetch_history("BTCUSDT", "5"),
+                fetch_history("BTCUSDT", "1"),
+                fetch_history("BTCPERP", "15"),
+                fetch_history("BTCPERP", "5"),
+                fetch_history("BTCPERP", "1"),
+            ]
+        )
+
+        # TODO: This code will wait for other tasks, because we use I/O bound tasks
+        await asyncio.gather(*tasks)
+
+    async def get_greeks(self, baseCoin: str = None):
         """
         Get the greeks for a given symbol
 
         Link: https://bybit-exchange.github.io/docs/v5/account/coin-greeks
         Args:
-            symbol (str): The symbol to get the greeks from
+            baseCoin (str): The baseCoin to get the greeks from
         Returns:
             dict: The response from the API
         """
-        if symbol:
-            return self.session.get_coin_greeks(symbol=symbol)
+        if baseCoin:
+            return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
         else:
-            return self.session.get_coin_greeks()
+            return self.session.get_coin_greeks()["result"]["list"][0]
+
+    async def get_position(self, symbol: str):
+        """
+        Gets the position of a linear/inverse contract
+
+        Link: https://bybit-exchange.github.io/docs/v5/position
+
+        Args:
+            symbol (str): The symbol to get the position from
+        Returns:
+            info (dict): The size and value of the position
+        """
+
+        position = self.session.get_positions(symbol=symbol, category="linear")["result"]["list"][0]
+        return {"qty": position["size"], "positionValue": position["positionValue"]}
 
     @beartype
     async def set_leverage(self, symbol: str, leverage: str):
@@ -314,7 +373,7 @@ class bybitFetcher:
 
         return None
 
-    async def _place_order(
+    async def place_order(
         self, symbol: str, quantity: float | int, side: str, category: str, reduce_only: bool = False
     ):
         """
@@ -352,8 +411,8 @@ class bybitFetcher:
             shortQuantity (float | int): The quantity to short
         """
         # Make both API calls concurrently
-        short_task = asyncio.create_task(self._place_order(shortSymbol, shortQuantity, "Sell", "linear"))
-        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Buy", "spot"))
+        short_task = asyncio.create_task(self.place_order(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Buy", "spot"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
@@ -373,13 +432,16 @@ class bybitFetcher:
             shortQuantity (float | int): The quantity to short
         """
         # Make both API calls concurrently
-        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Sell", "spot", reduce_only=True))
+        long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Sell", "spot", reduce_only=True))
         short_task = asyncio.create_task(
-            self._place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+            self.place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
         )
 
         # Gather the results
-        responses = await asyncio.gather(long_task, short_task)
+        try:
+            responses = await asyncio.gather(long_task, short_task)
+        except Exception as e:
+            self.logger.warning(f"Error: {e}")
         return responses
 
     @beartype
@@ -400,8 +462,8 @@ class bybitFetcher:
             dict: The response from the API
         """
         # Make both API calls concurrently
-        short_task = asyncio.create_task(self._place_order(shortSymbol, shortQuantity, "Sell", "linear"))
-        long_task = asyncio.create_task(self._place_order(longSymbol, longQuantity, "Buy", "linear"))
+        short_task = asyncio.create_task(self.place_order(shortSymbol, shortQuantity, "Sell", "linear"))
+        long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Buy", "linear"))
 
         # Gather the results
         responses = await asyncio.gather(long_task, short_task)
@@ -418,11 +480,9 @@ class bybitFetcher:
             dict: The response from the API
         """
         # Make both API calls concurrently
-        long_task = asyncio.create_task(
-            self._place_order(longSymbol, longQuantity, "Sell", "linear", reduce_only=True)
-        )
+        long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Sell", "linear", reduce_only=True))
         short_task = asyncio.create_task(
-            self._place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+            self.place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
         )
 
         # Gather the results
