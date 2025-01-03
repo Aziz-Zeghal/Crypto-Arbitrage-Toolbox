@@ -240,7 +240,7 @@ class GreekMaster:
         # SCHEDULING PART
         self.sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
         # Schedule the delivery day (cashout, write the position in the books, etc.)
-        self.sch.every().friday.at("7:50", "Europe/Paris").do(self._friday_job, epochTime=epochTime)
+        self.sch.every().friday.at("08:48", "Europe/Paris").do(self._friday_job, epochTime=epochTime)
 
         # WARNING: order of actions matters A LOT
         # If you run_pending at the end, function will get called even if the job is cancelled
@@ -384,3 +384,5 @@ class GreekMaster:
 
         # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)
         await self._handle_on_delivery()
+
+        asyncio.sleep(5)

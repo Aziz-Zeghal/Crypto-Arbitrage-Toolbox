@@ -74,7 +74,7 @@ class BybitClient:
         shortContract: str,
         strategy: Callable,
         leverage: str = "1",
-        minimumGap: float | int = 0.12,
+        minimumGap: float | int = -0.2,
     ):
         """
         Setup the contracts for the client
@@ -142,7 +142,7 @@ class BybitClient:
         quantityUSDC: float | int,
         strategy: Callable,
         leverage: str = "1",
-        minimumGap: float | int = 0.12,
+        minimumGap: float | int = -0.2,
     ):
         """
         The main executor, Ulysse (for spot and future contracts)

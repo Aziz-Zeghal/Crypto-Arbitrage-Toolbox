@@ -1,0 +1,185 @@
+2025-01-03 07:43:20,228 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-03 07:43:20,228 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-03 07:43:22,500 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-17JAN25
+Gap                  503.01
+Coeff                 0.302
+APR                7.343015
+DaysLeft                 15
+CumVolume         160096382
+Name: 2, dtype: object
+2025-01-03 07:43:22,501 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 07:43:26,180 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 07:43:26,181 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 07:43:26,551 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 07:43:27,348 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 07:43:27,349 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 07:43:32,355 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2025-01-03 07:45:05,354 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-03 07:45:05,354 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-03 07:45:07,236 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-17JAN25
+Gap                   482.0
+Coeff                  0.28
+APR                6.808643
+DaysLeft                 15
+CumVolume         160046534
+Name: 2, dtype: object
+2025-01-03 07:45:07,236 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 07:45:08,092 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 07:45:08,092 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 07:45:08,461 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 07:45:09,349 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 07:45:09,349 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 07:45:14,356 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2025-01-03 07:45:14,531 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2025-01-03 07:45:14,917 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2025-01-03 07:45:15,097 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2025-01-03 07:45:15,273 - greekMaster.client.fetcher - [32mINFO[0m - Spot WebSocket closed
+2025-01-03 07:45:15,273 - greekMaster - [32mINFO[0m - 
+BTCUSDC: 962.42
+BTC-03JAN25: 0.01
+2025-01-03 07:45:15,273 - greekMaster - [32mINFO[0m - Now we wait...
+2025-01-03 07:45:15,453 - greekMaster - [32mINFO[0m - Delivery date at 8:00AM UTC for: 03/01/2025
+2025-01-03 07:46:22,130 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-03 07:46:22,131 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-03 07:46:24,377 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-17JAN25
+Gap                  508.85
+Coeff                 0.308
+APR                7.489953
+DaysLeft                 15
+CumVolume         159772497
+Name: 2, dtype: object
+2025-01-03 07:46:24,378 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 07:46:25,405 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 07:46:25,405 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 07:46:26,460 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 07:46:27,441 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 07:46:27,441 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 07:46:32,444 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2025-01-03 07:46:32,621 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2025-01-03 07:46:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-03 07:46:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-03 07:46:32,622 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-03 07:46:32,990 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-03 07:46:33,191 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2025-01-03 07:46:33,365 - greekMaster.client.fetcher - [32mINFO[0m - Spot WebSocket closed
+2025-01-03 07:46:33,365 - greekMaster - [32mINFO[0m - 
+BTCUSDC: 962.98
+BTC-03JAN25: 0.01
+2025-01-03 07:46:33,365 - greekMaster - [32mINFO[0m - Now we wait...
+2025-01-03 07:46:33,548 - greekMaster - [32mINFO[0m - Delivery date at 8:00AM UTC for: 03/01/2025
+2025-01-03 07:47:33,978 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:47:34,344 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.54619945', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.43294678'}, 'USDC': {'Quantity': '4428.02247564', 'Available': '4428.02247564', 'usdValue': '4428.1730284'}}
+            --------------------
+2025-01-03 07:47:34,524 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:48:00,022 - greekMaster - [32mINFO[0m - 719977.5939941406
+2025-01-03 07:48:00,022 - greekMaster - [32mINFO[0m - Delivery day ! Setting up surveillance...
+2025-01-03 07:48:33,980 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:48:34,351 - root - [32mINFO[0m - --------------------
+            {'Balance': '6371.5640679', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.51318891'}, 'USDC': {'Quantity': '4428.01837564', 'Available': '4428.01837564', 'usdValue': '4428.97925563'}}
+            --------------------
+2025-01-03 07:48:34,534 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:49:33,981 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:49:34,348 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.41287027', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.01316782'}, 'USDC': {'Quantity': '4428.03337564', 'Available': '4428.03337564', 'usdValue': '4428.46732291'}}
+            --------------------
+2025-01-03 07:49:34,531 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:50:33,981 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:50:34,351 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.37838545', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '961.99913864'}, 'USDC': {'Quantity': '4428.05517564', 'Available': '4428.05517564', 'usdValue': '4428.46255671'}}
+            --------------------
+2025-01-03 07:50:34,533 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:51:34,051 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:51:34,419 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.86992656', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.05348673'}, 'USDC': {'Quantity': '4428.06707564', 'Available': '4428.06707564', 'usdValue': '4428.81541897'}}
+            --------------------
+2025-01-03 07:51:34,601 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:52:34,164 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:52:34,533 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.75540541', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.32165558'}, 'USDC': {'Quantity': '4428.07437564', 'Available': '4428.07437564', 'usdValue': '4428.48175848'}}
+            --------------------
+2025-01-03 07:52:35,070 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:53:34,165 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:53:34,534 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.04514553', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '961.88881568'}, 'USDC': {'Quantity': '4428.08557564', 'Available': '4428.08557564', 'usdValue': '4428.25827098'}}
+            --------------------
+2025-01-03 07:53:35,069 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:54:34,166 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:54:34,534 - root - [32mINFO[0m - --------------------
+            {'Balance': '6369.84451868', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '961.82807336'}, 'USDC': {'Quantity': '4428.10007564', 'Available': '4428.10007564', 'usdValue': '4428.14878474'}}
+            --------------------
+2025-01-03 07:54:35,062 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:55:34,168 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:55:34,537 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.37813525', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '961.71927335'}, 'USDC': {'Quantity': '4428.11647564', 'Available': '4428.11647564', 'usdValue': '4428.70098701'}}
+            --------------------
+2025-01-03 07:55:34,722 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:56:34,168 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:56:34,538 - root - [32mINFO[0m - --------------------
+            {'Balance': '6369.75309006', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.18404468'}, 'USDC': {'Quantity': '4428.13417564', 'Available': '4428.13417564', 'usdValue': '4427.7533561'}}
+            --------------------
+2025-01-03 07:56:35,070 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:57:34,359 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:57:34,729 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.70538031', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '962.31565272'}, 'USDC': {'Quantity': '4428.13317564', 'Available': '4428.13317564', 'usdValue': '4428.43871683'}}
+            --------------------
+2025-01-03 07:57:34,913 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:58:34,171 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:58:34,539 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.00634131', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '961.67809702'}, 'USDC': {'Quantity': '4428.14137564', 'Available': '4428.14137564', 'usdValue': '4428.42920483'}}
+            --------------------
+2025-01-03 07:58:35,067 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 07:59:34,345 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-03 07:59:34,719 - root - [32mINFO[0m - --------------------
+            {'Balance': '6370.07908804', 'BTC': {'Quantity': '0.00999112', 'Available': '0.00999112', 'usdValue': '961.7603217'}, 'USDC': {'Quantity': '4428.15397564', 'Available': '4428.15397564', 'usdValue': '4428.43737749'}}
+            --------------------
+2025-01-03 07:59:34,901 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-03 08:00:02,586 - greekMaster - [32mINFO[0m - Delivery arrived, spot sold !
+2025-01-03 08:01:10,570 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-03 08:01:10,571 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-03 08:01:12,793 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-24JAN25
+Gap                  768.84
+Coeff                 0.578
+APR                9.589913
+DaysLeft                 21
+CumVolume         156682988
+Name: 2, dtype: object
+2025-01-03 08:01:12,794 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-03 08:01:13,618 - websocket - [32mINFO[0m - Websocket connected
+2025-01-03 08:01:13,618 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-03 08:01:13,807 - greekMaster - [31mERROR[0m - Error: closed symbol error: This BTC-03JAN25 contract is not live (ErrCode: 110074) (ErrTime: 08:01:13).
+Request → POST https://api-demo.bybit.com/v5/position/set-leverage: {"symbol": "BTC-03JAN25", "category": "linear", "buyLeverage": "1", "sellLeverage": "1"}.
