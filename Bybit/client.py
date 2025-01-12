@@ -37,6 +37,16 @@ class BybitClient:
 
         self.logger = logging.getLogger("greekMaster.client")
 
+    def _new_round(self):
+        """
+        Routine called by the Master to reset the client's state
+        """
+        self.longContractmsg = None
+        self.shortContractmsg = None
+
+        # For next execution
+        self.active = True
+
     def check_arbitrage(self, minimumGap: float | int):
         """
         Callback function for both products' channels

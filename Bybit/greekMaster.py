@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 import datetime
 import logging
 import sys
@@ -10,7 +11,7 @@ from client import BybitClient
 from utils import get_date
 
 
-class GreekMaster:
+class GreekMaster(ABC):
     __slots__ = ["client", "fetcher", "logger", "position_info", "watching", "sch"]
 
     @beartype
@@ -21,12 +22,12 @@ class GreekMaster:
         Talks to Bybit through the client.
         Can send notifications and logs arbitrage events.
 
-        GreekMaster will be invoked by main.py and called forever.
+        GreekMaster is an interface for its child classes.
 
         3 types of methods:
             - Selectors: The method to choose the best pair of contracts
             - Strategies: Called by the executor
-            - Executors: Setup application, call the strategy, monitor, then exit.
+            - Executors: Setup application, call the strategy, monitor, then exit. (common to all children, with class customized utility methods)
         Defines:
             - client (BybitClient): Client for the Bybit API
             - fetcher (bybitFetcher): Fetcher for the Bybit API
@@ -34,6 +35,14 @@ class GreekMaster:
             - logger (logging.Logger): Logger for the client
             - position_info: Dictionnary with live updates
             - watching: Boolean to know if GreekMaster has control
+
+        Implements:
+            - _new_round: Cleanup for next arbitrage round
+            - monitor: Monitor the accounts, check the positions, the liquidation risk, etc.
+            - _exit_on_delivery: Handler called every second to check if delivery arrived or not (uses _select_order)
+            - _friday_job: Handler for the delivery day
+            - _handle_on_delivery: Handler to exit on delivery day (uses _select_amount)
+
 
         """
         self.client = BybitClient(demo=demo)
@@ -56,8 +65,7 @@ class GreekMaster:
         """
         self.sch.clear()
 
-        self.client.longContractmsg = None
-        self.client.shortContractmsg = None
+        self.client._new_round()
 
         self.position_info = {}
 
@@ -72,39 +80,46 @@ class GreekMaster:
         """
         self.logger.info("Monitoring the account...")
 
-        logging.info(
-            f"""--------------------
-            {self.fetcher.get_USDC_BTC()}
-            --------------------"""
-        )
+        ret = self.fetcher.get_USDC_BTC()
+        if ret:
+            logging.info(
+                f"""--------------------
+                {ret}
+                --------------------"""
+            )
 
-        logging.info(
-            f"""--------------------
-            {await self.fetcher.get_greeks("BTC")}
-            --------------------"""
-        )
+        ret = await self.fetcher.get_greeks("BTC")
+        if ret:
+            logging.info(
+                f"""--------------------
+                {ret}
+                --------------------"""
+            )
+
+    @abstractmethod
+    async def _select_amount():
+        """
+        Used in _exit_on_delivery.
+        Selects the entity to sell (BTC, USDC, or not sell for rollover)
+        """
+        pass
 
     async def _exit_on_delivery(self):
         """
         Handler called every second to check if delivery arrived or not.
         """
         shortContract = self.position_info["shortContract"]
-        longContract = self.position_info["longContract"]
 
         res = await self.fetcher.get_position(symbol=shortContract["symbol"])
 
         # If the position is 0, delivery arrived, sell spot.
         if res["qty"] == "0" or res["positionValue"] == "":
 
-            # Exit the spot
-            await self.fetcher.place_order(
-                symbol=longContract["symbol"],
-                side="Sell",
-                quantity=longContract["qty"],
-                category="spot",
-            )
+            # Exit position (can also be a rollover)
+            await self._select_amount()
+
             setattr(self, "watching", False),
-            self.logger.info("Delivery arrived, spot sold !")
+            self.logger.info("Delivery arrived, exited arbitrage !")
 
             # Here, you would want to return self.sch.CancelJob.
             # But, we are in an async function, so we cannot return it easily.
@@ -125,7 +140,6 @@ class GreekMaster:
 
     # TODO: Cannot run async on scheduler :(
     # Use AsyncScheduler
-    # TODO: This handler will be for spot/(perpetual|future)
     async def _handle_on_delivery(self):
         """
         Handler to exit on delivery day (Spot/Perpetual)
@@ -137,11 +151,6 @@ class GreekMaster:
         )
 
         self.logger.info(f"Delivery date at 8:00AM UTC for: {get_date(epochTime)}")
-
-        # Need to get the actual amount of BTC we have in the long (which is spot)
-        longContract = self.position_info["longContract"]
-        # TODO: Small portion still not sold
-        longContract["qty"] = round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6)
 
         # SCHEDULING PART
         self.sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
@@ -159,9 +168,31 @@ class GreekMaster:
         # Clear the schedule
         self._new_round()
 
+
+class SpotFutStrategos(GreekMaster):
+    """
+    Implemented GreekMaster for Perpetual and Future contracts
+
+    Carries scalper strategies + long term strategies
+    """
+
+    def __init__(self, demo=False):
+        super().__init__(demo)
+
+    async def _select_amount(self):
+        """ """
+        longContract = self.position_info["longContract"]
+
+        return await self.fetcher.place_order(
+            symbol=longContract["symbol"],
+            side="Sell",
+            quantity=longContract["qty"],
+            category="spot",
+        )
+
     def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25, quoteCoins: list[str] = ["USDC"]):
         """
-        Find the best gap for a pair of contracts
+        Find the best gap for spot and perpetual contracts
 
         Args:
             perpetual (bool): will get the perpetual contracts
@@ -287,6 +318,11 @@ class GreekMaster:
         # Monitor the position (write perceived position, compare with real position, log)
 
         self.watching = True
+
+        # Need to get the actual amount of BTC we have in the long (which is spot)
+        longContract = self.position_info["longContract"]
+        # TODO: Small portion still not sold
+        longContract["qty"] = round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6)
 
         # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)
         await self._handle_on_delivery()

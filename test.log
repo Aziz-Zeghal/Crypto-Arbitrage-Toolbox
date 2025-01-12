@@ -260,3 +260,69 @@ Traceback (most recent call last):
   File "/workspaces/Crypto-Arbitrage-Toolbox/Bybit/apiFetcher.py", line 423, in get_greeks
     return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
 IndexError: list index out of range
+2025-01-12 21:09:21,554 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 21:09:21,555 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 21:09:23,448 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-31JAN25
+Gap                  404.95
+Coeff                 0.208
+APR                3.902978
+DaysLeft                 19
+CumVolume          43807245
+Name: 2, dtype: object
+2025-01-12 21:09:23,449 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-12 21:09:24,320 - websocket - [32mINFO[0m - Websocket connected
+2025-01-12 21:09:24,321 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-12 21:09:24,690 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-12 21:09:25,506 - websocket - [32mINFO[0m - Websocket connected
+2025-01-12 21:09:25,506 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-12 21:09:30,512 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2025-01-12 21:09:30,689 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2025-01-12 21:09:31,254 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2025-01-12 21:09:31,431 - greekMaster.client.fetcher - [32mINFO[0m - Spot WebSocket closed
+2025-01-12 21:09:31,432 - greekMaster - [32mINFO[0m - 
+BTCUSDC: 950.24
+BTC-31JAN25: 0.01
+2025-01-12 21:09:31,432 - greekMaster - [32mINFO[0m - Now we wait...
+2025-01-12 21:09:31,981 - greekMaster - [32mINFO[0m - Delivery date at 8:00AM UTC for: 31/01/2025
+2025-01-12 21:10:32,026 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 21:10:32,393 - root - [32mINFO[0m - --------------------
+            {'Balance': '6364.73247472', 'BTC': {'Quantity': '0.00000061', 'Available': '0.00000061', 'usdValue': '0.05777219'}, 'USDC': {'Quantity': '5383.66061261', 'Available': '5383.66061261', 'usdValue': '5384.41970876'}}
+            --------------------
+2025-01-12 21:10:32,578 - greekMaster.client.fetcher - [33mWARNING[0m - Error: list index out of range
+2025-01-12 21:10:32,578 - root - [32mINFO[0m - --------------------
+            None
+            --------------------
+2025-01-12 21:11:32,087 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 21:11:32,806 - root - [32mINFO[0m - --------------------
+            {'Balance': '6364.73247472', 'BTC': {'Quantity': '0.00000061', 'Available': '0.00000061', 'usdValue': '0.05777219'}, 'USDC': {'Quantity': '5383.66061261', 'Available': '5383.66061261', 'usdValue': '5384.41970876'}}
+            --------------------
+2025-01-12 21:11:32,989 - greekMaster.client.fetcher - [33mWARNING[0m - Error: list index out of range
+2025-01-12 21:11:32,990 - root - [32mINFO[0m - --------------------
+            None
+            --------------------
+2025-01-12 21:12:32,141 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 21:12:32,510 - root - [32mINFO[0m - --------------------
+            {'Balance': '6364.73247472', 'BTC': {'Quantity': '0.00000061', 'Available': '0.00000061', 'usdValue': '0.05777219'}, 'USDC': {'Quantity': '5383.66061261', 'Available': '5383.66061261', 'usdValue': '5384.41970876'}}
+            --------------------
+2025-01-12 21:12:32,691 - greekMaster.client.fetcher - [33mWARNING[0m - Error: list index out of range
+2025-01-12 21:12:32,691 - root - [32mINFO[0m - --------------------
+            None
+            --------------------
+2025-01-12 21:33:31,475 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 21:33:31,476 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 21:33:33,368 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-31JAN25
+Gap                  450.22
+Coeff                 0.256
+APR                4.807813
+DaysLeft                 19
+CumVolume          43215910
+Name: 2, dtype: object
+2025-01-12 21:33:33,368 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-12 21:33:34,291 - websocket - [32mINFO[0m - Websocket connected
+2025-01-12 21:33:34,291 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-12 21:33:34,659 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-12 21:33:35,258 - websocket - [32mINFO[0m - Websocket connected

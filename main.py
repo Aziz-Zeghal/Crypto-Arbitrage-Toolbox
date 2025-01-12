@@ -1,29 +1,28 @@
 import sys
 import asyncio
 from datetime import datetime
-import logging
 
 sys.path.append("Bybit")
 
-from Bybit.greekMaster import GreekMaster
-from Bybit.utils import configure_logging
+from Bybit.greekMaster import SpotFutStrategos
+from Bybit.utils import ColorFormatter
 
 # TODO: Here, include argparse
 
 
 def init():
     # Configure logging
-    configure_logging(verbose=1)
+    ColorFormatter.configure_logging(verbose=1)
 
     # Create a Bybit client
     now = datetime.now()
-    Master = GreekMaster(demo=True)
+    Master = SpotFutStrategos(demo=True)
     then = datetime.now()
     print(f"Time taken to create the client: {then - now}")
     return Master
 
 
-async def run_forever(Master: GreekMaster):
+async def run_forever(Master: SpotFutStrategos):
     try:
         # Master.CT_best_gap(perpetual=True, spot=False)
         # await Master.one_shot_PF(quantityUSDC=1000, leverage="1", strategy=Master.client.check_arbitrage)

@@ -338,3 +338,7 @@
 2025-01-12 17:38:43,466 - greekMaster - [32mINFO[0m - GreekMaster initialized
 2025-01-12 17:40:52,086 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
 2025-01-12 17:40:52,087 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 21:22:34,323 - root - INFO - Global logging configuration applied with verbosity level 1
+2025-01-12 21:22:55,574 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 21:23:27,408 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 21:23:27,410 - greekMaster - [32mINFO[0m - GreekMaster initialized
