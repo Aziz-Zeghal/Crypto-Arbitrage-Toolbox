@@ -183,3 +183,80 @@ Name: 2, dtype: object
 2025-01-03 08:01:13,618 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
 2025-01-03 08:01:13,807 - greekMaster - [31mERROR[0m - Error: closed symbol error: This BTC-03JAN25 contract is not live (ErrCode: 110074) (ErrTime: 08:01:13).
 Request → POST https://api-demo.bybit.com/v5/position/set-leverage: {"symbol": "BTC-03JAN25", "category": "linear", "buyLeverage": "1", "sellLeverage": "1"}.
+2025-01-12 16:20:49,377 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 16:20:49,379 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 16:20:51,310 - greekMaster - [32mINFO[0m - Best gap
+Buy          BTCUSDC (Spot)
+Sell            BTC-31JAN25
+Gap                  514.37
+Coeff                 0.322
+APR                5.980506
+DaysLeft                 19
+CumVolume          47057543
+Name: 2, dtype: object
+2025-01-12 16:20:51,311 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-12 16:20:52,137 - websocket - [32mINFO[0m - Websocket connected
+2025-01-12 16:20:52,138 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-12 16:20:52,524 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) attempting connection...
+2025-01-12 16:20:53,111 - websocket - [32mINFO[0m - Websocket connected
+2025-01-12 16:20:53,112 - pybit._websocket_stream - [32mINFO[0m - WebSocket Unified V5 (Auth) connected
+2025-01-12 16:20:58,120 - greekMaster.client - [32mINFO[0m - Listening to the tickers
+2025-01-12 16:20:58,297 - greekMaster.client - [32mINFO[0m - Arbitrage found
+2025-01-12 16:20:58,298 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-12 16:20:58,298 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-12 16:20:58,298 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-12 16:20:58,298 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-12 16:20:58,299 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring short websocket...
+2025-01-12 16:20:58,413 - greekMaster.client - [33mWARNING[0m - Not active anymore. Ignoring long websocket...
+2025-01-12 16:20:58,876 - greekMaster.client.fetcher - [32mINFO[0m - Linear WebSocket closed
+2025-01-12 16:20:59,050 - greekMaster.client.fetcher - [32mINFO[0m - Spot WebSocket closed
+2025-01-12 16:20:59,050 - greekMaster - [32mINFO[0m - 
+BTCUSDC: 953.4
+BTC-31JAN25: 0.01
+2025-01-12 16:20:59,050 - greekMaster - [32mINFO[0m - Now we wait...
+2025-01-12 16:20:59,232 - greekMaster - [32mINFO[0m - Delivery date at 8:00AM UTC for: 31/01/2025
+2025-01-12 16:21:59,658 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 16:22:00,025 - root - [32mINFO[0m - --------------------
+            {'Balance': '6367.60264561', 'BTC': {'Quantity': '0.01004531', 'Available': '0.01004531', 'usdValue': '952.43455748'}, 'USDC': {'Quantity': '4435.31583261', 'Available': '4434.62523261', 'usdValue': '4434.98761923'}}
+            --------------------
+2025-01-12 16:22:00,210 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-12 16:22:59,718 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 16:23:00,434 - root - [32mINFO[0m - --------------------
+            {'Balance': '6367.69678071', 'BTC': {'Quantity': '0.01004531', 'Available': '0.01004531', 'usdValue': '952.67170893'}, 'USDC': {'Quantity': '4435.13023261', 'Available': '4434.62523261', 'usdValue': '4434.88186531'}}
+            --------------------
+2025-01-12 16:23:00,617 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-12 16:23:59,776 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 16:24:00,145 - root - [32mINFO[0m - --------------------
+            {'Balance': '6367.91939133', 'BTC': {'Quantity': '0.01004531', 'Available': '0.01004531', 'usdValue': '953.16904249'}, 'USDC': {'Quantity': '4434.67063261', 'Available': '4434.62523261', 'usdValue': '4434.62185123'}}
+            --------------------
+2025-01-12 16:24:00,328 - root - [32mINFO[0m - --------------------
+            {'totalDelta': '-0.01', 'totalVega': '', 'totalGamma': '', 'baseCoin': 'BTC', 'totalTheta': ''}
+            --------------------
+2025-01-12 16:24:59,824 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 16:25:00,188 - root - [32mINFO[0m - --------------------
+            {'Balance': '6368.18401474', 'BTC': {'Quantity': '0.01004531', 'Available': '0.01004531', 'usdValue': '953.22268516'}, 'USDC': {'Quantity': '4434.57111836', 'Available': '4434.57111836', 'usdValue': '4434.7485012'}}
+            --------------------
+2025-01-12 16:25:00,370 - asyncio - [31mERROR[0m - Task exception was never retrieved
+future: <Task finished name='Task-7' coro=<GreekMaster.monitor() done, defined at /workspaces/Crypto-Arbitrage-Toolbox/Bybit/greekMaster.py:66> exception=IndexError('list index out of range')>
+Traceback (most recent call last):
+  File "/workspaces/Crypto-Arbitrage-Toolbox/Bybit/greekMaster.py", line 83, in monitor
+    {await self.fetcher.get_greeks("BTC")}
+  File "/workspaces/Crypto-Arbitrage-Toolbox/Bybit/apiFetcher.py", line 423, in get_greeks
+    return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
+IndexError: list index out of range
+2025-01-12 16:25:59,884 - greekMaster - [32mINFO[0m - Monitoring the account...
+2025-01-12 16:26:00,599 - root - [32mINFO[0m - --------------------
+            {'Balance': '6366.53430282', 'BTC': {'Quantity': '0.00000031', 'Available': '0.00000031', 'usdValue': '0.03012786'}, 'USDC': {'Quantity': '5386.75367876', 'Available': '5386.75367876', 'usdValue': '5386.33351197'}}
+            --------------------
+2025-01-12 16:26:00,780 - asyncio - [31mERROR[0m - Task exception was never retrieved
+future: <Task finished name='Task-8' coro=<GreekMaster.monitor() done, defined at /workspaces/Crypto-Arbitrage-Toolbox/Bybit/greekMaster.py:66> exception=IndexError('list index out of range')>
+Traceback (most recent call last):
+  File "/workspaces/Crypto-Arbitrage-Toolbox/Bybit/greekMaster.py", line 83, in monitor
+    {await self.fetcher.get_greeks("BTC")}
+  File "/workspaces/Crypto-Arbitrage-Toolbox/Bybit/apiFetcher.py", line 423, in get_greeks
+    return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
+IndexError: list index out of range

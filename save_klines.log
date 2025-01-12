@@ -1,0 +1,340 @@
+2025-01-10 16:31:07,716 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-10 16:31:07,719 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-10 16:31:25,982 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN2524[0m.
+2025-01-10 16:31:26,525 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:16,688 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN25[0m.
+2025-01-10 17:28:16,690 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:16,910 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 963 new data points.
+2025-01-10 17:28:16,957 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN25[0m.
+2025-01-10 17:28:16,958 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:17,144 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 887 new data points.
+2025-01-10 17:28:17,151 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN25[0m.
+2025-01-10 17:28:17,151 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:17,505 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 432 new data points.
+2025-01-10 17:28:28,740 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-17JAN25[0m.
+2025-01-10 17:28:28,869 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 316 existing data points.
+2025-01-10 17:28:29,741 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:29,922 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:28:29,930 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-17JAN25[0m.
+2025-01-10 17:28:29,934 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 946 existing data points.
+2025-01-10 17:28:30,116 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:30,299 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:30,483 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:30,666 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:28:30,676 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-17JAN25[0m.
+2025-01-10 17:28:30,685 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 4727 existing data points.
+2025-01-10 17:28:31,578 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:31,772 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:32,136 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:32,319 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:32,512 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:33,409 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:33,949 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:34,135 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:34,668 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:34,853 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:35,045 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:35,576 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:35,762 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:35,947 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:36,133 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:36,320 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:36,843 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:28:36,868 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-24JAN25[0m.
+2025-01-10 17:28:36,869 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:37,052 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 710 new data points.
+2025-01-10 17:28:37,059 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-24JAN25[0m.
+2025-01-10 17:28:37,060 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:37,242 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:37,422 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:37,605 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 132 new data points.
+2025-01-10 17:28:37,612 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-24JAN25[0m.
+2025-01-10 17:28:37,613 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:28:37,795 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:37,980 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:38,165 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:38,347 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:38,528 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:38,712 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:39,078 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:39,275 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:39,468 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:39,656 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:39,840 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 659 new data points.
+2025-01-10 17:28:39,856 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-31JAN25[0m.
+2025-01-10 17:28:39,866 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 5020 existing data points.
+2025-01-10 17:28:40,090 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:40,274 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:28:40,286 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-31JAN25[0m.
+2025-01-10 17:28:40,309 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 15058 existing data points.
+2025-01-10 17:28:40,665 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:40,849 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:41,035 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:41,227 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:28:41,300 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-31JAN25[0m.
+2025-01-10 17:28:41,460 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 75287 existing data points.
+2025-01-10 17:28:41,657 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:41,891 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:42,125 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:42,329 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:42,545 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:42,759 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:43,035 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:43,235 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:43,430 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:43,627 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:43,823 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:44,024 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:44,211 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:44,400 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:44,591 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:44,789 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:44,982 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:28:45,082 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-28FEB25[0m.
+2025-01-10 17:28:45,094 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 2332 existing data points.
+2025-01-10 17:28:45,280 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:45,465 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:28:45,529 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-28FEB25[0m.
+2025-01-10 17:28:45,548 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 6994 existing data points.
+2025-01-10 17:28:45,732 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:45,921 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:46,114 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:46,818 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:28:46,858 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-28FEB25[0m.
+2025-01-10 17:28:46,937 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 34967 existing data points.
+2025-01-10 17:28:47,131 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:47,326 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:47,519 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:47,709 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:47,900 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:48,098 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:48,300 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:48,489 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:48,684 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:48,889 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:49,073 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:49,270 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:49,638 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:49,858 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:50,046 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:50,235 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:50,420 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:28:50,487 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-28MAR25[0m.
+2025-01-10 17:28:50,521 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 24604 existing data points.
+2025-01-10 17:28:50,704 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:50,901 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:28:50,932 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-28MAR25[0m.
+2025-01-10 17:28:51,006 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 73810 existing data points.
+2025-01-10 17:28:51,198 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:51,402 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:51,592 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:51,781 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:28:51,861 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-28MAR25[0m.
+2025-01-10 17:28:52,111 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 369048 existing data points.
+2025-01-10 17:28:52,303 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:53,211 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:53,427 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:54,322 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:54,549 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:54,775 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:54,993 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:55,565 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:55,953 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:56,205 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:56,423 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:57,033 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:57,242 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:57,447 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:57,827 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:58,035 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:58,241 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 18 new data points.
+2025-01-10 17:28:58,536 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-27JUN25[0m.
+2025-01-10 17:28:58,560 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 17115 existing data points.
+2025-01-10 17:28:58,914 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:59,101 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:28:59,125 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-27JUN25[0m.
+2025-01-10 17:28:59,172 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 51341 existing data points.
+2025-01-10 17:28:59,357 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:59,553 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:59,759 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:28:59,946 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:29:00,006 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-27JUN25[0m.
+2025-01-10 17:29:00,182 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 256702 existing data points.
+2025-01-10 17:29:00,373 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:00,577 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:00,788 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:00,998 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:01,205 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:01,412 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:01,617 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:01,815 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:02,725 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:02,927 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:03,234 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:03,439 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:03,636 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:03,834 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:04,037 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:04,254 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:04,511 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:29:04,813 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-26SEP25[0m.
+2025-01-10 17:29:04,841 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 8380 existing data points.
+2025-01-10 17:29:05,037 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:05,219 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:29:05,237 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-26SEP25[0m.
+2025-01-10 17:29:05,267 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 25138 existing data points.
+2025-01-10 17:29:05,449 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:05,634 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:05,820 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:06,535 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:29:06,572 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-26SEP25[0m.
+2025-01-10 17:29:06,705 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 125688 existing data points.
+2025-01-10 17:29:06,895 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:07,787 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:07,991 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:08,194 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:08,567 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:08,771 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:09,148 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:09,350 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:09,719 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:09,910 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:10,119 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:10,326 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:10,519 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:10,717 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:10,919 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:11,112 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:11,640 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:29:11,765 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-26DEC25[0m.
+2025-01-10 17:29:11,766 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:29:11,949 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 38 new data points.
+2025-01-10 17:29:11,957 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-26DEC25[0m.
+2025-01-10 17:29:11,958 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:29:12,148 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 114 new data points.
+2025-01-10 17:29:12,153 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-26DEC25[0m.
+2025-01-10 17:29:12,153 - greekMaster.client.fetcher - [32mINFO[0m - No previous data found, starting fresh.
+2025-01-10 17:29:12,337 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 570 new data points.
+2025-01-10 17:29:12,342 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCUSDT[0m.
+2025-01-10 17:29:12,386 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 35467 existing data points.
+2025-01-10 17:29:12,577 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:12,765 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:29:12,820 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCUSDT[0m.
+2025-01-10 17:29:13,013 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 105397 existing data points.
+2025-01-10 17:29:13,214 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:13,415 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:13,617 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:13,809 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:29:13,956 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCUSDT[0m.
+2025-01-10 17:29:14,769 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 525983 existing data points.
+2025-01-10 17:29:15,302 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:15,552 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:15,804 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:16,057 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:16,670 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:16,917 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:17,164 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:17,764 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:18,016 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:18,273 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:18,866 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:19,115 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:20,058 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:20,307 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:20,551 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:20,803 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:21,039 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:29:21,581 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCUSDT[0m.
+2025-01-10 17:29:21,627 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 35327 existing data points.
+2025-01-10 17:29:21,809 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:21,994 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:29:22,043 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCUSDT[0m.
+2025-01-10 17:29:22,182 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 105397 existing data points.
+2025-01-10 17:29:22,367 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:22,561 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:22,752 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:22,943 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:29:23,071 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCUSDT[0m.
+2025-01-10 17:29:23,847 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 525821 existing data points.
+2025-01-10 17:29:24,033 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:24,258 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:24,842 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:25,072 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:25,303 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:25,529 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:25,756 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:25,981 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:26,203 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:26,427 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:26,658 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:26,881 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:27,102 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:27,327 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:27,550 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:27,773 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:28,000 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:29:28,481 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCPERP[0m.
+2025-01-10 17:29:28,524 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 35628 existing data points.
+2025-01-10 17:29:28,714 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:28,902 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 68 new data points.
+2025-01-10 17:29:28,951 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCPERP[0m.
+2025-01-10 17:29:29,077 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 105881 existing data points.
+2025-01-10 17:29:29,262 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:29,463 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:29,661 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:29,853 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 204 new data points.
+2025-01-10 17:29:29,979 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTCPERP[0m.
+2025-01-10 17:29:30,555 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 525404 existing data points.
+2025-01-10 17:29:30,750 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:30,977 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:31,209 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:31,451 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:31,671 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:31,903 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:32,140 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:32,532 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:32,778 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:32,998 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:33,227 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:33,454 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:33,681 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:33,916 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:34,147 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:34,369 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:34,937 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 19 new data points.
+2025-01-10 17:29:42,913 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN25[0m.
+2025-01-10 17:29:42,920 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 988 existing data points.
+2025-01-10 17:29:43,104 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:43,287 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 31 new data points.
+2025-01-10 17:29:43,295 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN25[0m.
+2025-01-10 17:29:43,303 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 2962 existing data points.
+2025-01-10 17:29:43,494 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:43,678 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:43,860 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:44,045 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 91 new data points.
+2025-01-10 17:29:44,058 - greekMaster.client.fetcher - [32mINFO[0m - Fetching data for [38;5;214mBTC-10JAN25[0m.
+2025-01-10 17:29:44,069 - greekMaster.client.fetcher - [32mINFO[0m - Loaded 14807 existing data points.
+2025-01-10 17:29:44,434 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:44,639 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:44,832 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:45,375 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:45,914 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:46,105 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:46,299 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:46,493 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:47,374 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:47,567 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:48,105 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:48,299 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:48,482 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:48,839 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:49,028 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 1000 new data points.
+2025-01-10 17:29:49,210 - greekMaster.client.fetcher - [32mINFO[0m - Fetched 450 new data points.
+2025-01-11 16:03:14,304 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-11 16:03:14,306 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 17:37:46,285 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 17:37:46,287 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 17:38:43,465 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 17:38:43,466 - greekMaster - [32mINFO[0m - GreekMaster initialized
+2025-01-12 17:40:52,086 - root - [32mINFO[0m - Global logging configuration applied with verbosity level 1
+2025-01-12 17:40:52,087 - greekMaster - [32mINFO[0m - GreekMaster initialized

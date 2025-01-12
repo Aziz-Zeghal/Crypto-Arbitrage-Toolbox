@@ -6,11 +6,12 @@ import asyncio
 import logging
 from beartype import beartype
 
+from analyser import bybitAnalyser
 from pybit.unified_trading import HTTP, WebSocket
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
-from utils import save_klines_parquet, get_epoch, load_klines_parquet, save_data, load_data
+from utils import format_volume, save_klines_parquet, get_epoch, load_klines_parquet, save_data, load_data
 import keys
 
 
@@ -274,6 +275,96 @@ class bybitFetcher:
             save_klines_parquet(file_name, acc_data)
         return acc_data
 
+    # TODO: boolean for future, and upgrade function
+    @beartype
+    def all_gaps_pd(
+        self,
+        pretty=True,
+        applyFees=False,
+        inverse=False,
+        perpetual=False,
+        spot=False,
+        quoteCoins: list[str] = ["USDC", "USDT", "USD"],
+    ):
+        """
+        Get all the gaps for multiple products in a DataFrame
+
+        Careful: All flags should not be activated at the same time
+        Args:
+            pretty (bool): will format the elements in a more readable way
+            applyFees (bool): will apply the fees (4 takers, 0.22%)
+            inverse (bool): will get the inverse contracts
+            perpetual (bool): will get the perpetual contracts
+            spot (bool): will get the spot contracts
+            quoteCoins (list[str]): The quote coins to consider. Can be ["USDC", "USDT"]
+        Returns:
+            pd.DataFrame: DataFrame containing all the gaps
+        """
+
+        # WARNING: No perpetual with USDT, so remove it here
+        btcFutureContracts = self.get_futureNames("BTC", inverse=inverse, perpetual=perpetual, quoteCoins=quoteCoins)
+
+        # First, get the tickers of every future contract in a dataframe
+        btcTickers = pd.DataFrame(
+            [
+                self.session.get_tickers(symbol=future, category="linear")["result"]["list"][0]
+                for future in btcFutureContracts
+            ]
+        )
+
+        # Then the spot contracts (Take only USDT)
+        if spot:
+            if "USDT" in quoteCoins:
+                response = self.session.get_tickers(symbol="BTCUSDT", category="spot")["result"]["list"][0]
+                # Put deliveryTime to 0
+                response["deliveryTime"] = 0
+                response["symbol"] = "BTCUSDT (Spot)"
+                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
+
+            if "USDC" in quoteCoins:
+                response = self.session.get_tickers(symbol="BTCUSDC", category="spot")["result"]["list"][0]
+                # Put deliveryTime to 0
+                response["deliveryTime"] = 0
+                response["symbol"] = "BTCUSDC (Spot)"
+                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
+
+        # Define an empty DataFrame with specified columns and data types
+        column_types = {
+            "Buy": "string",
+            "Sell": "string",
+            "Gap": "float" if not pretty else "string",
+            "Coeff": "float" if not pretty else "string",
+            "APR": "float" if not pretty else "string",
+            "DaysLeft": "int",
+            "CumVolume": "int" if not pretty else "string",
+        }
+
+        # Create an empty DataFrame with the specified columns
+        df_gaps = pd.DataFrame(columns=column_types.keys()).astype(column_types)
+
+        # Now, we can calculate the gaps
+        for i, longTicker in btcTickers.iterrows():
+            # Take all futures after the current one
+            for j, shortTicker in btcTickers.iloc[i + 1 :].iterrows():
+                gap = bybitAnalyser.get_gap(longTicker, shortTicker, applyFees)
+                vol = int(gap["cumVolume"])
+
+                # Prepare the row data
+                row = {
+                    "Buy": longTicker["symbol"],
+                    "Sell": shortTicker["symbol"],
+                    "Gap": f"$ {gap['gap']:.2f}" if pretty else gap["gap"],
+                    "Coeff": f"{gap['coeff']:.2f} %" if pretty else gap["coeff"],
+                    "APR": f"{gap['apr']:.2f} %" if pretty else gap["apr"],
+                    "DaysLeft": int(gap["daysLeft"]),
+                    "CumVolume": format_volume(vol) if pretty else gap["cumVolume"],
+                }
+
+                df_gaps = pd.concat([df_gaps, pd.DataFrame([row])], ignore_index=True)
+
+        df_gaps = df_gaps.astype(column_types)
+        return df_gaps
+
     # TODO: Does not fetch in parallel. Should be done in parallel
     @beartype
     async def save_klines(self, dest: str):
@@ -328,10 +419,14 @@ class bybitFetcher:
         Returns:
             dict: The response from the API
         """
-        if baseCoin:
-            return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
-        else:
-            return self.session.get_coin_greeks()["result"]["list"][0]
+        try:
+            if baseCoin:
+                return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
+            else:
+                return self.session.get_coin_greeks()["result"]["list"][0]
+        except Exception as e:
+            self.logger.warning(f"Error: {e}")
+            return None
 
     async def get_position(self, symbol: str):
         """
