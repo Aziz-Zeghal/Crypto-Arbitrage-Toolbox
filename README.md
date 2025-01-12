@@ -44,7 +44,8 @@ Any strategy implemented has to respect these steps:
 ### Architecture
 For now, the architecture looks like this:
 
-![image](https://github.com/user-attachments/assets/d43148f0-880a-42e8-b005-beb766a03745)
+![image](https://github.com/user-attachments/assets/3f97bad6-385b-41bd-9c6f-a265b677670d)
+
 
 - **Utils**: Management of Parquet files. Currently, it only handles Klines for everything (spot, inverse, linear).
 - **Analyser**: Calculates fees, the amount of USDC required to balance quantities between two contracts, etc.
