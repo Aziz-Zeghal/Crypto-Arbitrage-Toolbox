@@ -44,14 +44,13 @@ Any strategy implemented has to respect these steps:
 ### Architecture
 For now, the architecture looks like this:
 
-![image](https://github.com/user-attachments/assets/3f97bad6-385b-41bd-9c6f-a265b677670d)
+![image](https://github.com/user-attachments/assets/827afa50-3557-49a3-aa35-5761229315d6)
 
 
 - **Utils**: Management of Parquet files. Currently, it only handles Klines for everything (spot, inverse, linear).
 - **Analyser**: Calculates fees, the amount of USDC required to balance quantities between two contracts, etc.
 - **ApiFetcher**: Handles all communication with a socket or the API.
-- **Simulation**: In the long term, it could simulate an entry + exit. For this, it relies on the Analyser for calculations.
-- **Visualizer**: A laboratory for viewing data in different ways. It can display real data or simulated data (from Simulation).
+- **Simulator**:  A laboratory for viewing data in different ways. It can display real data or simulated data. In the long term, it could simulate an entry + exit. For this, it relies on the Analyser for calculations.
 - **Client**: Logic for a pair of products. Executes the entry + exit arbitrage logic. It contains all the strategies for a pair of products. This will run as a systemd process (a daemon in the background).
 - **GreekMaster**: Logic for all products. Monitors the account and calls ephemeral client processes to orchestrate arbitrage entry. Can talk with Bybit through the client. If delta is unfavorable (meaning the arbitrage is no longer profitable), it sends a notification.
 
