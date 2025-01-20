@@ -171,9 +171,9 @@ class GreekMaster(ABC):
 
 class SpotFutStrategos(GreekMaster):
     """
-    Implemented GreekMaster for Perpetual and Future contracts
+    Implemented GreekMaster for Spot and Future contracts
 
-    Carries scalper strategies + long term strategies
+    Mainly used for testing purposes, not fully optimal.
     """
 
     def __init__(self, demo=False):
@@ -227,7 +227,7 @@ class SpotFutStrategos(GreekMaster):
         return bestGap
 
     @beartype
-    async def stay_alive_SF(self, collateral: str = "USDC", quantityUSDC: float | int = 1000):
+    async def stable_collateral(self, collateral: str = "USDC", quantityUSDC: float | int = 1000):
         """
         The classic strategy !
         Buy the spot, short the future.
