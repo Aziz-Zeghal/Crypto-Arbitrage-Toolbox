@@ -1,18 +1,17 @@
+from abc import ABC, abstractmethod
 import datetime
 import logging
 import sys
-import pandas as pd
 import asyncio
 import schedule
 from beartype import beartype
 from typing import Callable
 
-from client import BybitClient
-from analyser import bybitAnalyser
-from utils import format_volume, get_date, get_epoch
+from client import UlysseSpotPerp
+from utils import get_date
 
 
-class GreekMaster:
+class GreekMaster(ABC):
     __slots__ = ["client", "fetcher", "logger", "position_info", "watching", "sch"]
 
     @beartype
@@ -23,12 +22,12 @@ class GreekMaster:
         Talks to Bybit through the client.
         Can send notifications and logs arbitrage events.
 
-        GreekMaster will be invoked by main.py and called forever.
+        GreekMaster is an interface for its child classes.
 
         3 types of methods:
             - Selectors: The method to choose the best pair of contracts
             - Strategies: Called by the executor
-            - Executors: Setup application, call the strategy, monitor, then exit.
+            - Executors: Setup application, call the strategy, monitor, then exit. (common to all children, with class customized utility methods)
         Defines:
             - client (BybitClient): Client for the Bybit API
             - fetcher (bybitFetcher): Fetcher for the Bybit API
@@ -37,10 +36,20 @@ class GreekMaster:
             - position_info: Dictionnary with live updates
             - watching: Boolean to know if GreekMaster has control
 
-        """
-        self.client = BybitClient(demo=demo)
+        Implements:
+            - _new_round: Cleanup for next arbitrage round
+            - monitor: Monitor the accounts, check the positions, the liquidation risk, etc.
+            - _exit_on_delivery: Handler called every second to check if delivery arrived or not (uses _select_order)
+            - _friday_job: Handler for the delivery day
+            - _handle_on_delivery: Handler to exit on delivery day (uses _select_amount)
 
-        # Just for easy reference
+
+        """
+
+        # WARNING: This part will never be used because of the ABC.
+        # But useful for syntax completion
+        self.client = UlysseSpotPerp(demo=demo)
+
         self.fetcher = self.client.fetcher
 
         self.position_info = {}
@@ -52,106 +61,13 @@ class GreekMaster:
         self.sch = schedule.Scheduler()
         self.watching = False
 
-    # TODO: boolean for future, and upgrade function
-    @beartype
-    def all_gaps_pd(
-        self,
-        pretty=True,
-        applyFees=False,
-        inverse=False,
-        perpetual=False,
-        spot=False,
-        quoteCoins: list[str] = ["USDC", "USDT", "USD"],
-    ):
-        """
-        Get all the gaps for multiple products in a DataFrame
-
-        Careful: All flags should not be activated at the same time
-        Args:
-            pretty (bool): will format the elements in a more readable way
-            applyFees (bool): will apply the fees (4 takers, 0.22%)
-            inverse (bool): will get the inverse contracts
-            perpetual (bool): will get the perpetual contracts
-            spot (bool): will get the spot contracts
-            quoteCoins (list[str]): The quote coins to consider. Can be ["USDC", "USDT"]
-        Returns:
-            pd.DataFrame: DataFrame containing all the gaps
-        """
-
-        # WARNING: No perpetual with USDT, so remove it here
-        btcFutureContracts = self.fetcher.get_futureNames(
-            "BTC", inverse=inverse, perpetual=perpetual, quoteCoins=quoteCoins
-        )
-
-        # First, get the tickers of every future contract in a dataframe
-        btcTickers = pd.DataFrame(
-            [
-                self.fetcher.session.get_tickers(symbol=future, category="linear")["result"]["list"][0]
-                for future in btcFutureContracts
-            ]
-        )
-
-        # Then the spot contracts (Take only USDT)
-        if spot:
-            if "USDT" in quoteCoins:
-                response = self.fetcher.session.get_tickers(symbol="BTCUSDT", category="spot")["result"]["list"][0]
-                # Put deliveryTime to 0
-                response["deliveryTime"] = 0
-                response["symbol"] = "BTCUSDT (Spot)"
-                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
-
-            if "USDC" in quoteCoins:
-                response = self.fetcher.session.get_tickers(symbol="BTCUSDC", category="spot")["result"]["list"][0]
-                # Put deliveryTime to 0
-                response["deliveryTime"] = 0
-                response["symbol"] = "BTCUSDC (Spot)"
-                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
-
-        # Define an empty DataFrame with specified columns and data types
-        column_types = {
-            "Buy": "string",
-            "Sell": "string",
-            "Gap": "float" if not pretty else "string",
-            "Coeff": "float" if not pretty else "string",
-            "APR": "float" if not pretty else "string",
-            "DaysLeft": "int",
-            "CumVolume": "int" if not pretty else "string",
-        }
-
-        # Create an empty DataFrame with the specified columns
-        df_gaps = pd.DataFrame(columns=column_types.keys()).astype(column_types)
-
-        # Now, we can calculate the gaps
-        for i, longTicker in btcTickers.iterrows():
-            # Take all futures after the current one
-            for j, shortTicker in btcTickers.iloc[i + 1 :].iterrows():
-                gap = bybitAnalyser.get_gap(longTicker, shortTicker, applyFees)
-                vol = int(gap["cumVolume"])
-
-                # Prepare the row data
-                row = {
-                    "Buy": longTicker["symbol"],
-                    "Sell": shortTicker["symbol"],
-                    "Gap": f"$ {gap['gap']:.2f}" if pretty else gap["gap"],
-                    "Coeff": f"{gap['coeff']:.2f} %" if pretty else gap["coeff"],
-                    "APR": f"{gap['apr']:.2f} %" if pretty else gap["apr"],
-                    "DaysLeft": int(gap["daysLeft"]),
-                    "CumVolume": format_volume(vol) if pretty else gap["cumVolume"],
-                }
-
-                df_gaps = pd.concat([df_gaps, pd.DataFrame([row])], ignore_index=True)
-
-        df_gaps = df_gaps.astype(column_types)
-        return df_gaps
-
     def _new_round(self):
         """
         Cleanup for next arbitrage round
         """
         self.sch.clear()
 
-        self.client.longContractmsg = None
-        self.client.shortContractmsg = None
+        self.client._new_round()
 
         self.position_info = {}
 
@@ -166,39 +82,46 @@ class GreekMaster:
         """
         self.logger.info("Monitoring the account...")
 
-        logging.info(
-            f"""--------------------
-            {self.fetcher.get_USDC_BTC()}
-            --------------------"""
-        )
+        ret = self.fetcher.get_USDC_BTC()
+        if ret:
+            logging.info(
+                f"""--------------------
+                {ret}
+                --------------------"""
+            )
 
-        logging.info(
-            f"""--------------------
-            {await self.fetcher.get_greeks("BTC")}
-            --------------------"""
-        )
+        ret = await self.fetcher.get_greeks("BTC")
+        if ret:
+            logging.info(
+                f"""--------------------
+                {ret}
+                --------------------"""
+            )
+
+    @abstractmethod
+    async def _select_amount():
+        """
+        Used in _exit_on_delivery.
+        Selects the entity to sell (BTC, USDC, or not sell for rollover)
+        """
+        pass
 
     async def _exit_on_delivery(self):
         """
         Handler called every second to check if delivery arrived or not.
         """
         shortContract = self.position_info["shortContract"]
-        longContract = self.position_info["longContract"]
 
         res = await self.fetcher.get_position(symbol=shortContract["symbol"])
 
         # If the position is 0, delivery arrived, sell spot.
         if res["qty"] == "0" or res["positionValue"] == "":
 
-            # Exit the spot
-            await self.fetcher.place_order(
-                symbol=longContract["symbol"],
-                side="Sell",
-                quantity=longContract["qty"],
-                category="spot",
-            )
+            # Exit position (can also be a rollover)
+            await self._select_amount()
+
             setattr(self, "watching", False),
-            self.logger.info("Delivery arrived, spot sold !")
+            self.logger.info("Delivery arrived, exited arbitrage !")
 
             # Here, you would want to return self.sch.CancelJob.
             # But, we are in an async function, so we cannot return it easily.
@@ -217,9 +140,6 @@ class GreekMaster:
 
         # Else, we are friday but not yet the delivery day
 
-    # TODO: Cannot run async on scheduler :(
-    # Use AsyncScheduler
-    # TODO: This handler will be for spot/(perpetual|future)
     async def _handle_on_delivery(self):
         """
         Handler to exit on delivery day (Spot/Perpetual)
@@ -231,11 +151,6 @@ class GreekMaster:
         )
 
         self.logger.info(f"Delivery date at 8:00AM UTC for: {get_date(epochTime)}")
-
-        # Need to get the actual amount of BTC we have in the long (which is spot)
-        longContract = self.position_info["longContract"]
-        # TODO: Small portion still not sold
-        longContract["qty"] = round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6)
 
         # SCHEDULING PART
         self.sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
@@ -253,9 +168,32 @@ class GreekMaster:
         # Clear the schedule
         self._new_round()
 
+
+class SpotFutStrategos(GreekMaster):
+    """
+    Implemented GreekMaster for Spot and Future contracts
+
+    Mainly used for testing purposes, not fully optimal.
+    """
+
+    def __init__(self, demo=False):
+        super().__init__(demo)
+        self.client = UlysseSpotPerp(demo=demo)
+
+    async def _select_amount(self):
+        """ """
+        longContract = self.position_info["longContract"]
+
+        return await self.fetcher.place_order(
+            symbol=longContract["symbol"],
+            side="Sell",
+            quantity=longContract["qty"],
+            category="spot",
+        )
+
     def CT_best_gap(self, perpetual=True, spot=False, maxDays: int = 25, quoteCoins: list[str] = ["USDC"]):
         """
-        Find the best gap for a pair of contracts
+        Find the best gap for spot and perpetual contracts
 
         Args:
             perpetual (bool): will get the perpetual contracts
@@ -265,7 +203,7 @@ class GreekMaster:
         Returns:
             dict: The best gap
         """
-        gaps = self.all_gaps_pd(
+        gaps = self.fetcher.all_gaps_pd(
             inverse=False, perpetual=perpetual, pretty=False, applyFees=True, spot=spot, quoteCoins=quoteCoins
         )
 
@@ -288,47 +226,8 @@ class GreekMaster:
 
         return bestGap
 
-    # TODO: callables should be a pydantic object to reference the existing strategies
     @beartype
-    async def one_shot_PF(self, strategy: Callable, quantityUSDC: float | int, leverage: str = "1"):
-        """
-        One shot strategy with perpetual and future contracts
-
-        Steps:
-            - Finds the best pair of contracts for the strategy
-            - Calls the client to enter the position
-            - Writes the position in our books
-            - Wait for gap on other side
-            - Cashout
-            - Repeat.
-
-        Args:
-            strategy (callable): The strategy to use
-            quantityUSDC (float): The quantity in USDC
-            leverage (str): The leverage to use, default is "1"
-        """
-
-        # Get best gap
-        bestGap = self.CT_best_gap(perpetual=True, spot=False)
-
-        self.logger.info(f"Starting {strategy.__name__} with {quantityUSDC} USDC and {leverage}x leverage")
-        # Invoke strategy
-        try:
-            resp = await self.client.Ulysse(
-                longContract=bestGap["Buy"],
-                shortContract=bestGap["Sell"],
-                strategy=strategy,
-                quantityUSDC=quantityUSDC,
-                leverage=leverage,
-            )
-        except Exception as e:
-            self.logger.error(f"Error: {e}")
-            raise e
-
-        self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
-
-    @beartype
-    async def stay_alive_SF(self, collateral: str = "USDC", quantityUSDC: float | int = 1000):
+    async def stable_collateral(self, collateral: str = "USDC", quantityUSDC: float | int = 1000):
         """
         The classic strategy !
         Buy the spot, short the future.
@@ -358,14 +257,13 @@ class GreekMaster:
         bestGap = self.CT_best_gap(perpetual=False, spot=True, quoteCoins=[collateral])
 
         # Set current information
-        self.position_info["longContract"] = bestGap["Buy"]
-        self.position_info["shortContract"] = bestGap["Sell"]
+        self.client.longContractSymbol = bestGap["Buy"]
+        self.client.shortContractSymbol = bestGap["Sell"]
+
         # Invoke strategy
         try:
-            resp = await self.client.Ulysse_spot(
-                longContract=bestGap["Buy"],
-                shortContract=bestGap["Sell"],
-                strategy=self.client.check_arbitrage,
+            resp = await self.client.base_executor(
+                strategy=self.client.most_basic_arb,
                 quantityUSDC=quantityUSDC,
             )
         except Exception as e:

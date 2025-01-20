@@ -2,8 +2,6 @@ import json
 import sys
 import pandas as pd
 import logging
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import datetime
 
 
@@ -101,168 +99,6 @@ def format_volume(volume: int) -> str:
         return str(volume)
 
 
-def plot_candles(file: str, lowerlimit="2024-01-01 00:00", upperlimit="2026-01-01 00:00") -> dict:
-    """
-    Takes a file, transforms it to a pandas DataFrame, and plots it as a candlestick chart.
-    The file contains a list of candles in the format:
-        [startTime, openPrice, highPrice, lowPrice, closePrice, volume, turnover]
-
-    Special thanks to this ressource: https://github.com/SteWolk/kuegiBot/blob/4bf335fbdebeca89b49c4fd7843d70f79235f3fe/kuegi_bot/utils/helper.py#L132
-    Args:
-        file (str): The file containing the candles data
-        lowerlimit (str): The lower bound date to filter the data (format: YYYY-MM-DD HH:MM)
-        upperlimit (str): The upper bound date to filter the data (format: YYYY-MM-DD HH:MM)
-    Returns:
-        dict: {"figure": fig, "dataframe": df}
-    """
-    df = load_klines_parquet(file, pretty=True)
-
-    # Filter according to the date
-    # This syntax looks like numpy
-    df = df[(df["startTime"] >= lowerlimit) & (df["startTime"] <= upperlimit)]
-
-    # Use plotly
-    fig = go.Figure(
-        data=[
-            go.Candlestick(
-                x=df["startTime"],
-                open=df["openPrice"],
-                high=df["highPrice"],
-                low=df["lowPrice"],
-                close=df["closePrice"],
-            )
-        ]
-    )
-    # Determine min and max prices for more granular y-axis control
-    min_price = df[["lowPrice"]].min().values[0]
-    max_price = df[["highPrice"]].max().values[0]
-
-    # Add a buffer for the y-axis to extend beyond the min/max prices
-    y_min = min_price * 0.99  # 1% below the lowest price
-    y_max = max_price * 1.01  # 1% above the highest price
-
-    try:
-        fig.update_layout(
-            title="Candlestick Chart",
-            xaxis_title="Time",
-            yaxis_title="Price",
-            xaxis_rangeslider_visible=False,
-            # To avoid overlapping text on x-axis
-            xaxis_tickangle=-45,
-            # Show a subset of x-axis labels for clarity
-            xaxis_tickvals=df["startTime"][:: len(df) // 5],
-            # Y-axis extension and more granular tick intervals
-            yaxis=dict(range=[y_min, y_max], tickmode="linear", dtick=(y_max - y_min) / 10),
-        )
-    except Exception as e:
-        print("Are you sure the date limits are correct?")
-        raise e
-    return fig, df
-
-
-def plot_compare(
-    longfile: str, shortfile: str, lowerlimit="2024-01-01 00:00", upperlimit="2026-01-01 00:00"
-) -> go.Figure:
-    """
-    Compares two datasets in a candlestick chart.
-    The two datasets are merged on the 'startTime' column to align them.
-
-    Args:
-        longfile (str): File containing the long dataset
-        shortfile (str): File containing the short dataset
-        lowerlimit (str): The lower bound date to filter the data (format: YYYY-MM-DD HH:MM)
-        upperlimit (str): The upper bound date to filter the data (format: YYYY-MM-DD HH:MM)
-
-    Returns:
-        go.Figure: The plotly figure
-    """
-    # Get DataFrames for Long and Short datasets
-    try:
-        _, dfLong = plot_candles(longfile, lowerlimit=lowerlimit, upperlimit=upperlimit)
-        _, dfShort = plot_candles(shortfile, lowerlimit=lowerlimit, upperlimit=upperlimit)
-    except Exception as e:
-        print("One limit is incorrect.")
-        raise e
-
-    # Merge both DataFrames on 'startTime' to align their data
-    merged_df = pd.merge(dfLong, dfShort, suffixes=("_long", "_short"), how="inner", on="startTime")
-
-    # Initialize figure
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.02)
-
-    # Add Long position candlestick with specific color
-    fig.add_trace(
-        go.Candlestick(
-            x=merged_df["startTime"],
-            open=merged_df["openPrice_long"],
-            high=merged_df["highPrice_long"],
-            low=merged_df["lowPrice_long"],
-            close=merged_df["closePrice_long"],
-            name=shortfile,
-        ),
-        row=1,
-        col=1,
-    )
-
-    # Add Short position candlestick with specific color
-    fig.add_trace(
-        go.Candlestick(
-            x=merged_df["startTime"],
-            open=merged_df["openPrice_short"],
-            high=merged_df["highPrice_short"],
-            low=merged_df["lowPrice_short"],
-            close=merged_df["closePrice_short"],
-            name=longfile,
-        ),
-        row=1,
-        col=1,
-    )
-
-    # Change the name of traces to distinguish between the two datasets
-    fig.data[0].name = longfile
-    fig.data[1].name = shortfile
-
-    # Change color to have 1 whole color
-    fig.data[0].decreasing.fillcolor = "green"
-    fig.data[0].decreasing.line.color = "green"
-
-    fig.data[1].increasing.fillcolor = "red"
-    fig.data[1].increasing.line.color = "red"
-
-    # Calculate and add the difference trace
-    diffCalc = 100 - merged_df["closePrice_long"] * 100 / merged_df["closePrice_short"]
-    diff_graph = go.Scatter(
-        x=merged_df["startTime"], y=diffCalc, name="Coefficient of difference", marker=dict(color="blue")
-    )
-    fig.add_trace(diff_graph, row=2, col=1)
-
-    # Trendline of difference trace
-    trendline = go.Scatter(
-        x=merged_df["startTime"],
-        y=diffCalc.rolling(window=150).mean(),
-        name="Trendline",
-        marker=dict(color="black"),
-    )
-    fig.add_trace(trendline, row=2, col=1)
-
-    # Final layout updates
-    fig.update_layout(
-        title="Candlestick Chart",
-        xaxis_title="Time",
-        yaxis_title="Price",
-        xaxis_rangeslider_visible=False,
-        xaxis_tickangle=-45,
-        newshape=dict(
-            label=dict(
-                texttemplate="Change: %{dy:.2f}",
-            )
-        ),
-    )
-
-    fig.update_layout(modebar_add=["drawline"])
-    return fig
-
-
 # Deprecated
 def load_data(file: str) -> list:
     with open(file, "r") as f:
@@ -272,20 +108,6 @@ def load_data(file: str) -> list:
 def save_data(file: str, data: list) -> None:
     with open(file, "w") as f:
         json.dump(data, f)
-
-
-def json_to_parquet(file: str) -> None:
-    """
-    Converts a JSON file to a parquet file.
-
-    Args:
-        file (str): File to convert
-    """
-    data = load_data(file)
-    df = pd.DataFrame(
-        data, columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
-    )
-    save_klines_parquet(file.replace(".json", ".parquet"), df)
 
 
 class ColorFormatter(logging.Formatter):
@@ -308,41 +130,55 @@ class ColorFormatter(logging.Formatter):
         record.levelname = f"{level_colors.get(record.levelname, '')}{record.levelname}{reset}"
         return super().format(record)
 
+    @staticmethod
+    def configure_logging(run_name: str = "test.log", verbose: int = 0):
+        """
+        Configures logging for all loggers in the application.
 
-def configure_logging(run_name: str = "test.log", verbose: int = 0):
+        Args:
+            verbose (int): Controls the verbosity level:
+                0 - WARNING (default)
+                1 - INFO
+                2 or more - DEBUG
+            run_name (str): Name of the logging file
+        """
+        # Default log level
+        log_level = logging.WARNING
+        if verbose == 1:
+            log_level = logging.INFO
+        elif verbose >= 2:
+            log_level = logging.DEBUG
+
+        # Formatter with colors
+        formatter = ColorFormatter("\033[36m%(asctime)s\033[0m - %(name)s - %(levelname)s - %(message)s")
+
+        # Stream handler for console output
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setFormatter(formatter)
+
+        # Stream handler for file output
+        file_handler = logging.FileHandler(run_name)
+        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+
+        # Apply the configuration to the root logger
+        logging.basicConfig(
+            level=log_level,
+            handlers=[console_handler, file_handler],
+        )
+
+        # Test message to confirm configuration
+        logging.getLogger().info("Global logging configuration applied with verbosity level %d", verbose)
+
+
+def json_to_parquet(file: str) -> None:
     """
-    Configures logging for all loggers in the application.
+    Converts a JSON file to a parquet file.
 
     Args:
-        verbose (int): Controls the verbosity level:
-            0 - WARNING (default)
-            1 - INFO
-            2 or more - DEBUG
-        run_name (str): Name of the logging file
+        file (str): File to convert
     """
-    # Default log level
-    log_level = logging.WARNING
-    if verbose == 1:
-        log_level = logging.INFO
-    elif verbose >= 2:
-        log_level = logging.DEBUG
-
-    # Formatter with colors
-    formatter = ColorFormatter("\033[36m%(asctime)s\033[0m - %(name)s - %(levelname)s - %(message)s")
-
-    # Stream handler for console output
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setFormatter(formatter)
-
-    # Stream handler for file output
-    file_handler = logging.FileHandler(run_name)
-    file_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
-
-    # Apply the configuration to the root logger
-    logging.basicConfig(
-        level=log_level,
-        handlers=[console_handler, file_handler],
+    data = load_data(file)
+    df = pd.DataFrame(
+        data, columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
     )
-
-    # Test message to confirm configuration
-    logging.getLogger().info("Global logging configuration applied with verbosity level %d", verbose)
+    save_klines_parquet(file.replace(".json", ".parquet"), df)

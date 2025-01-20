@@ -1,5 +1,7 @@
+from abc import ABC, abstractmethod
 import asyncio
 import logging
+from time import sleep
 from beartype import beartype
 from typing import Callable
 
@@ -8,19 +10,30 @@ from apiFetcher import bybitFetcher
 from analyser import bybitAnalyser
 
 
-class BybitClient:
-    __slots__ = ["fetcher", "longContractmsg", "shortContractmsg", "logger", "active"]
+class BybitClient(ABC):
+    __slots__ = [
+        "fetcher",
+        "longContractSymbol",
+        "shortContractSymbol",
+        "longContractmsg",
+        "shortContractmsg",
+        "logger",
+        "active",
+    ]
 
     @beartype
     def __init__(self, demo=False):
         """
         Logic for a pair of products.
         It contains all the strategies for a pair of products.
-        This will run as a systemd process (a daemon in the background).
+        This will be run as a systemd process (a daemon in the background).
+
+        Ulysse are instances of this class, and they will be the ones to call the strategies.
 
         2 types of methods:
-            - Strategies: Called by the executor
-            - Executors: Setup application, then call the strategy
+            - Strategies (Common to all classes): Called by the executor
+            If the strategy uses contract related information (like funding rate), the strategy will be in the child class.
+            - Executors (Child class related): Setup application, then call the strategy
 
         Defines:
             - fetcher (bybitFetcher): Fetcher for the Bybit API
@@ -37,7 +50,20 @@ class BybitClient:
 
         self.logger = logging.getLogger("greekMaster.client")
 
-    def check_arbitrage(self, minimumGap: float | int):
+    def _new_round(self):
+        """
+        Routine called by the Master to reset the client's state
+        """
+        self.longContractSymbol = None
+        self.shortContractSymbol = None
+
+        self.longContractmsg = None
+        self.shortContractmsg = None
+
+        # For next execution
+        self.active = True
+
+    def most_basic_arb(self, minimumGap: float | int):
         """
         Callback function for both products' channels
 
@@ -68,12 +94,20 @@ class BybitClient:
             self.logger.info("Arbitrage found")
             self.active = False
 
+    @abstractmethod
+    def _activate_websockets(self, short_handler: Callable, long_handler: Callable):
+        """
+        Tells which websocket to activate, subscribes to the tickers, and more.
+
+        Should be implemented in the child class, depending on the used products.
+
+        WARNING: Do not forget to sleep between starting the websockets and subscribing to the tickers.
+        """
+        pass
+
     async def _setup_contracts(
         self,
-        longContract: str,
-        shortContract: str,
         strategy: Callable,
-        leverage: str = "1",
         minimumGap: float | int = -0.2,
     ):
         """
@@ -105,47 +139,54 @@ class BybitClient:
             else:
                 self.logger.warning("Not active anymore. Ignoring long websocket...")
 
-        # Determine if the long contract is spot
-        is_spot = longContract.endswith("(Spot)")
-
-        self.fetcher.start_linear_ws()  # Always start linear ws (for futures)
-        await self.fetcher.set_leverage(shortContract, leverage)
-
-        if is_spot:
-            longContract = longContract.replace(" (Spot)", "")
-            self.fetcher.start_spot_ws()  # Only start spot ws if it's a spot contract
-        else:
-            await self.fetcher.set_leverage(longContract, leverage)
-
-        # Sleep to give websockets time to initialize
-        await asyncio.sleep(5)
+        # Logic to activate websockets, and subscribe to the tickers (extra setup before: leverage, spot handling...)
+        self._activate_websockets(short_handler, long_handler)
 
         # Stream tickers for both contracts using the same handler
-        self.fetcher.ws.ticker_stream(symbol=shortContract, callback=short_handler)
-
         self.active = True
-
-        if is_spot:
-            self.fetcher.ws_spot.ticker_stream(symbol=longContract, callback=long_handler)
-        else:
-            self.fetcher.ws.ticker_stream(symbol=longContract, callback=long_handler)
 
         self.logger.info("Listening to the tickers")
 
-        return longContract, shortContract
+    @abstractmethod
+    def base_executor(self):
+        """
+        Main executor for the client
+
+        Should be implemented in the child class, depending on the used products.
+        """
+        pass
+
+
+class UlysseSpotPerp(BybitClient):
+    """
+    The base_executor client has executors for spot and perpetual contracts.
+    """
+
+    def _activate_websockets(self, short_handler: Callable, long_handler: Callable):
+        # TODO: This cannot be definitive
+        self.longContractSymbol = self.longContractSymbol.replace(" (Spot)", "")
+
+        # Start the websockets
+        self.fetcher.start_linear_ws()
+        self.fetcher.start_spot_ws()
+
+        # Sleep to give websockets time to initialize
+        sleep(5)
+
+        # Subscribe to the tickers
+        self.fetcher.ws_spot.ticker_stream(symbol=self.longContractSymbol, callback=long_handler)
+        self.fetcher.ws.ticker_stream(symbol=self.shortContractSymbol, callback=short_handler)
 
     @beartype
-    async def Ulysse_spot(
+    async def base_executor(
         self,
-        longContract: str,
-        shortContract: str,
         quantityUSDC: float | int,
         strategy: Callable,
         leverage: str = "1",
         minimumGap: float | int = -0.2,
     ):
         """
-        The main executor, Ulysse (for spot and future contracts)
+        The main executor for Ulysse (for spot and future contracts)
         Main character to spawn the strategy
 
         Actions:
@@ -166,10 +207,11 @@ class BybitClient:
             dict: The response from the API
         """
 
+        # Leverage only on the future product
+        await self.fetcher.set_leverage(self.shortContractSymbol, leverage)
+
         # Setup the contracts
-        longContract, shortContract = await self._setup_contracts(
-            longContract, shortContract, strategy, leverage, minimumGap
-        )
+        await self._setup_contracts(strategy, minimumGap)
 
         # TODO: Find a way to call entry in callbacks to avoid busy waiting
         while self.active:
@@ -183,11 +225,14 @@ class BybitClient:
             shortPosition = bybitAnalyser.position_calculator(shortTickers, "Sell", quantityUSDC)
 
             # Open the positions
-            resp = await self.fetcher.enter_spot_linear(
-                longContract, shortContract, round(shortPosition["value"], 8), shortPosition["quantityContracts"]
+            await self.fetcher.enter_spot_linear(
+                self.longContractSymbol,
+                self.shortContractSymbol,
+                round(shortPosition["value"], 8),
+                shortPosition["quantityContracts"],
             )
         except Exception as e:
-            self.logger.error(f"Error when entering: {e}")
+            self.logger.error(f"Error when entering arbitrage position: {e}")
             self.logger.error("Exiting")
             self.fetcher.close_websockets()
             raise e
@@ -197,15 +242,24 @@ class BybitClient:
 
         # Return the response
         return {
-            "longContract": {"symbol": longContract, "qty": round(shortPosition["value"], 2)},
-            "shortContract": {"symbol": shortContract, "qty": shortPosition["quantityContracts"]},
+            "longContract": {
+                "symbol": self.longContractSymbol,
+                "qty": round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6),
+            },
+            "shortContract": {"symbol": self.shortContractSymbol, "qty": shortPosition["quantityContracts"]},
         }
+
+
+class UlysseLinear(BybitClient):
+    """
+    DEPRECATED: Needs to be updated
+    """
 
     # TODO: In the long run, this will be the strategy selector too
     # TODO: If connection ends too fast, program takes time to end
     # Could make threaded websocket call_backs, and when we are done SIGINT them
     @beartype
-    async def Ulysse(
+    async def base_executor(
         self,
         longContract: str,
         shortContract: str,
@@ -215,7 +269,7 @@ class BybitClient:
         minimumGap: float | int = 0.12,
     ):
         """
-        The main executor, Ulysse
+        The main executor for Ulysse
         Main character to spawn the strategy
 
         Actions:
@@ -253,12 +307,12 @@ class BybitClient:
             longPosition = bybitAnalyser.position_calculator(longTickers, "Buy", quantityUSDC)
             shortPosition = bybitAnalyser.position_calculator(shortTickers, "Sell", quantityUSDC)
             # Open the positions
-            resp = await self.fetcher.enter_double_linear(
+            await self.fetcher.enter_double_linear(
                 longContract, shortContract, longPosition["quantityContracts"], shortPosition["quantityContracts"]
             )
 
         except Exception as e:
-            self.logger.error(f"Error: {e}")
+            self.logger.error(f"Error when entering arbitrage position: {e}")
             self.logger.error("Exiting")
             self.fetcher.ws.exit()
             raise e
