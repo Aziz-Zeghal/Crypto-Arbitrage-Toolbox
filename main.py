@@ -25,7 +25,7 @@ def init():
 async def run_forever(Master: SpotFutStrategos):
     try:
         # Master.CT_best_gap(perpetual=True, spot=False)
-        # await Master.one_shot_PF(quantityUSDC=1000, leverage="1", strategy=Master.client.check_arbitrage)
+        # await Master.one_shot_PF(quantityUSDC=1000, leverage="1", strategy=Master.client.most_basic_arb)
         # await Master.save_klines(dest="store")
         await Master.stay_alive_SF(quantityUSDC=1000)
     except Exception as e:

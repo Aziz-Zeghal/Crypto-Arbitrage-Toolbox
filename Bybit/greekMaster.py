@@ -7,7 +7,7 @@ import schedule
 from beartype import beartype
 from typing import Callable
 
-from client import BybitClient
+from client import UlysseSpotPerp
 from utils import get_date
 
 
@@ -45,9 +45,11 @@ class GreekMaster(ABC):
 
 
         """
-        self.client = BybitClient(demo=demo)
 
-        # Just for easy reference
+        # WARNING: This part will never be used because of the ABC.
+        # But useful for syntax completion
+        self.client = UlysseSpotPerp(demo=demo)
+
         self.fetcher = self.client.fetcher
 
         self.position_info = {}
@@ -138,8 +140,6 @@ class GreekMaster(ABC):
 
         # Else, we are friday but not yet the delivery day
 
-    # TODO: Cannot run async on scheduler :(
-    # Use AsyncScheduler
     async def _handle_on_delivery(self):
         """
         Handler to exit on delivery day (Spot/Perpetual)
@@ -178,6 +178,7 @@ class SpotFutStrategos(GreekMaster):
 
     def __init__(self, demo=False):
         super().__init__(demo)
+        self.client = UlysseSpotPerp(demo=demo)
 
     async def _select_amount(self):
         """ """
@@ -225,45 +226,6 @@ class SpotFutStrategos(GreekMaster):
 
         return bestGap
 
-    # TODO: callables should be a pydantic object to reference the existing strategies
-    @beartype
-    async def one_shot_PF(self, strategy: Callable, quantityUSDC: float | int, leverage: str = "1"):
-        """
-        One shot strategy with perpetual and future contracts
-
-        Steps:
-            - Finds the best pair of contracts for the strategy
-            - Calls the client to enter the position
-            - Writes the position in our books
-            - Wait for gap on other side
-            - Cashout
-            - Repeat.
-
-        Args:
-            strategy (callable): The strategy to use
-            quantityUSDC (float): The quantity in USDC
-            leverage (str): The leverage to use, default is "1"
-        """
-
-        # Get best gap
-        bestGap = self.CT_best_gap(perpetual=True, spot=False)
-
-        self.logger.info(f"Starting {strategy.__name__} with {quantityUSDC} USDC and {leverage}x leverage")
-        # Invoke strategy
-        try:
-            resp = await self.client.Ulysse(
-                longContract=bestGap["Buy"],
-                shortContract=bestGap["Sell"],
-                strategy=strategy,
-                quantityUSDC=quantityUSDC,
-                leverage=leverage,
-            )
-        except Exception as e:
-            self.logger.error(f"Error: {e}")
-            raise e
-
-        self.logger.info(f"\nLong: {resp['long']}\nShort: {resp['short']}")
-
     @beartype
     async def stay_alive_SF(self, collateral: str = "USDC", quantityUSDC: float | int = 1000):
         """
@@ -295,14 +257,13 @@ class SpotFutStrategos(GreekMaster):
         bestGap = self.CT_best_gap(perpetual=False, spot=True, quoteCoins=[collateral])
 
         # Set current information
-        self.position_info["longContract"] = bestGap["Buy"]
-        self.position_info["shortContract"] = bestGap["Sell"]
+        self.client.longContractSymbol = bestGap["Buy"]
+        self.client.shortContractSymbol = bestGap["Sell"]
+
         # Invoke strategy
         try:
-            resp = await self.client.Ulysse_spot(
-                longContract=bestGap["Buy"],
-                shortContract=bestGap["Sell"],
-                strategy=self.client.check_arbitrage,
+            resp = await self.client.base_executor(
+                strategy=self.client.most_basic_arb,
                 quantityUSDC=quantityUSDC,
             )
         except Exception as e:
@@ -318,11 +279,6 @@ class SpotFutStrategos(GreekMaster):
         # Monitor the position (write perceived position, compare with real position, log)
 
         self.watching = True
-
-        # Need to get the actual amount of BTC we have in the long (which is spot)
-        longContract = self.position_info["longContract"]
-        # TODO: Small portion still not sold
-        longContract["qty"] = round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6)
 
         # Schedule the monitoring loop (every day, check delta, liquidation risk, etc.)
         await self._handle_on_delivery()

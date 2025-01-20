@@ -11,7 +11,7 @@ from pybit.unified_trading import HTTP, WebSocket
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
-from utils import format_volume, save_klines_parquet, get_epoch, load_klines_parquet, save_data, load_data
+from utils import format_volume, save_klines_parquet, get_epoch, load_klines_parquet
 import keys
 
 
@@ -68,13 +68,10 @@ class bybitFetcher:
         )
 
     def close_websockets(self):
-        if self.ws:
-            self.ws.exit()
-            self.logger.info("Linear WebSocket closed")
-
-        if self.ws_spot:
-            self.ws_spot.exit()
-            self.logger.info("Spot WebSocket closed")
+        for ws in [self.ws, self.ws_spot]:
+            if ws:
+                ws.exit()
+                self.logger.info(f"WebSocket closed")
 
     def get_USDC_BTC(self):
         """
