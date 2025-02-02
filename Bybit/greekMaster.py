@@ -109,6 +109,8 @@ class GreekMaster(ABC):
     async def _exit_on_delivery(self):
         """
         Handler called every second to check if delivery arrived or not.
+
+        Uses _select_order to exit the position when delivery arrives.
         """
         shortContract = self.position_info["shortContract"]
 
@@ -127,6 +129,11 @@ class GreekMaster(ABC):
             # But, we are in an async function, so we cannot return it easily.
 
     def _friday_job(self, epochTime: int):
+        """
+        Job for the delivery day.
+
+        Calls _exit_on_delivery every second until the delivery arrives.
+        """
         self.logger.info(f"{epochTime - datetime.datetime.now().timestamp() * 1000}")
         # If we are 30 minutes before the delivery time
         if (epochTime - datetime.datetime.now().timestamp() * 1000) < 1200 * 1000:
@@ -142,7 +149,9 @@ class GreekMaster(ABC):
 
     async def _handle_on_delivery(self):
         """
-        Handler to exit on delivery day (Spot/Perpetual)
+        Handler called after entering arbitrage.
+
+        Short contract is always supposed to be a future contract (perpetual/linear/inverse)
         """
         epochTime = int(
             self.fetcher.session.get_tickers(symbol=self.position_info["shortContract"]["symbol"], category="linear")[
