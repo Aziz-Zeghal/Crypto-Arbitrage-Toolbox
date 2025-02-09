@@ -73,7 +73,7 @@ class bybitFetcher:
                 ws.exit()
                 self.logger.info("WebSocket closed")
 
-    def get_USDC_BTC(self):
+    def get_wallet(self):
         """
         Gives some information on USDC and BTC
 
@@ -90,28 +90,27 @@ class bybitFetcher:
                     Available: Available to withdraw
                     usdValue: Value in USD
         """
-        btcDict = self.session.get_wallet_balance(accountType="UNIFIED", coin="BTC")["result"]["list"][0]
-        usdcDict = self.session.get_wallet_balance(accountType="UNIFIED", coin="USDC")["result"]["list"][0]
+        response = self.session.get_wallet_balance(accountType="UNIFIED")["result"]["list"][0]
+        totalBalance = response["totalEquity"]
 
-        totalBalance = btcDict["totalEquity"]
+        btcDict = next((coin for coin in response["coin"] if coin["coin"] == "BTC"), None)
+        usdcDict = next((coin for coin in response["coin"] if coin["coin"] == "USDC"), None)
+        usdtDict = next((coin for coin in response["coin"] if coin["coin"] == "USDT"), None)
 
-        # Just to make the code more readable
-        btcDict = btcDict["coin"][0]
-        usdcDict = usdcDict["coin"][0]
+        def get_info(coin: dict):
+            return {
+                "Quantity": float(coin["equity"]),
+                "Available": float(coin["equity"]) - float(coin["totalPositionIM"]),
+                "TotalPositionIM": float(coin["totalPositionIM"]),
+                "usdValue": float(coin["usdValue"]),
+            }
 
-        btcValue = {
-            "Quantity": btcDict["equity"],
-            "Available": btcDict["availableToWithdraw"] if btcDict["availableToWithdraw"] != "" else "0",
-            "usdValue": btcDict["usdValue"],
+        return {
+            "Balance": totalBalance,
+            "BTC": get_info(btcDict),
+            "USDC": get_info(usdcDict),
+            "USDT": get_info(usdtDict),
         }
-
-        usdcValue = {
-            "Quantity": usdcDict["equity"],
-            "Available": usdcDict["availableToWithdraw"] if usdcDict["availableToWithdraw"] != "" else "0",
-            "usdValue": usdcDict["usdValue"],
-        }
-
-        return {"Balance": totalBalance, "BTC": btcValue, "USDC": usdcValue}
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
     # TODO: Add a verbose parameter

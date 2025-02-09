@@ -82,7 +82,7 @@ class GreekMaster(ABC):
         """
         self.logger.info("Monitoring the account...")
 
-        ret = self.fetcher.get_USDC_BTC()
+        ret = self.fetcher.get_wallet()
         if ret:
             logging.info(
                 f"""--------------------
