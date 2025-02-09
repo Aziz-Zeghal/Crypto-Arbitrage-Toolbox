@@ -244,7 +244,7 @@ class UlysseSpotPerp(BybitClient):
         return {
             "longContract": {
                 "symbol": self.longContractSymbol,
-                "qty": round(float(self.fetcher.get_USDC_BTC()["BTC"]["Available"]) - 0.000001, 6),
+                "qty": round(self.fetcher.get_wallet()["BTC"]["Available"] - 0.000001, 6),
             },
             "shortContract": {"symbol": self.shortContractSymbol, "qty": shortPosition["quantityContracts"]},
         }

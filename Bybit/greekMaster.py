@@ -82,7 +82,7 @@ class GreekMaster(ABC):
         """
         self.logger.info("Monitoring the account...")
 
-        ret = self.fetcher.get_USDC_BTC()
+        ret = self.fetcher.get_wallet()
         if ret:
             logging.info(
                 f"""--------------------
@@ -213,7 +213,7 @@ class SpotFutStrategos(GreekMaster):
             dict: The best gap
         """
         gaps = self.fetcher.all_gaps_pd(
-            inverse=False, perpetual=perpetual, pretty=False, applyFees=True, spot=spot, quoteCoins=quoteCoins
+            inverse=False, perpetual=perpetual, applyFees=True, spot=spot, quoteCoins=quoteCoins
         )
 
         # TODO: This filtering should be in all_gaps_pd

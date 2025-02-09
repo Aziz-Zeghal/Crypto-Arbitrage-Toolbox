@@ -11,7 +11,7 @@ from pybit.unified_trading import HTTP, WebSocket
 
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
-from utils import format_volume, save_klines_parquet, get_epoch, load_klines_parquet
+from utils import save_klines_parquet, get_epoch, load_klines_parquet
 import keys
 
 
@@ -71,9 +71,9 @@ class bybitFetcher:
         for ws in [self.ws, self.ws_spot]:
             if ws:
                 ws.exit()
-                self.logger.info(f"WebSocket closed")
+                self.logger.info("WebSocket closed")
 
-    def get_USDC_BTC(self):
+    def get_wallet(self):
         """
         Gives some information on USDC and BTC
 
@@ -90,90 +90,27 @@ class bybitFetcher:
                     Available: Available to withdraw
                     usdValue: Value in USD
         """
-        btcDict = self.session.get_wallet_balance(accountType="UNIFIED", coin="BTC")["result"]["list"][0]
-        usdcDict = self.session.get_wallet_balance(accountType="UNIFIED", coin="USDC")["result"]["list"][0]
+        response = self.session.get_wallet_balance(accountType="UNIFIED")["result"]["list"][0]
+        totalBalance = response["totalEquity"]
 
-        totalBalance = btcDict["totalEquity"]
+        btcDict = next((coin for coin in response["coin"] if coin["coin"] == "BTC"), None)
+        usdcDict = next((coin for coin in response["coin"] if coin["coin"] == "USDC"), None)
+        usdtDict = next((coin for coin in response["coin"] if coin["coin"] == "USDT"), None)
 
-        # Just to make the code more readable
-        btcDict = btcDict["coin"][0]
-        usdcDict = usdcDict["coin"][0]
+        def get_info(coin: dict):
+            return {
+                "Quantity": float(coin["equity"]),
+                "Available": float(coin["equity"]) - float(coin["totalPositionIM"]),
+                "TotalPositionIM": float(coin["totalPositionIM"]),
+                "usdValue": float(coin["usdValue"]),
+            }
 
-        btcValue = {
-            "Quantity": btcDict["equity"],
-            "Available": btcDict["availableToWithdraw"],
-            "usdValue": btcDict["usdValue"],
+        return {
+            "Balance": totalBalance,
+            "BTC": get_info(btcDict),
+            "USDC": get_info(usdcDict),
+            "USDT": get_info(usdtDict),
         }
-
-        usdcValue = {
-            "Quantity": usdcDict["equity"],
-            "Available": usdcDict["availableToWithdraw"],
-            "usdValue": usdcDict["usdValue"],
-        }
-
-        return {"Balance": totalBalance, "BTC": btcValue, "USDC": usdcValue}
-
-    # TODO: Maybe add error handling for the case where the contract does not exist
-    @beartype
-    def get_spot(self, coin: str = "BTC"):
-        """
-        Get spot for a given coin
-
-        Args:
-            coin (str): Either BTC or ETH
-        Returns:
-            list: List of all the products
-        """
-        markets = []
-        pair = self.session.get_instruments_info(symbol=f"{coin}USDT", category="spot")["result"]["list"][0]
-        markets.append(pair)
-        pair = self.session.get_instruments_info(symbol=f"{coin}USDC", category="spot")["result"]["list"][0]
-        markets.append(pair)
-
-        return markets
-
-    @beartype
-    def get_futureNames(self, coin: str = "BTC", inverse=False, perpetual=False, quoteCoins=["USDT", "USDC", "USD"]):
-        """
-        Get all the future contracts for a given coin
-
-        Link: https://bybit-exchange.github.io/docs/v5/market/instrument
-        Args:
-            coin (str): Either BTC or ETH
-            inverse (bool): If True, will return inverse futures
-            perpetual (bool): If True, will return perpetual
-            quoteCoins (list[str]): The quote coins to consider
-        Return:
-            list: List of all the future contracts for the given coin sorted by expiry date
-        """
-
-        # Sadly, I do not think there is a better way to do this
-        # But the contracts themself are not always queried
-        pairs = self.session.get_instruments_info(category="linear", baseCoin=coin)
-        markets = []
-        for p in pairs["result"]["list"]:
-            # Looks like BTC-01NOV24
-            if p["quoteCoin"] in quoteCoins:
-                if p["contractType"] == "LinearFutures":
-                    markets.append(p["symbol"])
-                elif perpetual and p["contractType"] == "LinearPerpetual":
-                    markets.append(p["symbol"])
-                elif inverse and p["contractType"] == "InverseFutures":
-                    markets.append(p["symbol"])
-
-        # Function to extract and convert the date part to a datetime object
-        def extract_date(contract):
-            # Extracts the date part, e.g., '01NOV24' or '0328' for inverse futures
-            date_str = contract.split("-")[-1] if "-" in contract else contract[-4:]
-            try:
-                return datetime.strptime(date_str, "%d%b%y")
-            except ValueError:
-                # Maximum date for inverse futures and perpetuals
-                return datetime.strptime("2000", "%Y")
-
-        # Sort the markets by expiry date
-        sorted_markets = sorted(markets, key=extract_date)
-        return sorted_markets
 
     # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
     # TODO: Add a verbose parameter
@@ -272,95 +209,145 @@ class bybitFetcher:
             save_klines_parquet(file_name, acc_data)
         return acc_data
 
-    # TODO: boolean for future, and upgrade function
+    # TODO: Maybe add error handling for the case where the contract does not exist
+    @beartype
+    def get_spot(self, coin: str = "BTC"):
+        """
+        Get spot for a given coin
+
+        Args:
+            coin (str): Either BTC or ETH
+        Returns:
+            list: List of all the products
+        """
+        markets = []
+        pair = self.session.get_instruments_info(symbol=f"{coin}USDT", category="spot")["result"]["list"][0]
+        markets.append(pair)
+        pair = self.session.get_instruments_info(symbol=f"{coin}USDC", category="spot")["result"]["list"][0]
+        markets.append(pair)
+
+        return markets
+
+    @beartype
+    def get_linearNames(
+        self, coin: str = "BTC", inverse: bool = False, perpetual: bool = True, quoteCoins=["USDT", "USDC", "USD"]
+    ):
+        """
+        Get all the future contracts for a given coin
+
+        Link: https://bybit-exchange.github.io/docs/v5/market/instrument
+        Args:
+            coin (str): Either BTC or ETH
+            quoteCoins (list[str]): The quote coins to consider
+        Return:
+            dict: The future contracts. The keys are "perpetual" and "future"
+        """
+
+        # Sadly, I do not think there is a better way to do this
+        # But the contracts themself are not always queried
+        pairs = self.session.get_instruments_info(category="linear", baseCoin=coin)
+        markets = {"perpetual": [], "future": []}
+        for p in pairs["result"]["list"]:
+            # Looks like BTC-01NOV24
+            if p["quoteCoin"] in quoteCoins:
+                if p["contractType"] == "LinearFutures":
+                    markets["future"].append(p["symbol"])
+                elif perpetual and p["contractType"] == "LinearPerpetual":
+                    markets["perpetual"].append(p["symbol"])
+                elif inverse and p["contractType"] == "InverseFutures":
+                    markets["future"].append(p["symbol"])
+
+        return markets
+
+    # WARNING: There is no Future/Inverse with USD or USDT, so selecting these will return nothing.
     @beartype
     def all_gaps_pd(
         self,
-        pretty=True,
-        applyFees=False,
-        inverse=False,
-        perpetual=False,
-        spot=False,
+        coin: str = "BTC",
+        applyFees: bool = False,
+        inverse: bool = False,
+        perpetual: bool = True,
+        spot: bool = False,
         quoteCoins: list[str] = ["USDC", "USDT", "USD"],
-    ):
+    ):  # Function can return either DataFrame or Styler
         """
         Get all the gaps for multiple products in a DataFrame
 
-        Careful: All flags should not be activated at the same time
         Args:
-            pretty (bool): will format the elements in a more readable way
-            applyFees (bool): will apply the fees (4 takers, 0.22%)
-            inverse (bool): will get the inverse contracts
-            perpetual (bool): will get the perpetual contracts
-            spot (bool): will get the spot contracts
-            quoteCoins (list[str]): The quote coins to consider. Can be ["USDC", "USDT"]
+            coin (str): The coin to consider (e.g., "BTC").
+            applyFees (bool): Apply trading fees (0.22% taker fee).
+            inverse (bool): Use inverse contracts.
+            perpetual (bool): Use perpetual contracts.
+            spot (bool): Include spot contracts.
+            quoteCoins (list[str]): Quote currencies to consider (e.g., ["USDC", "USDT"]).
+
         Returns:
-            pd.DataFrame: DataFrame containing all the gaps
+            pd.DataFrame | pd.io.formats.style.Styler: A DataFrame or a styled version.
         """
 
-        # WARNING: No perpetual with USDT, so remove it here
-        btcFutureContracts = self.get_futureNames("BTC", inverse=inverse, perpetual=perpetual, quoteCoins=quoteCoins)
+        # Get future and spot contracts
+        market = self.get_linearNames(coin=coin, inverse=inverse, perpetual=perpetual, quoteCoins=quoteCoins)
 
-        # First, get the tickers of every future contract in a dataframe
-        btcTickers = pd.DataFrame(
-            [
-                self.session.get_tickers(symbol=future, category="linear")["result"]["list"][0]
-                for future in btcFutureContracts
-            ]
-        )
+        shortTickers = [
+            self.session.get_tickers(symbol=future, category="linear")["result"] for future in market["future"]
+        ]
 
-        # Then the spot contracts (Take only USDT)
+        longTickers = [
+            self.session.get_tickers(symbol=perpetual, category="linear")["result"]
+            for perpetual in market["perpetual"]
+        ]
+
         if spot:
-            if "USDT" in quoteCoins:
-                response = self.session.get_tickers(symbol="BTCUSDT", category="spot")["result"]["list"][0]
-                # Put deliveryTime to 0
-                response["deliveryTime"] = 0
-                response["symbol"] = "BTCUSDT (Spot)"
-                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
+            for stableCoin in ["USDT", "USDC"]:
+                if stableCoin in quoteCoins:
+                    response = self.session.get_tickers(symbol=f"{coin}{stableCoin}", category="spot")["result"]
+                    response["list"][0]["deliveryTime"] = 0  # Spot contracts don't have a delivery time
+                    response["list"][0]["symbol"] = f"{coin}{stableCoin} (Spot)"
+                    longTickers.append(response)
 
-            if "USDC" in quoteCoins:
-                response = self.session.get_tickers(symbol="BTCUSDC", category="spot")["result"]["list"][0]
-                # Put deliveryTime to 0
-                response["deliveryTime"] = 0
-                response["symbol"] = "BTCUSDC (Spot)"
-                btcTickers = pd.concat([pd.DataFrame([response]), btcTickers], ignore_index=True)
-
-        # Define an empty DataFrame with specified columns and data types
+        # Define the column types
         column_types = {
             "Buy": "string",
             "Sell": "string",
-            "Gap": "float" if not pretty else "string",
-            "Coeff": "float" if not pretty else "string",
-            "APR": "float" if not pretty else "string",
+            "Gap": "float",
+            "Coeff": "float",
+            "APR": "float",
             "DaysLeft": "int",
-            "CumVolume": "int" if not pretty else "string",
+            "CumVolume": "int",
         }
 
-        # Create an empty DataFrame with the specified columns
         df_gaps = pd.DataFrame(columns=column_types.keys()).astype(column_types)
 
-        # Now, we can calculate the gaps
-        for i, longTicker in btcTickers.iterrows():
-            # Take all futures after the current one
-            for j, shortTicker in btcTickers.iloc[i + 1 :].iterrows():
-                gap = bybitAnalyser.get_gap(longTicker, shortTicker, applyFees)
-                vol = int(gap["cumVolume"])
+        # Calculate gaps
+        for i, long in enumerate(longTickers):
+            for short in shortTickers:
+                # Cross only the products in different categories
+                longInfo = long["list"][0]
+                shortInfo = short["list"][0]
+                gap = bybitAnalyser.get_gap(longInfo, shortInfo, applyFees)
 
-                # Prepare the row data
-                row = {
-                    "Buy": longTicker["symbol"],
-                    "Sell": shortTicker["symbol"],
-                    "Gap": f"$ {gap['gap']:.2f}" if pretty else gap["gap"],
-                    "Coeff": f"{gap['coeff']:.2f} %" if pretty else gap["coeff"],
-                    "APR": f"{gap['apr']:.2f} %" if pretty else gap["apr"],
-                    "DaysLeft": int(gap["daysLeft"]),
-                    "CumVolume": format_volume(vol) if pretty else gap["cumVolume"],
-                }
+                row = pd.DataFrame(
+                    [
+                        {
+                            "Buy": longInfo["symbol"],
+                            "Sell": shortInfo["symbol"],
+                            "Gap": gap["gap"],
+                            "Coeff": gap["coeff"],
+                            "APR": gap["apr"],
+                            "DaysLeft": max(0, int(gap["daysLeft"])),
+                            "CumVolume": gap["cumVolume"],
+                        }
+                    ]
+                )
 
-                df_gaps = pd.concat([df_gaps, pd.DataFrame([row])], ignore_index=True)
+                df_gaps = pd.concat([df_gaps, row], ignore_index=True)
 
         df_gaps = df_gaps.astype(column_types)
-        return df_gaps
+
+        # Sort by DaysLeft
+        df_gaps.sort_values(by="DaysLeft", inplace=True)
+
+        return df_gaps.reset_index(drop=True)
 
     # TODO: Does not fetch in parallel. Should be done in parallel
     @beartype
