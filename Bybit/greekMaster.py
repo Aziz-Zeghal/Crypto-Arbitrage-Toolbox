@@ -1,11 +1,9 @@
 from abc import ABC, abstractmethod
 import datetime
 import logging
-import sys
 import asyncio
 import schedule
 from beartype import beartype
-from typing import Callable
 
 from client import UlysseSpotPerp
 from utils import get_date

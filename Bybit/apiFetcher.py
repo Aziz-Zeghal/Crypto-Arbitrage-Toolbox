@@ -160,7 +160,7 @@ class bybitFetcher:
         )
         ORANGE = "\033[38;5;214m"
         RESET = "\033[0m"
-        self.logger.info(f"Fetching data for {ORANGE}{product}{RESET}.")
+        self.logger.info(f"Fetching data for {ORANGE}{product}{RESET} in {ORANGE}{interval}{RESET} interval.")
         try:
             acc_data = load_klines_parquet(file_name)
             self.logger.info(f"Loaded {len(acc_data)} existing data points.")
@@ -208,6 +208,43 @@ class bybitFetcher:
         if not acc_data.empty:
             save_klines_parquet(file_name, acc_data)
         return acc_data
+
+    # TODO: Add inverse contracts file handling
+    @beartype
+    async def save_klines(self, coin: str = "BTC", dest: str = "store"):
+        """
+        Save the klines of all the Perpetual/Future/Inverse contracts in parquet format
+        Checks if a parquet file exists to update it, else creates a new one
+
+        Args:
+            dest (str): The destination folder
+        """
+        allContracts = self.get_linearNames(inverse=False, perpetual=True, coin=coin)
+
+        # Combine perpetual and future contracts
+        allContracts = allContracts["perpetual"] + allContracts["future"]
+
+        async def _fetch_history(contract, interval, category="linear"):
+            await self.get_history_pd(product=contract, interval=interval, dest=dest, category=category)
+
+        tasks = []
+
+        for contract in allContracts:
+            tasks.extend(
+                [_fetch_history(contract, "15"), _fetch_history(contract, "5"), _fetch_history(contract, "1")]
+            )
+
+        # spot
+        tasks.extend(
+            [
+                _fetch_history(f"{coin}USDT", "15", category="spot"),
+                _fetch_history(f"{coin}USDT", "5", category="spot"),
+                _fetch_history(f"{coin}USDT", "1", category="spot"),
+            ]
+        )
+
+        # TODO: This code will wait for other tasks, because we use I/O bound tasks
+        await asyncio.gather(*tasks)
 
     # TODO: Maybe add error handling for the case where the contract does not exist
     @beartype
@@ -348,50 +385,6 @@ class bybitFetcher:
         df_gaps.sort_values(by="DaysLeft", inplace=True)
 
         return df_gaps.reset_index(drop=True)
-
-    # TODO: Does not fetch in parallel. Should be done in parallel
-    @beartype
-    async def save_klines(self, dest: str):
-        """
-        Save the klines of all the future contracts in parquet format
-        Checks if a parquet file exists to update it, else creates a new one
-
-        Args:
-            dest (str): The destination folder
-        """
-        allContracts = self.get_futureNames()
-
-        async def fetch_history(contract, interval, category="linear"):
-            await self.get_history_pd(product=contract, interval=interval, dest=dest, category=category)
-
-        tasks = []
-
-        for contract in allContracts:
-            tasks.extend([fetch_history(contract, "15"), fetch_history(contract, "5"), fetch_history(contract, "1")])
-
-        # spot
-        tasks.extend(
-            [
-                fetch_history("BTCUSDT", "15", category="spot"),
-                fetch_history("BTCUSDT", "5", category="spot"),
-                fetch_history("BTCUSDT", "1", category="spot"),
-            ]
-        )
-
-        # Perpetual contracts
-        tasks.extend(
-            [
-                fetch_history("BTCUSDT", "15"),
-                fetch_history("BTCUSDT", "5"),
-                fetch_history("BTCUSDT", "1"),
-                fetch_history("BTCPERP", "15"),
-                fetch_history("BTCPERP", "5"),
-                fetch_history("BTCPERP", "1"),
-            ]
-        )
-
-        # TODO: This code will wait for other tasks, because we use I/O bound tasks
-        await asyncio.gather(*tasks)
 
     async def get_greeks(self, baseCoin: str = None):
         """
