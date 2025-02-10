@@ -1,0 +1,11 @@
+beartype
+fastjsonschema
+narwhals
+nbformat
+plotly
+pyarrow
+pybit
+pycryptodome
+schedule
+tenacity
+websocket-client

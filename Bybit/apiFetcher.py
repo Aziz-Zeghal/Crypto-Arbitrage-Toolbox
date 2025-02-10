@@ -1,4 +1,3 @@
-from datetime import datetime
 import sys
 import os
 import pandas as pd
@@ -12,8 +11,10 @@ from pybit.unified_trading import HTTP, WebSocket
 # Custom imports
 sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
 from utils import save_klines_parquet, get_epoch, load_klines_parquet
-import keys
-
+try:
+    import keys
+except ImportError:
+    print("No keys file found !")
 
 class bybitFetcher:
     __slots__ = ["session", "ws", "ws_spot", "logger"]

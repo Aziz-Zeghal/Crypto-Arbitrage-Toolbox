@@ -69,18 +69,21 @@ GreekMaster will be responsible of the arbitrage for one round. Looping will be 
 I code this project in a Github Codespace that I open with a Visual Studio Code window.
 
 #### Conda
-I use a conda env:
-```
-conda create --name <env_name> --file req.txt
-conda activate <env_name>
-```
-
-You can dump an environment with:
-```
-conda list --export > req.txt
+I use a conda env. Either use the YAML:
+```bash
+conda env create -f conda_env.yaml
 ```
 
-Run the code with Python3.10.6
+Or conda create then pip install:
+```bash
+conda create --name sandbox --file conda_requirements.txt 
+pip install -r requirements.txt
+```
+
+I output like this:
+```bash
+conda env export --name sandbox > conda_env.yaml
+```
 
 #### VSCode
 If you want to use VSCode, you can select the conda env like this:
