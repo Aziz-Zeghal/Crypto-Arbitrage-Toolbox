@@ -3,3 +3,10 @@ keys.py
 # cache
 __pycache__/
 .conda/
+
+# Log
+test.log
+save_klines.log
+
+# Database
+store/
