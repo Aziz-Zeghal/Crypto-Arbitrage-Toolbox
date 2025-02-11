@@ -69,15 +69,9 @@ GreekMaster will be responsible of the arbitrage for one round. Looping will be 
 I code this project in a Github Codespace that I open with a Visual Studio Code window.
 
 #### Conda
-I use a conda env. Either use the YAML:
+I use a conda env. Use the YAML:
 ```bash
 conda env create -f conda_env.yaml
-```
-
-Or conda create then pip install:
-```bash
-conda create --name sandbox --file conda_requirements.txt 
-pip install -r requirements.txt
 ```
 
 I output like this:

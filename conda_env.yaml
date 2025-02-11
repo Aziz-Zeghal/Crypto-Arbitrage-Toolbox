@@ -127,3 +127,4 @@ dependencies:
       - schedule==1.2.2
       - tenacity==9.0.0
       - websocket-client==1.8.0
+prefix: /home/ubuntu/miniforge3/envs/sandbox
