@@ -3,7 +3,6 @@
 This document provides an overview of the arbitrage strategies implemented or researched in **KairosEdge**.
 
 All the following strategies can be applied in long term (wait for expiry) or short term (pattern recognition) scenarios.
----
 
 ## **Table of Contents**
 

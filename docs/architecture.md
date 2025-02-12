@@ -10,5 +10,3 @@ The current architecture of the project includes the following components:
 - **GreekMaster**: Oversees all products, monitors accounts, and orchestrates ephemeral client processes.
 
 The `GreekMaster` handles single rounds of arbitrage, while looping is managed by `main.py`.
-
----

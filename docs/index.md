@@ -5,7 +5,7 @@ Welcome to the **KairosEdge**, a sandbox for exploring and implementing various 
 ---
 
 ## **Table of Contents**
+
 - [Project Architecture](./architecture.md)
 - [Strategies](./strategies.md)
 - [Setup Instructions](./setup.md)
-

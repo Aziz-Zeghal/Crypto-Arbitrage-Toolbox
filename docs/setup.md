@@ -1,11 +1,11 @@
 # **Setup**
 
 ## **Table of Contents**
-- [Environment Setup](#environment-setup)
-  - [Conda](#conda)
-  - [Package Installation](#package-installation)
-  - [VSCode](#vscode)
-  - [Jupyter Notebook](#jupyter-notebook)
+
+- [Conda](#conda)
+- [Package Installation](#package-installation)
+- [VSCode](#vscode)
+- [Jupyter Notebook](#jupyter-notebook)
 
 ---
 
