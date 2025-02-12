@@ -3,7 +3,6 @@
 Welcome to the **KairosEdge**, a sandbox for exploring and implementing various arbitrage strategies on cryptocurrency platforms (mainly Bybit).
 
 Go in the `docs/` folder to read more about the project.
----
 
 ## **Overview**
 
