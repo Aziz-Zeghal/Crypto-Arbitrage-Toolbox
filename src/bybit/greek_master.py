@@ -23,9 +23,8 @@ class GreekMaster(ABC):
 
         GreekMaster is an interface for its child classes.
 
-        3 types of methods:
+        2 types of methods:
             - Selectors: The method to choose the best pair of contracts
-            - Strategies: Called by the executor
             - Executors: Setup application, call the strategy, monitor, then exit. (common to all children, with class customized utility methods)
         Defines:
             - client (BybitClient): Client for the Bybit API
