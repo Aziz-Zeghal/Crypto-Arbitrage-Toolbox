@@ -1,16 +1,14 @@
-from datetime import datetime
-import pandas as pd
+import datetime
 
 
-class bybitAnalyser:
-
+class Analyser:
     # TODO: Still not perfect (take history)
     @staticmethod
-    def get_gap(longTickers: dict, shortTickers: dict, applyFees=False):
-        """
-        Get the gap between two future contracts with their tickers
-        CAREFUL: We suppose the longTickers is closer to delivery than shortTickers
-        This means that the price of longTickers should be lower than shortTickers
+    def get_gap(longTickers: dict, shortTickers: dict, applyFees: bool = False) -> dict:
+        """Get the gap between two future contracts with their tickers.
+
+        CAREFUL: We suppose the longTickers is closer to delivery than shortTickers.
+        This means that the price of longTickers should be lower than shortTickers.
 
         Args:
             longTickers (dict): Tickers of the first future contract
@@ -23,8 +21,8 @@ class bybitAnalyser:
                 coeff: The coefficient of the gap
                 apr: The annual percentage rate
                 daysLeft: The number of days left before the delivery of the first contract
-        """
 
+        """
         # | Volume of the future contract
         longVolume = float(longTickers["turnover24h"])
         shortVolume = float(shortTickers["turnover24h"])
@@ -40,30 +38,21 @@ class bybitAnalyser:
         coeff = round((shortPrice / longPrice - 1) * 100, 3)
 
         if applyFees:
-            if coeff < 0:
-                coeff = min(coeff + 0.22, 0)
-            else:
-                coeff = max(coeff - 0.22, 0)
+            coeff = min(coeff + 0.22, 0) if coeff < 0 else max(coeff - 0.22, 0)
 
         # | Time to delivery for the contracts, epoch in milliseconds (convert to seconds)
         longDelivery = int(longTickers["deliveryTime"]) / 1000
         shortDelivery = int(shortTickers["deliveryTime"]) / 1000
 
-        todayDate = datetime.now().timestamp()
+        todayDate = datetime.datetime.now(datetime.UTC).timestamp()
         # - Time to delivery
         # Sometimes, its a perpetual contract, so we need to check if the delivery time is 0
 
         # TODO: Two perpetuals give a negative daysLeft, but it's fine
-        if longDelivery != 0:
-            maximumTime = longDelivery
-        else:
-            maximumTime = shortDelivery
+        maximumTime = longDelivery if longDelivery != 0 else shortDelivery
         daysLeft = (maximumTime - todayDate) / 86400 + 1
 
-        if daysLeft != 0:
-            apr = coeff * 365 / daysLeft
-        else:
-            apr = 0
+        apr = coeff * 365 / daysLeft if daysLeft != 0 else 0
         return {
             "gap": gap,
             "coeff": coeff,
@@ -73,21 +62,24 @@ class bybitAnalyser:
         }
 
     @staticmethod
-    def position_calculator(ticker, side: str, quantityUSDC: float | int, leverage: int = 1):
-        """
-        Checks information about a position before entering it
-        User submits a USDC quantity, and we calculate the amount of contracts to buy/sell
-        The calculations are based on the Bybit documentation, but they will never be 100% accurate
+    def position_calculator(ticker: str, side: str, quantityUSDC: float, leverage: int = 1) -> dict:
+        """Check information about a position before entering it.
+
+        User submits a USDC quantity, and we calculate the amount of contracts to buy/sell.
+        The calculations are based on the Bybit documentation, but they will never be 100% accurate.
 
         Link: https://bybit-exchange.github.io/docs/v5/order/create-order
         Source for calculations: https://www.bybit.com/en/help-center/article/Order-Cost-USDT-ContractUSDT_Perpetual_Contract
+
         Args:
-            contract (str): The future contract to enter a position on
+            ticker (str): The future contract to enter a position on
             side (str): Either "Buy" or "Sell"
             quantityUSDC (float | int): Price in USDC of contracts to buy/sell
             leverage (int): The leverage to use
+
         Returns:
             dict: The response from the API
+
         """
         # The user submits a USDC quantity, we calculate the amount of contracts to buy/sell
         # We could use the marketUnit parameter to "quoteCoin", but we want to control the quantity

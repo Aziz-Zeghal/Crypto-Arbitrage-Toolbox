@@ -1,21 +1,18 @@
-import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from utils import load_klines_parquet
+from bybit.utils import load_klines_parquet
 
 
 class Simulator:
-
     __slots__ = ["encyclopedia"]
 
-    def __init__(self, contract: str | None = None):
-        """
-        Simulator for the contracts
+    def __init__(self, contract: str | None = None) -> None:
+        """Simulate for the contracts.
 
         Args:
-            longData (str): the file path of the long contract data
-            shortData (str): the file path of the short contract data
+            contract: The contract to simulate
+
         """
         if contract is None:
             self.encyclopedia = {}
@@ -24,9 +21,11 @@ class Simulator:
                 contract: load_klines_parquet(contract),
             }
 
-    def plot_candles(self, contract: str, lowerlimit="2024-01-01 00:00", upperlimit="2026-01-01 00:00") -> dict:
-        """
-        Takes a contract, transforms it to a pandas DataFrame, and plots it as a candlestick chart.
+    def plot_candles(
+        self, contract: str, lowerlimit: str = "2024-01-01 00:00", upperlimit: str = "2026-01-01 00:00"
+    ) -> dict:
+        """Take a contract, transforms it to a pandas DataFrame, and plots it as a candlestick chart.
+
         The contract contains a list of candles in the format:
             [startTime, openPrice, highPrice, lowPrice, closePrice, volume, turnover]
 
@@ -35,10 +34,11 @@ class Simulator:
             contract (str): The contract containing the candles data
             lowerlimit (str): The lower bound date to filter the data (format: YYYY-MM-DD HH:MM)
             upperlimit (str): The upper bound date to filter the data (format: YYYY-MM-DD HH:MM)
+
         Returns:
             dict: {"figure": fig, "dataframe": df}
-        """
 
+        """
         if contract not in self.encyclopedia:
             self.encyclopedia[contract] = load_klines_parquet(contract, pretty=True)
 
@@ -57,12 +57,12 @@ class Simulator:
                     high=df["highPrice"],
                     low=df["lowPrice"],
                     close=df["closePrice"],
-                )
-            ]
+                ),
+            ],
         )
         # Determine min and max prices for more granular y-axis control
-        min_price = df[["lowPrice"]].min().values[0]
-        max_price = df[["highPrice"]].max().values[0]
+        min_price = df[["lowPrice"]].min().to_numpy()[0]
+        max_price = df[["highPrice"]].max().to_numpy()[0]
 
         # Add a buffer for the y-axis to extend beyond the min/max prices
         y_min = min_price * 0.99  # 1% below the lowest price
@@ -79,7 +79,7 @@ class Simulator:
                 # Show a subset of x-axis labels for clarity
                 xaxis_tickvals=df["startTime"][:: len(df) // 5],
                 # Y-axis extension and more granular tick intervals
-                yaxis=dict(range=[y_min, y_max], tickmode="linear", dtick=(y_max - y_min) / 10),
+                yaxis={"range": [y_min, y_max], "tickmode": "linear", "dtick": (y_max - y_min) / 10},
             )
         except Exception as e:
             print("Are you sure the date limits are correct?")
@@ -87,10 +87,14 @@ class Simulator:
         return fig, df
 
     def plot_compare(
-        self, longContract: str, shortContract: str, lowerlimit="2024-01-01 00:00", upperlimit="2026-01-01 00:00"
+        self,
+        longContract: str,
+        shortContract: str,
+        lowerlimit: str = "2024-01-01 00:00",
+        upperlimit: str = "2026-01-01 00:00",
     ) -> go.Figure:
-        """
-        Compares two datasets in a candlestick chart.
+        """Compare two datasets in a candlestick chart.
+
         The two datasets are merged on the 'startTime' column to align them.
 
         Args:
@@ -101,17 +105,18 @@ class Simulator:
 
         Returns:
             go.Figure: The plotly figure
+
         """
         # Get DataFrames for Long and Short datasets
         try:
             _, dfLong = self.plot_candles(longContract, lowerlimit=lowerlimit, upperlimit=upperlimit)
             _, dfShort = self.plot_candles(shortContract, lowerlimit=lowerlimit, upperlimit=upperlimit)
-        except Exception as e:
+        except Exception:
             print("One limit is incorrect.")
-            raise e
+            raise
 
         # Merge both DataFrames on 'startTime' to align their data
-        merged_df = pd.merge(dfLong, dfShort, suffixes=("_long", "_short"), how="inner", on="startTime")
+        merged_df = dfLong.merge(dfShort, suffixes=("_long", "_short"), how="inner", on="startTime")
 
         # Initialize figure
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.02)
@@ -158,7 +163,10 @@ class Simulator:
         # Calculate and add the difference trace
         diffCalc = 100 - merged_df["closePrice_long"] * 100 / merged_df["closePrice_short"]
         diff_graph = go.Scatter(
-            x=merged_df["startTime"], y=diffCalc, name="Coefficient of difference", marker=dict(color="blue")
+            x=merged_df["startTime"],
+            y=diffCalc,
+            name="Coefficient of difference",
+            marker={"color": "blue"},
         )
         fig.add_trace(diff_graph, row=2, col=1)
 
@@ -167,7 +175,7 @@ class Simulator:
             x=merged_df["startTime"],
             y=diffCalc.rolling(window=150).mean(),
             name="Trendline",
-            marker=dict(color="black"),
+            marker={"color": "black"},
         )
         fig.add_trace(trendline, row=2, col=1)
 
@@ -178,11 +186,11 @@ class Simulator:
             yaxis_title="Price",
             xaxis_rangeslider_visible=False,
             xaxis_tickangle=-45,
-            newshape=dict(
-                label=dict(
-                    texttemplate="Change: %{dy:.2f}",
-                )
-            ),
+            newshape={
+                "label": {
+                    "texttemplate": "Change: %{dy:.2f}",
+                },
+            },
         )
 
         fig.update_layout(modebar_add=["drawline"])

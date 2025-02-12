@@ -1,39 +1,36 @@
-import sys
 import asyncio
-from datetime import datetime
+import datetime
 
-sys.path.append("Bybit")
-
-from Bybit.greekMaster import SpotFutStrategos
-from Bybit.utils import ColorFormatter
+from bybit.greek_master import SpotFutStrategos
+from bybit.utils import ColorFormatter
 
 # TODO: Here, include argparse
 
 
-def init():
+def init() -> SpotFutStrategos:
     # Configure logging
     ColorFormatter.configure_logging(verbose=1)
 
     # Create a Bybit client
-    now = datetime.now()
+    now = datetime.datetime.now(tz=datetime.UTC)
     Master = SpotFutStrategos(demo=True)
-    then = datetime.now()
+    then = datetime.datetime.now(tz=datetime.UTC)
     print(f"Time taken to create the client: {then - now}")
     return Master
 
 
-async def run_forever(Master: SpotFutStrategos):
+async def run_forever(Master: SpotFutStrategos) -> None:
     try:
         # Master.CT_best_gap(perpetual=True, spot=False)
         # await Master.one_shot_PF(quantityUSDC=1000, leverage="1", strategy=Master.client.most_basic_arb)
         # await Master.save_klines(dest="store")
         await Master.stable_collateral(quantityUSDC=1000)
-    except Exception as e:
+    except Exception:
         print("Something happened, exiting")
-        raise e
+        raise
 
 
-async def main():
+async def main() -> None:
     # Very important, else we will get recursion errors in the long run
     # TODO: Env variable for this to have a clean exit
     Master = init()
