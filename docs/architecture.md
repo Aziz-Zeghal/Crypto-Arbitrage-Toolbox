@@ -21,7 +21,7 @@ Orchestrates the entire arbitrage process. Monitors accounts, initiates client p
 - **Selectors**: Logic for pair selection.
 - **Executors**: Set up application, call strategy, monitor, and exit.
 
-GreekMaster serves as an interface for child classes, depending on the manipulated products. It exposes groups of methods:
+GreekMaster serves as an interface for child classes, depending on the manipulated products. It exposes groups of methods.
 
 
 ## Client
