@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "KairosEdge"
+version = "0.0.1"
+authors = [{ name = "Aziz-Zeghal" }]
+description = "Crypto CEX arbitrage Toolbox"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = { file = "LICENSE" }
+
+[tool.setuptools]
+packages = ["bybit"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D203",  # Incompatible avec D211
+    "D213",  # Incompatible avec D212
+    "COM812", # Conflit avec le formatter
+    "D100", # Docstring in public class
+    "D101", # Dosctring in public module
+    "TD003", # Issue link for TODO
+    "TD002", # Author for TODO
+    "FIX002", # TODO to resolve
+    "N803", # Variables can be uppercase
+    "N806", # Variables in function can be uppercase
+    "FBT001", # Booleans in function
+    "FBT002", # Booleans in function
+    "T201", # Leave prints
+    "G004", # Allow f-strings
+    "PLR2004", # Allow "magic" values
+    "B006", # Allow mutable objects in default arguments of functions
+    "PD901", # Allow to use the "df" variable name
+    "ERA001", # Leave commented code
+    "PYI041" # Allow float | int annotation for beartype
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

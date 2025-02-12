@@ -1,28 +1,30 @@
-import sys
-import os
-import pandas as pd
 import asyncio
 import logging
-from beartype import beartype
+import sys
+from pathlib import Path
 
-from analyser import bybitAnalyser
+import pandas as pd
+from beartype import beartype
 from pybit.unified_trading import HTTP, WebSocket
 
 # Custom imports
-sys.path.append(os.path.dirname(os.path.abspath("keys.py")))
-from utils import save_klines_parquet, get_epoch, load_klines_parquet
+from bybit.analyser import Analyser
+from bybit.utils import get_epoch, load_klines_parquet, save_klines_parquet
+
+sys.path.append(str(Path("keys.py").resolve().parent))
+
 try:
     import keys
 except ImportError:
     print("No keys file found !")
 
-class bybitFetcher:
-    __slots__ = ["session", "ws", "ws_spot", "logger"]
+
+class Fetcher:
+    __slots__ = ["logger", "session", "ws", "ws_spot"]
 
     @beartype
-    def __init__(self, demo=False):
-        """
-        Initialize the Bybit session
+    def __init__(self, demo: bool = False) -> None:
+        """Initialize the Bybit session.
 
         Args:
             demo (bool): If True, will use the demo keys
@@ -30,6 +32,7 @@ class bybitFetcher:
         Defines:
             - session (HTTP): The HTTP session
             - logger (logging.Logger): Logger for the fetcher
+
         """
         if demo:
             self.session = HTTP(api_key=keys.demobybitPKey, api_secret=keys.demobybitSKey, demo=True)
@@ -42,10 +45,8 @@ class bybitFetcher:
 
         self.logger = logging.getLogger("greekMaster.client.fetcher")
 
-    def start_linear_ws(self):
-        """
-        Start the WebSocket session for linear contracts
-        """
+    def start_linear_ws(self) -> None:
+        """Start the WebSocket session for linear contracts."""
         self.ws = WebSocket(
             api_key=keys.demobybitPKey,
             api_secret=keys.demobybitSKey,
@@ -55,10 +56,8 @@ class bybitFetcher:
             ping_timeout=4,
         )
 
-    def start_spot_ws(self):
-        """
-        Start the WebSocket session for spot contracts
-        """
+    def start_spot_ws(self) -> None:
+        """Start the WebSocket session for spot contracts."""
         self.ws_spot = WebSocket(
             api_key=keys.demobybitPKey,
             api_secret=keys.demobybitSKey,
@@ -68,17 +67,18 @@ class bybitFetcher:
             ping_timeout=4,
         )
 
-    def close_websockets(self):
+    def close_websockets(self) -> None:
+        """Close the WebSocket sessions."""
         for ws in [self.ws, self.ws_spot]:
             if ws:
                 ws.exit()
                 self.logger.info("WebSocket closed")
 
-    def get_wallet(self):
-        """
-        Gives some information on USDC and BTC
+    def get_wallet(self) -> dict:
+        """Give information on USDC and BTC.
 
         Link: https://bybit-exchange.github.io/docs/v5/account/wallet-balance
+
         Returns:
             dict:
                 Balance: Total balance in USD
@@ -90,6 +90,7 @@ class bybitFetcher:
                     Quantity: Quantity of USDC
                     Available: Available to withdraw
                     usdValue: Value in USD
+
         """
         response = self.session.get_wallet_balance(accountType="UNIFIED")["result"]["list"][0]
         totalBalance = response["totalEquity"]
@@ -98,7 +99,7 @@ class bybitFetcher:
         usdcDict = next((coin for coin in response["coin"] if coin["coin"] == "USDC"), None)
         usdtDict = next((coin for coin in response["coin"] if coin["coin"] == "USDT"), None)
 
-        def get_info(coin: dict):
+        def get_info(coin: dict) -> dict:
             return {
                 "Quantity": float(coin["equity"]),
                 "Available": float(coin["equity"]) - float(coin["totalPositionIM"]),
@@ -113,7 +114,8 @@ class bybitFetcher:
             "USDT": get_info(usdtDict),
         }
 
-    # TODO: No need to load the whole DataFrame, just the last part, then concat to the file (Parquet is not made for that though)
+    # TODO: No need to load the whole DataFrame, just the last part,
+    # then concat to the file (Parquet is not made for that though)
     # TODO: Add a verbose parameter
     @beartype
     async def get_history_pd(
@@ -123,9 +125,9 @@ class bybitFetcher:
         dateLimit: str = "01/01/2021",
         category: str = "linear",
         dest: str | None = None,
-    ):
-        """
-        Get the history of a future product until dateLimit
+    ) -> pd.DataFrame:
+        """Get the history of a future product until dateLimit.
+
         If we do not have any data, we start from the oldest data point, and fetch the data before it
         If we have some data, we start from the most recent data point, and fetch the data after it
         We do it this way, because we cannot know when the product started
@@ -143,7 +145,6 @@ class bybitFetcher:
         Returns:
             A DataFrame containing the accumulated data
         """
-
         file_name = f"{product}_{interval}"
         if category == "spot":
             file_name += "_spot.parquet"
@@ -151,13 +152,13 @@ class bybitFetcher:
             file_name += ".parquet"
 
         if dest:
-            file_name = os.path.join(dest, file_name)
+            file_name = Path(dest) / file_name
 
         dateLimit = get_epoch(dateLimit)
 
         # Initialize an empty DataFrame for accumulated data
         acc_data = pd.DataFrame(
-            columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"]
+            columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"],
         )
         ORANGE = "\033[38;5;214m"
         RESET = "\033[0m"
@@ -212,27 +213,29 @@ class bybitFetcher:
 
     # TODO: Add inverse contracts file handling
     @beartype
-    async def save_klines(self, coin: str = "BTC", dest: str = "store"):
-        """
-        Save the klines of all the Perpetual/Future/Inverse contracts in parquet format
+    async def save_klines(self, coin: str = "BTC", dest: str = "store") -> None:
+        """Save the klines of all the Perpetual/Future/Inverse contracts in parquet format.
+
         Checks if a parquet file exists to update it, else creates a new one
 
         Args:
+            coin (str): The coin to consider (e.g., "BTC")
             dest (str): The destination folder
+
         """
         allContracts = self.get_linearNames(inverse=False, perpetual=True, coin=coin)
 
         # Combine perpetual and future contracts
         allContracts = allContracts["perpetual"] + allContracts["future"]
 
-        async def _fetch_history(contract, interval, category="linear"):
+        async def _fetch_history(contract: str, interval: str, category: str = "linear") -> None:
             await self.get_history_pd(product=contract, interval=interval, dest=dest, category=category)
 
         tasks = []
 
         for contract in allContracts:
             tasks.extend(
-                [_fetch_history(contract, "15"), _fetch_history(contract, "5"), _fetch_history(contract, "1")]
+                [_fetch_history(contract, "15"), _fetch_history(contract, "5"), _fetch_history(contract, "1")],
             )
 
         # spot
@@ -241,7 +244,7 @@ class bybitFetcher:
                 _fetch_history(f"{coin}USDT", "15", category="spot"),
                 _fetch_history(f"{coin}USDT", "5", category="spot"),
                 _fetch_history(f"{coin}USDT", "1", category="spot"),
-            ]
+            ],
         )
 
         # TODO: This code will wait for other tasks, because we use I/O bound tasks
@@ -249,14 +252,14 @@ class bybitFetcher:
 
     # TODO: Maybe add error handling for the case where the contract does not exist
     @beartype
-    def get_spot(self, coin: str = "BTC"):
-        """
-        Get spot for a given coin
+    def get_spot(self, coin: str = "BTC") -> list:
+        """Get spot for a given coin.
 
         Args:
             coin (str): Either BTC or ETH
         Returns:
             list: List of all the products
+
         """
         markets = []
         pair = self.session.get_instruments_info(symbol=f"{coin}USDT", category="spot")["result"]["list"][0]
@@ -268,10 +271,13 @@ class bybitFetcher:
 
     @beartype
     def get_linearNames(
-        self, coin: str = "BTC", inverse: bool = False, perpetual: bool = True, quoteCoins=["USDT", "USDC", "USD"]
-    ):
-        """
-        Get all the future contracts for a given coin
+        self,
+        coin: str = "BTC",
+        inverse: bool = False,
+        perpetual: bool = True,
+        quoteCoins: list[str] = ["USDT", "USDC", "USD"],
+    ) -> dict:
+        """Get all the future contracts for a given coin.
 
         Link: https://bybit-exchange.github.io/docs/v5/market/instrument
         Args:
@@ -280,7 +286,6 @@ class bybitFetcher:
         Return:
             dict: The future contracts. The keys are "perpetual" and "future"
         """
-
         # Sadly, I do not think there is a better way to do this
         # But the contracts themself are not always queried
         pairs = self.session.get_instruments_info(category="linear", baseCoin=coin)
@@ -307,9 +312,8 @@ class bybitFetcher:
         perpetual: bool = True,
         spot: bool = False,
         quoteCoins: list[str] = ["USDC", "USDT", "USD"],
-    ):  # Function can return either DataFrame or Styler
-        """
-        Get all the gaps for multiple products in a DataFrame
+    ) -> pd.DataFrame:  # Function can return either DataFrame or Styler
+        """Get all the gaps for multiple products in a DataFrame.
 
         Args:
             coin (str): The coin to consider (e.g., "BTC").
@@ -321,8 +325,8 @@ class bybitFetcher:
 
         Returns:
             pd.DataFrame | pd.io.formats.style.Styler: A DataFrame or a styled version.
-        """
 
+        """
         # Get future and spot contracts
         market = self.get_linearNames(coin=coin, inverse=inverse, perpetual=perpetual, quoteCoins=quoteCoins)
 
@@ -331,8 +335,7 @@ class bybitFetcher:
         ]
 
         longTickers = [
-            self.session.get_tickers(symbol=perpetual, category="linear")["result"]
-            for perpetual in market["perpetual"]
+            self.session.get_tickers(symbol=perpetual, category="linear")["result"] for perpetual in market["perpetual"]
         ]
 
         if spot:
@@ -357,12 +360,12 @@ class bybitFetcher:
         df_gaps = pd.DataFrame(columns=column_types.keys()).astype(column_types)
 
         # Calculate gaps
-        for i, long in enumerate(longTickers):
+        for _i, long in enumerate(longTickers):
             for short in shortTickers:
                 # Cross only the products in different categories
                 longInfo = long["list"][0]
                 shortInfo = short["list"][0]
-                gap = bybitAnalyser.get_gap(longInfo, shortInfo, applyFees)
+                gap = Analyser.get_gap(longInfo, shortInfo, applyFees)
 
                 row = pd.DataFrame(
                     [
@@ -374,8 +377,8 @@ class bybitFetcher:
                             "APR": gap["apr"],
                             "DaysLeft": max(0, int(gap["daysLeft"])),
                             "CumVolume": gap["cumVolume"],
-                        }
-                    ]
+                        },
+                    ],
                 )
 
                 df_gaps = pd.concat([df_gaps, row], ignore_index=True)
@@ -383,13 +386,12 @@ class bybitFetcher:
         df_gaps = df_gaps.astype(column_types)
 
         # Sort by DaysLeft
-        df_gaps.sort_values(by="DaysLeft", inplace=True)
+        df_gaps = df_gaps.sort_values(by="DaysLeft")
 
         return df_gaps.reset_index(drop=True)
 
-    async def get_greeks(self, baseCoin: str = None):
-        """
-        Get the greeks for a given symbol
+    async def get_greeks(self, baseCoin: str | None = None) -> dict:
+        """Get the greeks for a given symbol.
 
         Link: https://bybit-exchange.github.io/docs/v5/account/coin-greeks
         Args:
@@ -400,15 +402,13 @@ class bybitFetcher:
         try:
             if baseCoin:
                 return self.session.get_coin_greeks(baseCoin=baseCoin)["result"]["list"][0]
-            else:
-                return self.session.get_coin_greeks()["result"]["list"][0]
+            return self.session.get_coin_greeks()["result"]["list"][0]
         except Exception as e:
             self.logger.warning(f"Error: {e}")
             return None
 
-    async def get_position(self, symbol: str):
-        """
-        Gets the position of a linear/inverse contract
+    async def get_position(self, symbol: str) -> dict:
+        """Get the position of a linear/inverse contract.
 
         Link: https://bybit-exchange.github.io/docs/v5/position
 
@@ -416,15 +416,14 @@ class bybitFetcher:
             symbol (str): The symbol to get the position from
         Returns:
             info (dict): The size and value of the position
-        """
 
+        """
         position = self.session.get_positions(symbol=symbol, category="linear")["result"]["list"][0]
         return {"qty": position["size"], "positionValue": position["positionValue"]}
 
     @beartype
-    async def set_leverage(self, symbol: str, leverage: str):
-        """
-        Set the leverage for a given symbol
+    async def set_leverage(self, symbol: str, leverage: str) -> dict | None:
+        """Set the leverage for a given symbol.
 
         Link: https://bybit-exchange.github.io/docs/inverse/#t-changeleverage
         Args:
@@ -437,20 +436,27 @@ class bybitFetcher:
         for category in categories:
             try:
                 return self.session.set_leverage(
-                    symbol=symbol, category=category, buyLeverage=leverage, sellLeverage=leverage
+                    symbol=symbol,
+                    category=category,
+                    buyLeverage=leverage,
+                    sellLeverage=leverage,
                 )
             except Exception as e:
                 # Either wrong category, or leverage was set
                 if not e.args[0].startswith(("Illegal category", "leverage not modified")):
-                    raise e
+                    raise
 
         return None
 
     async def place_order(
-        self, symbol: str, quantity: float | int, side: str, category: str, reduce_only: bool = False
-    ):
-        """
-        Place an order in the specified category.
+        self,
+        symbol: str,
+        quantity: float,
+        side: str,
+        category: str,
+        reduce_only: bool = False,
+    ) -> dict:
+        """Place an order in the specified category.
 
         Args:
             symbol (str): The symbol to trade
@@ -460,6 +466,7 @@ class bybitFetcher:
             reduce_only (bool): Whether the order is reduce-only
         Returns:
             dict: The response from the API
+
         """
         return self.session.place_order(
             symbol=symbol,
@@ -472,42 +479,49 @@ class bybitFetcher:
 
     @beartype
     async def enter_spot_linear(
-        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
-    ):
-        """
-        Enter a long position in a spot contract and a short position in a linear contract.
+        self,
+        longSymbol: str,
+        shortSymbol: str,
+        longQuantity: float,
+        shortQuantity: float,
+    ) -> list:
+        """Enter a long position in a spot contract and a short position in a linear contract.
 
         Args:
             longSymbol (str): The symbol to long
             shortSymbol (str): The symbol to short
             longQuantity (float | int): The quantity to long
             shortQuantity (float | int): The quantity to short
+
         """
         # Make both API calls concurrently
         short_task = asyncio.create_task(self.place_order(shortSymbol, shortQuantity, "Sell", "linear"))
         long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Buy", "spot"))
 
         # Gather the results
-        responses = await asyncio.gather(long_task, short_task)
-        return responses
+        return await asyncio.gather(long_task, short_task)
 
     @beartype
     async def exit_spot_linear(
-        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
-    ):
-        """
-        Exit a long position in a spot contract and a short position in a linear contract.
+        self,
+        longSymbol: str,
+        shortSymbol: str,
+        longQuantity: float,
+        shortQuantity: float,
+    ) -> list:
+        """Exit a long position in a spot contract and a short position in a linear contract.
 
         Args:
             longSymbol (str): The symbol to long
             shortSymbol (str): The symbol to short
             longQuantity (float | int): The quantity to long
             shortQuantity (float | int): The quantity to short
+
         """
         # Make both API calls concurrently
         long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Sell", "spot", reduce_only=True))
         short_task = asyncio.create_task(
-            self.place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+            self.place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True),
         )
 
         # Gather the results
@@ -519,10 +533,13 @@ class bybitFetcher:
 
     @beartype
     async def enter_double_linear(
-        self, longSymbol: str, shortSymbol: str, longQuantity: float | int, shortQuantity: float | int
-    ):
-        """
-        Enter a position in both contracts.
+        self,
+        longSymbol: str,
+        shortSymbol: str,
+        longQuantity: float,
+        shortQuantity: float,
+    ) -> list:
+        """Enter a position in both contracts.
 
         CAREFUL: It will not be arbitrage. The quantities have to be calculated beforehand.
 
@@ -533,31 +550,34 @@ class bybitFetcher:
             shortQuantity (float | int): The quantity to short
         Returns:
             dict: The response from the API
+
         """
         # Make both API calls concurrently
         short_task = asyncio.create_task(self.place_order(shortSymbol, shortQuantity, "Sell", "linear"))
         long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Buy", "linear"))
 
         # Gather the results
-        responses = await asyncio.gather(long_task, short_task)
-        return responses
+        return await asyncio.gather(long_task, short_task)
 
-    async def exit_double_linear(self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int):
-        """
-        Exit a position in both contracts.
+    async def exit_double_linear(
+        self, longSymbol: str, shortSymbol: str, longQuantity: int, shortQuantity: int
+    ) -> dict:
+        """Exit a position in both contracts.
 
         Args:
             longSymbol (str): The symbol to long
             shortSymbol (str): The symbol to short
+            longQuantity (float | int): The quantity to long
+            shortQuantity (float | int): The quantity to short
         Returns:
             dict: The response from the API
+
         """
         # Make both API calls concurrently
         long_task = asyncio.create_task(self.place_order(longSymbol, longQuantity, "Sell", "linear", reduce_only=True))
         short_task = asyncio.create_task(
-            self.place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True)
+            self.place_order(shortSymbol, shortQuantity, "Buy", "linear", reduce_only=True),
         )
 
         # Gather the results
-        responses = await asyncio.gather(long_task, short_task)
-        return responses
+        return await asyncio.gather(long_task, short_task)
