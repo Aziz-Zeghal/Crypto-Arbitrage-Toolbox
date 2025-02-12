@@ -1,8 +1,5 @@
 import asyncio
 import datetime
-import sys
-
-sys.path.append("Bybit")
 
 from bybit.greek_master import SpotFutStrategos
 from bybit.utils import ColorFormatter
