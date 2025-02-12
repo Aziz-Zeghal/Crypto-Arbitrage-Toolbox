@@ -1,8 +1,11 @@
 # .gitignore
 keys.py
+
 # cache
 __pycache__/
 .conda/
+*.egg-info/
+dist/
 
 # Log
 test.log

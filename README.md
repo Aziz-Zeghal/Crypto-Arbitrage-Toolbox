@@ -1,5 +1,5 @@
-# Crypto-Arbitrage-Toolbox
-This repository is a sandbox for many arbitrage strategies using crypto platforms (maybe DeFy one day).
+# KairosEdge
+This repository is a Crypto Arbitrage Toolbox for many arbitrage strategies using crypto platforms (maybe DeFy one day).
 
 Still modifying architecture
 
@@ -11,6 +11,7 @@ Still modifying architecture
 - [Architecture](#Architecture)
 - [Environnement and tools](#Environnement-and-tools)
     - [Conda](#Conda)
+    - [Package](#Package)
     - [VSCode](#VSCode)
     - [Jupiter Notebook](#Jupiter-Notebook)
     - [Kestra](#Kestra)
@@ -78,6 +79,16 @@ I output like this:
 ```bash
 conda env export --name sandbox > conda_env.yaml
 ```
+
+#### Package
+Bybit has a pyproject.toml file to package the project. You can install it like this:
+```bash
+python -m build
+# Then install the package
+pip install -e .
+```
+
+You will see the package in your environment. Look at the `scripts` folder for examples.
 
 #### VSCode
 If you want to use VSCode, you can select the conda env like this:
