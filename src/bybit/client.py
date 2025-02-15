@@ -17,10 +17,8 @@ class BybitClient(ABC):
         "active",
         "fetcher",
         "logger",
-        "longContractSymbol",
-        "longContractmsg",
-        "shortContractSymbol",
-        "shortContractmsg",
+        "longContract",
+        "shortContract",
     ]
 
     @beartype
@@ -38,28 +36,24 @@ class BybitClient(ABC):
             the strategy will be in the child class.
             - Executors (Child class related): Setup application, then call the strategy
 
-        Defines:
-            - fetcher (Fetcher): Fetcher for the Bybit API
-            - longContract (str): last long contract message
-            - shortContract (str): last short contract message
-            - logger (logging.Logger): Logger for the client
-
+        longContract and shortContract are dictionnaries of this form:
+        {
+            "data": Last Kline data,
+            "symbol": Contract symbol,
+            "qty": Position quantity,
+        }
         """
         self.fetcher = Fetcher(demo=demo)
-
-        self.longContractmsg: str = None
-        self.shortContractmsg: str = None
+        self.longContract: dict = {}
+        self.shortContract: dict = {}
         self.active = False
 
         self.logger = logging.getLogger("greekMaster.client")
 
     def new_round(self) -> None:
         """Routine called by the Master to reset the client's state."""
-        self.longContractSymbol = None
-        self.shortContractSymbol = None
-
-        self.longContractmsg = None
-        self.shortContractmsg = None
+        self.longContract = {}
+        self.shortContract = {}
 
         # For next execution
         self.active = True
@@ -76,18 +70,16 @@ class BybitClient(ABC):
 
         """
         # Check if the data is complete
-        if self.longContractmsg is None or self.shortContractmsg is None:
+        if self.longContract.get("data") is None or self.shortContract.get("data") is None:
             return
-        longTickers = self.longContractmsg["data"]
-        shortTickers = self.shortContractmsg["data"]
+        longTickers = self.longContract["data"]["data"]
+        shortTickers = self.shortContract["data"]["data"]
 
         # | Price of the future contract
         longPrice = float(longTickers["lastPrice"])
         shortPrice = float(shortTickers["lastPrice"])
         # - Calculate the gap
         coeff = (shortPrice / longPrice - 1) * 100
-
-        # TODO: Add logging ?
 
         # Check if the gap is enough
         if coeff >= minimumGap:
@@ -122,14 +114,14 @@ class BybitClient(ABC):
         # Define handlers
         def short_handler(message: str) -> None:
             if self.active:
-                self.shortContractmsg = message
+                self.shortContract["data"] = message
                 strategy(minimumGap=minimumGap)
             else:
                 self.logger.warning("Not active anymore. Ignoring short websocket...")
 
         def long_handler(message: str) -> None:
             if self.active:
-                self.longContractmsg = message
+                self.longContract["data"] = message
                 strategy(minimumGap=minimumGap)
             else:
                 self.logger.warning("Not active anymore. Ignoring long websocket...")
@@ -143,6 +135,13 @@ class BybitClient(ABC):
         self.logger.info("Listening to the tickers")
 
     @abstractmethod
+    async def select_amount() -> dict:  # noqa: ANN202
+        """To use in _exit_on_delivery.
+
+        Selects the entity to sell (BTC, USDC, or not sell for rollover)
+        """
+
+    @abstractmethod
     def base_executor(self):  # noqa: ANN201
         """Implement the main executor for the client.
 
@@ -153,9 +152,18 @@ class BybitClient(ABC):
 class UlysseSpotPerp(BybitClient):
     """The base_executor client has executors for spot and perpetual contracts."""
 
+    async def select_amount(self) -> dict:
+        """Places the order for the spot contract."""
+        return await self.fetcher.place_order(
+            symbol=self.longContract["symbol"],
+            side="Sell",
+            quantity=self.longContract["qty"],
+            category="spot",
+        )
+
     def _activate_websockets(self, short_handler: Callable, long_handler: Callable) -> None:
         # TODO: This cannot be definitive
-        self.longContractSymbol = self.longContractSymbol.replace(" (Spot)", "")
+        self.longContract["symbol"] = self.longContract["symbol"].replace(" (Spot)", "")
 
         # Start the websockets
         self.fetcher.start_linear_ws()
@@ -165,8 +173,8 @@ class UlysseSpotPerp(BybitClient):
         sleep(5)
 
         # Subscribe to the tickers
-        self.fetcher.ws_spot.ticker_stream(symbol=self.longContractSymbol, callback=long_handler)
-        self.fetcher.ws.ticker_stream(symbol=self.shortContractSymbol, callback=short_handler)
+        self.fetcher.ws_spot.ticker_stream(symbol=self.longContract["symbol"], callback=long_handler)
+        self.fetcher.ws.ticker_stream(symbol=self.shortContract["symbol"], callback=short_handler)
 
     async def base_executor(
         self,
@@ -174,7 +182,7 @@ class UlysseSpotPerp(BybitClient):
         strategy: Callable,
         leverage: str = "1",
         minimumGap: float | int = -0.2,
-    ) -> dict:
+    ) -> None:
         """Implement the main executor for Ulysse (for spot and future contracts).
 
         Actions:
@@ -196,7 +204,7 @@ class UlysseSpotPerp(BybitClient):
 
         """
         # Leverage only on the future product
-        await self.fetcher.set_leverage(self.shortContractSymbol, leverage)
+        await self.fetcher.set_leverage(self.shortContract["symbol"], leverage)
 
         # Setup the contracts
         await self._setup_contracts(strategy, minimumGap)
@@ -207,15 +215,15 @@ class UlysseSpotPerp(BybitClient):
 
         try:
             # We do not need the long info, because we can take how much we want
-            shortTickers = self.shortContractmsg["data"]
+            shortTickers = self.shortContract["data"]["data"]
 
             # Calculate the position
             shortPosition = Analyser.position_calculator(shortTickers, "Sell", quantityUSDC)
 
             # Open the positions
             await self.fetcher.enter_spot_linear(
-                self.longContractSymbol,
-                self.shortContractSymbol,
+                self.longContract["symbol"],
+                self.shortContract["symbol"],
                 round(shortPosition["value"], 8),
                 shortPosition["quantityContracts"],
             )
@@ -228,11 +236,6 @@ class UlysseSpotPerp(BybitClient):
         # Not active anymore, close the Websockets
         self.fetcher.close_websockets()
 
-        # Return the response
-        return {
-            "longContract": {
-                "symbol": self.longContractSymbol,
-                "qty": round(self.fetcher.get_wallet()["BTC"]["Available"] - 0.000001, 6),
-            },
-            "shortContract": {"symbol": self.shortContractSymbol, "qty": shortPosition["quantityContracts"]},
-        }
+        # Affect the qty to the dictionnaries
+        self.longContract["qty"] = round(self.fetcher.get_wallet()["BTC"]["Available"] - 0.000001, 6)
+        self.shortContract["qty"] = shortPosition["quantityContracts"]

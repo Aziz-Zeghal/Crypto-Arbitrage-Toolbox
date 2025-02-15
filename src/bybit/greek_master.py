@@ -1,20 +1,20 @@
 import asyncio
 import datetime
 import logging
-from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 import schedule
 from beartype import beartype
 
-from bybit.client import UlysseSpotPerp
+from bybit.client import BybitClient
 from bybit.utils import get_date
 
 
-class GreekMaster(ABC):
-    __slots__ = ["client", "fetcher", "logger", "position_info", "sch", "watching"]
+class GreekMaster:
+    __slots__ = ["client", "fetcher", "logger", "sch", "watching"]
 
     @beartype
-    def __init__(self, demo: bool = False) -> None:
+    def __init__(self, client: BybitClient) -> None:
         """Logic for all products.
 
         Monitors the account and calls ephemeral client processes to orchestrate arbitrage entry.
@@ -25,31 +25,25 @@ class GreekMaster(ABC):
 
         2 types of methods:
             - Selectors: The method to choose the best pair of contracts
-            - Executors: Setup application, call the strategy, monitor, then exit. (common to all children, with class customized utility methods)
+            - Executors: Setup application, call the strategy, monitor, then exit.
         Defines:
             - client (BybitClient): Client for the Bybit API
             - fetcher (Fetcher): Fetcher for the Bybit API
             - contracts (list): List of all the current contracts
             - logger (logging.Logger): Logger for the client
-            - position_info: Dictionnary with live updates
             - watching: Boolean to know if GreekMaster has control
 
         Implements:
             - _new_round: Cleanup for next arbitrage round
-            - monitor: Monitor the accounts, check the positions, the liquidation risk, etc.
+            - _monitor: Monitor the accounts, check the positions, the liquidation risk, etc.
             - _exit_on_delivery: Handler called every second to check if delivery arrived or not (uses _select_order)
             - _friday_job: Handler for the delivery day
             - _handle_on_delivery: Handler to exit on delivery day (uses _select_amount)
 
-
         """
-        # WARNING: This part will never be used because of the ABC.
-        # But useful for syntax completion
-        self.client = UlysseSpotPerp(demo=demo)
+        self.client: BybitClient = client
 
         self.fetcher = self.client.fetcher
-
-        self.position_info = {}
 
         self.logger = logging.getLogger("greekMaster")
 
@@ -64,11 +58,9 @@ class GreekMaster(ABC):
 
         self.client.new_round()
 
-        self.position_info = {}
-
         self.watching = False
 
-    async def monitor(self) -> None:
+    async def _monitor(self) -> None:
         """Monitor the accounts, check the positions, the liquidation risk, etc.
 
         Writes inside position_info
@@ -92,26 +84,19 @@ class GreekMaster(ABC):
                 --------------------""",
             )
 
-    @abstractmethod
-    async def _select_amount():  # noqa: ANN202
-        """To use in _exit_on_delivery.
-
-        Selects the entity to sell (BTC, USDC, or not sell for rollover)
-        """
-
     async def _exit_on_delivery(self):  # noqa: ANN202
         """Call handler every second to check if delivery arrived or not.
 
         Uses _select_order to exit the position when delivery arrives.
         """
-        shortContract = self.position_info["shortContract"]
+        shortContract = self.client.shortContract
 
         res = await self.fetcher.get_position(symbol=shortContract["symbol"])
 
         # If the position is 0, delivery arrived, sell spot.
         if res["qty"] == "0" or res["positionValue"] == "":
             # Exit position (can also be a rollover)
-            await self._select_amount()
+            await self.client.select_amount()
 
             (setattr(self, "watching", False),)
             self.logger.info("Delivery arrived, exited arbitrage !")
@@ -119,6 +104,7 @@ class GreekMaster(ABC):
             # Here, you would want to return self.sch.CancelJob.
             # But, we are in an async function, so we cannot return it easily.
 
+    # TODO: Use aioschedule + run_until_complete
     def _friday_job(self, epochTime: int) -> None:
         """Job for the delivery day.
 
@@ -144,15 +130,15 @@ class GreekMaster(ABC):
         Short contract is always supposed to be a future contract (perpetual/linear/inverse)
         """
         epochTime = int(
-            self.fetcher.session.get_tickers(symbol=self.position_info["shortContract"]["symbol"], category="linear")[
-                "result"
-            ]["list"][0]["deliveryTime"],
+            self.fetcher.session.get_tickers(symbol=self.client.shortContract["symbol"], category="linear")["result"][
+                "list"
+            ][0]["deliveryTime"],
         )
 
         self.logger.info(f"Delivery date at 8:00AM UTC for: {get_date(epochTime)}")
 
         # SCHEDULING PART
-        self.sch.every().minute.do(lambda: asyncio.ensure_future(self.monitor()))
+        self.sch.every().minute.do(lambda: asyncio.ensure_future(self._monitor()))
         # Schedule the delivery day (cashout, write the position in the books, etc.)
         self.sch.every().friday.at("08:48", "Europe/Paris").do(self._friday_job, epochTime=epochTime)
 
@@ -167,40 +153,14 @@ class GreekMaster(ABC):
         # Clear the schedule
         self._new_round()
 
-
-class SpotFutStrategos(GreekMaster):
-    """Implemented GreekMaster for Spot and Future contracts.
-
-    Mainly used for testing purposes, not fully optimal.
-    """
-
-    def __init__(self, demo: bool = False) -> None:
-        super().__init__(demo)
-        self.client = UlysseSpotPerp(demo=demo)
-
-    async def _select_amount(self) -> dict:
-        """Places the order to sell the spot contract."""
-        longContract = self.position_info["longContract"]
-
-        return await self.fetcher.place_order(
-            symbol=longContract["symbol"],
-            side="Sell",
-            quantity=longContract["qty"],
-            category="spot",
-        )
-
-    def CT_best_gap(
+    def best_gap(
         self,
-        perpetual: bool = True,
-        spot: bool = False,
         maxDays: int = 25,
         quoteCoins: list[str] = ["USDC"],
     ):
-        """Find the best gap for spot and perpetual contracts.
+        """Find the best gap for spot and future contracts.
 
         Args:
-            perpetual (bool): will get the perpetual contracts
-            spot (bool): will get the spot contracts
             maxDays (int): The maximum number of days left before delivery
             quoteCoins (list[str]): The quote coins to consider
         Returns:
@@ -209,20 +169,12 @@ class SpotFutStrategos(GreekMaster):
         """
         gaps = self.fetcher.all_gaps_pd(
             inverse=False,
-            perpetual=perpetual,
+            perpetual=False,
             applyFees=True,
-            spot=spot,
+            spot=True,
             quoteCoins=quoteCoins,
         )
 
-        # TODO: This filtering should be in all_gaps_pd
-        if spot:
-            # Keep only the spot contracts
-            gaps = gaps.loc[gaps["Buy"].str.contains("Spot")]
-
-        # Buy should have USDC or PERP inside it
-        # TODO: will remove this as soon as all_gaps_pd is updated
-        gaps = gaps.loc[gaps["Buy"].str.contains("USDT|USDC|PERP")]
         # Keep the positive coeffs
         gaps = gaps.loc[gaps["Coeff"] > 0]
 
@@ -234,8 +186,28 @@ class SpotFutStrategos(GreekMaster):
 
         return bestGap
 
+    def quickest_gap(self) -> dict:
+        """Find the quickest gap for spot and future contracts."""
+        gaps = self.fetcher.all_gaps_pd(
+            inverse=False,
+            perpetual=False,
+            applyFees=True,
+            spot=True,
+            quoteCoins=["USDC"],
+        )
+
+        # Take the gap that finishes the soonest
+        bestGap = gaps.loc[gaps["DaysLeft"].idxmin()]
+
+        self.logger.info(f"Best gap\n{bestGap}")
+
+        return bestGap
+
+    # TODO: Callable should also take kwargs if selectors have parameters
     @beartype
-    async def stable_collateral(self, collateral: str = "USDC", quantityUSDC: float | int = 1000) -> None:
+    async def stable_collateral(
+        self, selector: Callable[["GreekMaster"], dict] = quickest_gap, quantityUSDC: float | int = 0
+    ) -> None:
         """Buy the spot, short the future. The classic strategy.
 
         Client will be executed once.
@@ -253,22 +225,27 @@ class SpotFutStrategos(GreekMaster):
             - Repeat.
 
         Args:
-            quantityUSDC (float): The quantity in USDC
-            collateral (str): The collateral to use, either "USDC" or "USDT"
+            quantityUSDC (float): The quantity in USDC. If 0, will take the max of the wallet
+            selector (callable of greek_master): The selector for the contracts (should be implemented in GreekMaster)
 
         """
         # Clear the schedule
         self._new_round()
-        # Get best gap
-        bestGap = self.CT_best_gap(perpetual=False, spot=True, quoteCoins=[collateral])
+
+        # If no quantity was indicated, get the max of the wallet
+        if quantityUSDC == 0:
+            quantityUSDC = self.fetcher.get_wallet()["USDC"]
+
+        # Get the Pandas series (Buy, Sell)
+        contractPair = selector()
 
         # Set current information
-        self.client.longContractSymbol = bestGap["Buy"]
-        self.client.shortContractSymbol = bestGap["Sell"]
+        self.client.longContract["symbol"] = contractPair["Buy"]
+        self.client.shortContract["symbol"] = contractPair["Sell"]
 
         # Invoke strategy
         try:
-            resp = await self.client.base_executor(
+            await self.client.base_executor(
                 strategy=self.client.most_basic_arb,
                 quantityUSDC=quantityUSDC,
             )
@@ -277,9 +254,11 @@ class SpotFutStrategos(GreekMaster):
             raise
 
         self.logger.info(
-            f"\n{resp['longContract']['symbol']}: {resp['longContract']['qty']}\n{resp['shortContract']['symbol']}: {resp['shortContract']['qty']}",
+            f"""
+            {self.client.longContract["symbol"]}: {self.client.longContract["qty"]}
+            {self.client.shortContract["symbol"]}: {self.client.shortContract["qty"]}
+            """,
         )
-        self.position_info = resp
 
         self.logger.info("Now we wait...")
         # Monitor the position (write perceived position, compare with real position, log)
