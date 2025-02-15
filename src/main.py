@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 
-from bybit.client import UlysseSpotPerp
+from bybit.client import UlysseSpotFut
 from bybit.greek_master import GreekMaster
 from bybit.utils import ColorFormatter
 
@@ -13,7 +13,7 @@ def init() -> GreekMaster:
 
     # Create a Bybit client
     now = datetime.datetime.now(tz=datetime.UTC)
-    Master = GreekMaster(client=UlysseSpotPerp(demo=True))
+    Master = GreekMaster(client=UlysseSpotFut(demo=True))
     then = datetime.datetime.now(tz=datetime.UTC)
     print(f"Time taken to create the client: {then - now}")
     return Master
@@ -27,7 +27,7 @@ async def main() -> None:
     # TODO: Env variable for this to have a clean exit
     while True:
         try:
-            await Master.stable_collateral(selector=Master.best_gap, quantityUSDC=100)
+            await Master.stable_collateral(selector=Master.quickest_gap, quantityUSDC=1000)
         except Exception:
             print("Something happened, exiting")
             raise

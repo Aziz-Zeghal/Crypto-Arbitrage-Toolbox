@@ -15,6 +15,7 @@ from bybit.api_fetcher import Fetcher
 class BybitClient(ABC):
     __slots__ = [
         "active",
+        "balance",
         "fetcher",
         "logger",
         "longContract",
@@ -46,6 +47,8 @@ class BybitClient(ABC):
         self.fetcher = Fetcher(demo=demo)
         self.longContract: dict = {}
         self.shortContract: dict = {}
+        self.balance = 0
+
         self.active = False
 
         self.logger = logging.getLogger("greekMaster.client")
@@ -54,8 +57,8 @@ class BybitClient(ABC):
         """Routine called by the Master to reset the client's state."""
         self.longContract = {}
         self.shortContract = {}
+        self.balance = 0
 
-        # For next execution
         self.active = True
 
     def most_basic_arb(self, minimumGap: float) -> None:
@@ -135,7 +138,14 @@ class BybitClient(ABC):
         self.logger.info("Listening to the tickers")
 
     @abstractmethod
-    async def select_amount() -> dict:  # noqa: ANN202
+    async def _enter_amount() -> dict:  # noqa: ANN202
+        """To use in base_executor.
+
+        Selects the entry method for the client.
+        """
+
+    @abstractmethod
+    async def exit_amount() -> dict:  # noqa: ANN202
         """To use in _exit_on_delivery.
 
         Selects the entity to sell (BTC, USDC, or not sell for rollover)
@@ -149,11 +159,31 @@ class BybitClient(ABC):
         """
 
 
-class UlysseSpotPerp(BybitClient):
+class UlysseSpotFut(BybitClient):
     """The base_executor client has executors for spot and perpetual contracts."""
 
-    async def select_amount(self) -> dict:
-        """Places the order for the spot contract."""
+    async def _enter_amount(self) -> dict:
+        """Places the entry order."""
+        # We do not need the long info, because we can take how much we want
+        shortTickers = self.shortContract["data"]["data"]
+
+        # Calculate the position
+        shortPosition = Analyser.position_calculator(shortTickers, "Sell", self.balance)
+
+        # Open the positions
+        await self.fetcher.enter_spot_linear(
+            self.longContract["symbol"],
+            self.shortContract["symbol"],
+            round(shortPosition["value"], 8),
+            shortPosition["quantityContracts"],
+        )
+
+        # Affect the qty to the dictionnaries
+        self.longContract["qty"] = round(self.fetcher.get_wallet()["BTC"]["Available"] - 0.000001, 6)
+        self.shortContract["qty"] = shortPosition["quantityContracts"]
+
+    async def exit_amount(self) -> dict:
+        """Places the exit order."""
         return await self.fetcher.place_order(
             symbol=self.longContract["symbol"],
             side="Sell",
@@ -178,7 +208,6 @@ class UlysseSpotPerp(BybitClient):
 
     async def base_executor(
         self,
-        quantityUSDC: float,
         strategy: Callable,
         leverage: str = "1",
         minimumGap: float | int = -0.2,
@@ -193,9 +222,6 @@ class UlysseSpotPerp(BybitClient):
         Callback functions for both channels will check for the conditions of the arbitrage.
 
         Args:
-            longContract (str): The long contract's name
-            shortContract (str): The short contract's name
-            quantityUSDC (float | int): The quantity in USDC
             strategy (callable): The strategy to use (Needs to be implemented in client)
             leverage (str): The leverage to use, default is "1"
             minimumGap (float | int): The minimum gap to consider for the arbitrage
@@ -206,27 +232,17 @@ class UlysseSpotPerp(BybitClient):
         # Leverage only on the future product
         await self.fetcher.set_leverage(self.shortContract["symbol"], leverage)
 
+        # TODO: Should be kwargs
         # Setup the contracts
         await self._setup_contracts(strategy, minimumGap)
 
         # TODO: Find a way to call entry in callbacks to avoid busy waiting
-        while self.active:
+        while self.active:  # noqa: ASYNC110
             await asyncio.sleep(0.1)
 
         try:
-            # We do not need the long info, because we can take how much we want
-            shortTickers = self.shortContract["data"]["data"]
+            await self._enter_amount()
 
-            # Calculate the position
-            shortPosition = Analyser.position_calculator(shortTickers, "Sell", quantityUSDC)
-
-            # Open the positions
-            await self.fetcher.enter_spot_linear(
-                self.longContract["symbol"],
-                self.shortContract["symbol"],
-                round(shortPosition["value"], 8),
-                shortPosition["quantityContracts"],
-            )
         except Exception:
             self.logger.exception("Error when entering arbitrage position")
             self.logger.exception("Exiting", stack_info=False)
@@ -235,7 +251,3 @@ class UlysseSpotPerp(BybitClient):
 
         # Not active anymore, close the Websockets
         self.fetcher.close_websockets()
-
-        # Affect the qty to the dictionnaries
-        self.longContract["qty"] = round(self.fetcher.get_wallet()["BTC"]["Available"] - 0.000001, 6)
-        self.shortContract["qty"] = shortPosition["quantityContracts"]

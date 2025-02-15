@@ -23,6 +23,26 @@ Orchestrates the entire arbitrage process. Monitors accounts, initiates client p
 
 GreekMaster serves as an interface for child classes, depending on the manipulated products. It exposes groups of methods.
 
+TO HAVE: GreekMaster looks at a specified configuration file that looks like this:
+```JSON
+{
+    "active": true,
+    "selector":
+    {
+        "name": "best_gap",
+        "parameter": {
+            "maxDays": 25,
+            "quoteCoins" : ["USDC"]
+        }
+    },
+    "client":
+    {
+        "name": "UlysseSpotFut",
+        "strategy": "baseExecutor"
+    }
+}
+```
+
 
 ## Client
 Manages a pair of products. Contains all the strategies for a pair of products.
@@ -31,4 +51,4 @@ Manages a pair of products. Contains all the strategies for a pair of products.
 - **Strategies**: The entry and exit strategies for a pair of products.
 - **Executors**: Initial setup before websocket subscription, and exit strategy.
 
-The client can be long-term (wait for an expiry) or short term (scalping). Either way it ceises to exist after one cycle of arbitrage is completed.
+The client can be long-term (wait for an expiry) or short term (scalping). Either way it resets after one cycle of arbitrage is completed.

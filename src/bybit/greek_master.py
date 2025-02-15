@@ -38,7 +38,7 @@ class GreekMaster:
             - _monitor: Monitor the accounts, check the positions, the liquidation risk, etc.
             - _exit_on_delivery: Handler called every second to check if delivery arrived or not (uses _select_order)
             - _friday_job: Handler for the delivery day
-            - _handle_on_delivery: Handler to exit on delivery day (uses _select_amount)
+            - _handle_on_delivery: Handler to exit on delivery day (uses _exit_amount)
 
         """
         self.client: BybitClient = client
@@ -96,7 +96,7 @@ class GreekMaster:
         # If the position is 0, delivery arrived, sell spot.
         if res["qty"] == "0" or res["positionValue"] == "":
             # Exit position (can also be a rollover)
-            await self.client.select_amount()
+            await self.client.exit_amount()
 
             (setattr(self, "watching", False),)
             self.logger.info("Delivery arrived, exited arbitrage !")
@@ -236,6 +236,7 @@ class GreekMaster:
         if quantityUSDC == 0:
             quantityUSDC = self.fetcher.get_wallet()["USDC"]
 
+        self.client.balance = quantityUSDC
         # Get the Pandas series (Buy, Sell)
         contractPair = selector()
 
@@ -247,7 +248,6 @@ class GreekMaster:
         try:
             await self.client.base_executor(
                 strategy=self.client.most_basic_arb,
-                quantityUSDC=quantityUSDC,
             )
         except Exception:
             self.logger.exception("Error")
