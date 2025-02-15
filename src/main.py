@@ -9,7 +9,7 @@ from bybit.utils import ColorFormatter
 def init() -> GreekMaster:
     """Make the GreekMaster with specified client."""
     # Configure logging
-    ColorFormatter.configure_logging(verbose=1, run_name="actual_run.log")
+    ColorFormatter.configure_logging(verbose=1, run_name="test.log")
 
     # Create a Bybit client
     now = datetime.datetime.now(tz=datetime.UTC)

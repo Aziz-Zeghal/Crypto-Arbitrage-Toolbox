@@ -152,11 +152,46 @@ class BybitClient(ABC):
         """
 
     @abstractmethod
-    def base_executor(self):  # noqa: ANN201
-        """Implement the main executor for the client.
+    async def base_executor(
+        self,
+        strategy: Callable,
+        leverage: str = "1",
+        minimumGap: float | int = -0.2,
+    ) -> None:
+        """Implement the main executor for Ulysse, depending on the used products.
 
-        Should be implemented in the child class, depending on the used products.
+        Actions:
+            - Initialize the Bybit client
+            - Listen to the tickers with the websocket
+            - Associate to callback functions
+
+        Callback functions for both channels will check for the conditions of the arbitrage.
+
+        Args:
+            strategy (callable): The strategy to use (Needs to be implemented in client)
+            leverage (str): The leverage to use, default is "1"
+            minimumGap (float | int): The minimum gap to consider for the arbitrage
+
         """
+        # TODO: Should be kwargs
+        # Setup the contracts
+        await self._setup_contracts(strategy, minimumGap)
+
+        # TODO: Find a way to call entry in callbacks to avoid busy waiting
+        while self.active:  # noqa: ASYNC110
+            await asyncio.sleep(0.1)
+
+        try:
+            await self._enter_amount()
+
+        except Exception:
+            self.logger.exception("Error when entering arbitrage position")
+            self.logger.exception("Exiting", stack_info=False)
+            self.fetcher.close_websockets()
+            raise
+
+        # Not active anymore, close the Websockets
+        self.fetcher.close_websockets()
 
 
 class UlysseSpotFut(BybitClient):
@@ -212,42 +247,7 @@ class UlysseSpotFut(BybitClient):
         leverage: str = "1",
         minimumGap: float | int = -0.2,
     ) -> None:
-        """Implement the main executor for Ulysse (for spot and future contracts).
-
-        Actions:
-            - Initialize the Bybit client
-            - Listen to the tickers with the websocket
-            - Associate to callback functions
-
-        Callback functions for both channels will check for the conditions of the arbitrage.
-
-        Args:
-            strategy (callable): The strategy to use (Needs to be implemented in client)
-            leverage (str): The leverage to use, default is "1"
-            minimumGap (float | int): The minimum gap to consider for the arbitrage
-        Returns:
-            dict: The response from the API
-
-        """
+        """Implement for spot and future contracts."""
         # Leverage only on the future product
         await self.fetcher.set_leverage(self.shortContract["symbol"], leverage)
-
-        # TODO: Should be kwargs
-        # Setup the contracts
-        await self._setup_contracts(strategy, minimumGap)
-
-        # TODO: Find a way to call entry in callbacks to avoid busy waiting
-        while self.active:  # noqa: ASYNC110
-            await asyncio.sleep(0.1)
-
-        try:
-            await self._enter_amount()
-
-        except Exception:
-            self.logger.exception("Error when entering arbitrage position")
-            self.logger.exception("Exiting", stack_info=False)
-            self.fetcher.close_websockets()
-            raise
-
-        # Not active anymore, close the Websockets
-        self.fetcher.close_websockets()
+        await super().base_executor(strategy, leverage, minimumGap)
