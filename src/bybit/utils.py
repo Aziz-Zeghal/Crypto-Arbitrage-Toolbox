@@ -101,7 +101,16 @@ def format_volume(volume: int) -> str:
 class ColorFormatter(logging.Formatter):
     """Custom formatter to colorize log level names based on their severity."""
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
+        """Format the log record with colors based on the log level.
+
+        Args:
+            record (logging.LogRecord): The log record to format.
+
+        Returns:
+            str: The formatted log record as a string.
+
+        """
         # Define color mappings for log levels
         level_colors = {
             "DEBUG": "\033[37m",  # White
