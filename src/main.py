@@ -9,7 +9,7 @@ from bybit.utils import ColorFormatter
 def init() -> GreekMaster:
     """Make the GreekMaster with specified client."""
     # Configure logging
-    ColorFormatter.configure_logging(verbose=1, run_name="test.log")
+    ColorFormatter.configure_logging(verbose=1, run_name="actual_run.log")
 
     # Create a Bybit client
     now = datetime.datetime.now(tz=datetime.UTC)
@@ -27,7 +27,7 @@ async def main() -> None:
     # TODO: Env variable for this to have a clean exit
     while True:
         try:
-            await Master.stable_collateral(selector=Master.quickest_gap, quantityUSDC=1000)
+            await Master.stable_collateral(selector=Master.quickest_gap, quantityUSDC=3000)
         except Exception:
             print("Something happened, exiting")
             raise

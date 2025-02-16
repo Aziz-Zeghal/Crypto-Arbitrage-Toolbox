@@ -138,7 +138,7 @@ class GreekMaster:
         self.logger.info(f"Delivery date at 8:00AM UTC for: {get_date(epochTime)}")
 
         # SCHEDULING PART
-        self.sch.every().minute.do(lambda: asyncio.ensure_future(self._monitor()))
+        self.sch.every().day.at("08:00", "Europe/Paris").do(lambda: asyncio.ensure_future(self._monitor()))
         # Schedule the delivery day (cashout, write the position in the books, etc.)
         self.sch.every().friday.at("08:48", "Europe/Paris").do(self._friday_job, epochTime=epochTime)
 
