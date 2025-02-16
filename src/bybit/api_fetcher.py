@@ -213,23 +213,37 @@ class Fetcher:
 
     # TODO: Add inverse contracts file handling
     @beartype
-    async def save_klines(self, coin: str = "BTC", dest: str = "store") -> None:
+    async def save_klines(
+        self,
+        coin: str = "BTC",
+        datelimit: str = "01/01/2021",
+        dest: str = "store",
+        spot: bool = True,
+        perpetual: bool = True,
+        inverse: bool = True,
+    ) -> None:
         """Save the klines of all the Perpetual/Future/Inverse contracts in parquet format.
 
         Checks if a parquet file exists to update it, else creates a new one
 
         Args:
-            coin (str): The coin to consider (e.g., "BTC")
-            dest (str): The destination folder
+            coin (str): The coin to consider (e.g., "BTC").
+            datelimit (str): The last date of fetched data.
+            dest (str): The destination folder to save the data.
+            spot (bool): Include spot contracts.
+            perpetual (bool): Include perpetual contracts.
+            inverse (bool): Include inverse contracts.
 
         """
-        allContracts = self.get_linearNames(inverse=False, perpetual=True, coin=coin)
+        allContracts = self.get_linearNames(inverse=inverse, perpetual=perpetual, coin=coin)
 
         # Combine perpetual and future contracts
         allContracts = allContracts["perpetual"] + allContracts["future"]
 
         async def _fetch_history(contract: str, interval: str, category: str = "linear") -> None:
-            await self.get_history_pd(product=contract, interval=interval, dest=dest, category=category)
+            await self.get_history_pd(
+                product=contract, dateLimit=datelimit, interval=interval, dest=dest, category=category
+            )
 
         tasks = []
 
@@ -239,13 +253,14 @@ class Fetcher:
             )
 
         # spot
-        tasks.extend(
-            [
-                _fetch_history(f"{coin}USDT", "15", category="spot"),
-                _fetch_history(f"{coin}USDT", "5", category="spot"),
-                _fetch_history(f"{coin}USDT", "1", category="spot"),
-            ],
-        )
+        if spot:
+            tasks.extend(
+                [
+                    _fetch_history(f"{coin}USDT", "15", category="spot"),
+                    _fetch_history(f"{coin}USDT", "5", category="spot"),
+                    _fetch_history(f"{coin}USDT", "1", category="spot"),
+                ],
+            )
 
         # TODO: This code will wait for other tasks, because we use I/O bound tasks
         await asyncio.gather(*tasks)
@@ -273,8 +288,8 @@ class Fetcher:
     def get_linearNames(
         self,
         coin: str = "BTC",
-        inverse: bool = False,
         perpetual: bool = True,
+        inverse: bool = False,
         quoteCoins: list[str] = ["USDT", "USDC", "USD"],
     ) -> dict:
         """Get all the future contracts for a given coin.
@@ -307,21 +322,21 @@ class Fetcher:
     def all_gaps_pd(
         self,
         coin: str = "BTC",
-        applyFees: bool = False,
-        inverse: bool = False,
-        perpetual: bool = True,
-        spot: bool = False,
         quoteCoins: list[str] = ["USDC", "USDT", "USD"],
+        applyFees: bool = False,
+        spot: bool = False,
+        perpetual: bool = True,
+        inverse: bool = False,
     ) -> pd.DataFrame:  # Function can return either DataFrame or Styler
         """Get all the gaps for multiple products in a DataFrame.
 
         Args:
             coin (str): The coin to consider (e.g., "BTC").
-            applyFees (bool): Apply trading fees (0.22% taker fee).
-            inverse (bool): Use inverse contracts.
-            perpetual (bool): Use perpetual contracts.
-            spot (bool): Include spot contracts.
             quoteCoins (list[str]): Quote currencies to consider (e.g., ["USDC", "USDT"]).
+            applyFees (bool): Apply trading fees (0.22% taker fee).
+            spot (bool): Include spot contracts.
+            perpetual (bool): Use perpetual contracts.
+            inverse (bool): Use inverse contracts.
 
         Returns:
             pd.DataFrame | pd.io.formats.style.Styler: A DataFrame or a styled version.

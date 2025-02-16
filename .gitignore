@@ -11,7 +11,9 @@ dist/
 # Log
 test.log
 save_klines.log
+*.log
 nohup.out
 
 # Database
 store/
+temp_store/
