@@ -18,6 +18,9 @@ try:
 except ImportError:
     print("No keys file found !")
 
+# Constants
+PERPETUALS = ["BTCUSDT", "BTCPERP", "BTCUSD", "ETHUSDT", "ETHPERP", "ETHUSD"]
+
 
 class Fetcher:
     __slots__ = ["logger", "session", "ws", "ws_spot"]
@@ -75,21 +78,17 @@ class Fetcher:
                 self.logger.info("WebSocket closed")
 
     def get_wallet(self) -> dict:
-        """Give information on USDC and BTC.
+        """Give information on BTC, USDC, USDT in UNIFIED account.
 
         Link: https://bybit-exchange.github.io/docs/v5/account/wallet-balance
 
         Returns:
             dict:
                 Balance: Total balance in USD
-                BTC: dict:
-                    Quantity: Quantity of BTC
-                    Available: Available to withdraw
-                    usdValue: Value in USD
-                USDC: dict:
-                    Quantity: Quantity of USDC
-                    Available: Available to withdraw
-                    usdValue: Value in USD
+                Coin:
+                    Quantity: Quantity of the coin
+                    Available: Available quantity of the coin
+                    TotalPositionIM: Used quantity of the coin
 
         """
         response = self.session.get_wallet_balance(accountType="UNIFIED")["result"]["list"][0]
@@ -100,12 +99,14 @@ class Fetcher:
         usdtDict = next((coin for coin in response["coin"] if coin["coin"] == "USDT"), None)
 
         def get_info(coin: dict) -> dict:
-            return {
-                "Quantity": float(coin["equity"]),
-                "Available": float(coin["equity"]) - float(coin["totalPositionIM"]),
-                "TotalPositionIM": float(coin["totalPositionIM"]),
-                "usdValue": float(coin["usdValue"]),
-            }
+            if coin is not None:
+                return {
+                    "Quantity": float(coin["equity"]),
+                    "Available": float(coin["equity"]) - float(coin["totalPositionIM"]),
+                    "TotalPositionIM": float(coin["totalPositionIM"]),
+                    "usdValue": float(coin["usdValue"]),
+                }
+            return None
 
         return {
             "Balance": totalBalance,
@@ -114,15 +115,97 @@ class Fetcher:
             "USDT": get_info(usdtDict),
         }
 
-    # TODO: No need to load the whole DataFrame, just the last part,
-    # then concat to the file (Parquet is not made for that though)
+    async def get_funding_rates(self, klines_df: pd.DataFrame, product: str) -> pd.DataFrame:
+        """Associate the funding rate of a contract to each kline.
+
+        This function fetches all required funding rates by paginating through
+        Bybit's API until all klines are covered.
+
+        Args:
+            klines_df (pd.DataFrame): The DataFrame containing the klines.
+            product (str): The product to get the funding rates from.
+
+        Returns:
+            pd.DataFrame: The DataFrame with the funding rates.
+
+        """
+        end_time = klines_df["startTime"].max()  # Newest timestamp in klines
+        limit = klines_df["startTime"].min()  # Oldest timestamp in klines
+
+        # Start with the current fundingRate
+        current_funding = self.session.get_tickers(symbol=product, category="linear")["result"]["list"]
+
+        current_funding_df = pd.DataFrame(current_funding)
+        # Remove a 7 hours, 59 minutes and 50 seconds in epoch milliseconds
+        current_funding_df["fundingRateTimestamp"] = current_funding_df["nextFundingTime"].astype(int) - 28_790_000
+        current_funding_df["fundingRate"] = current_funding_df["fundingRate"].astype(float)
+        funding_data = [current_funding_df[["fundingRateTimestamp", "fundingRate"]]]
+
+        # If we fundingRateTimestamp column, add its data to the funding data
+        if "fundingRate" in klines_df.columns:
+            klines_df = klines_df.rename(columns={"fundingRate": "existingFundingRate"})
+
+        while True:
+            # Query funding rate history
+            params = {
+                "category": "linear",
+                "symbol": product,
+                "endTime": end_time,
+            }
+            response = self.session.get_funding_rate_history(**params)["result"]["list"]
+
+            self.logger.info(f"Fetched {len(response)} new funding rate data points.")
+
+            if not response:  # No more data
+                break
+
+            # Convert to DataFrame and append
+            df_funding = pd.DataFrame(response)[["fundingRateTimestamp", "fundingRate"]]
+            df_funding["fundingRateTimestamp"] = df_funding["fundingRateTimestamp"].astype(int)
+            df_funding["fundingRate"] = df_funding["fundingRate"].astype(float)
+            funding_data.append(df_funding)
+
+            # Update start_time for the next batch (use last timestamp)
+            end_time = df_funding["fundingRateTimestamp"].min()
+
+            # If last funding rate is beyond the max kline timestamp, stop
+            if end_time < limit:
+                break
+
+            await asyncio.sleep(0.1)
+
+        # Combine all funding data
+        if not funding_data:
+            msg = "No funding rate data found."
+            raise ValueError(msg)
+
+        df_funding_final = pd.concat(funding_data).sort_values("fundingRateTimestamp")
+
+        klines_df = klines_df.sort_values("startTime")
+        # Merge using nearest past funding rate timestamp
+        df_merged = (
+            pd.merge_asof(
+                klines_df, df_funding_final, left_on="startTime", right_on="fundingRateTimestamp", direction="backward"
+            )
+            .sort_values("startTime", ascending=False)
+            .reset_index(drop=True)
+            .drop(columns=["fundingRateTimestamp"])
+        )
+
+        # Combine with the existing funding rate column
+        if "existingFundingRate" in df_merged.columns:
+            df_merged["fundingRate"] = df_merged["fundingRate"].combine_first(df_merged["existingFundingRate"])
+            df_merged = df_merged.drop(columns=["existingFundingRate"])
+
+        return df_merged
+
     # TODO: Add a verbose parameter
     @beartype
     async def get_history_pd(
         self,
         product: str,
         interval: str = "m",
-        dateLimit: str = "01/01/2021",
+        dateLimit: str = "01/01/2024",
         category: str = "linear",
         dest: str | None = None,
     ) -> pd.DataFrame:
@@ -156,10 +239,6 @@ class Fetcher:
 
         dateLimit = get_epoch(dateLimit)
 
-        # Initialize an empty DataFrame for accumulated data
-        acc_data = pd.DataFrame(
-            columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"],
-        )
         ORANGE = "\033[38;5;214m"
         RESET = "\033[0m"
         self.logger.info(f"Fetching data for {ORANGE}{product}{RESET} in {ORANGE}{interval}{RESET} interval.")
@@ -170,6 +249,10 @@ class Fetcher:
             timestamp = acc_data.iloc[0]["startTime"]
 
         except FileNotFoundError:
+            # Initialize an empty DataFrame for accumulated data
+            acc_data = pd.DataFrame(
+                columns=["startTime", "openPrice", "highPrice", "lowPrice", "closePrice", "volume", "turnover"],
+            )
             self.logger.info("No previous data found, starting fresh.")
             timestamp_key = "end"
             timestamp = None
@@ -207,6 +290,22 @@ class Fetcher:
             if numberCandles < 1000 or int(acc_data.iloc[-1]["startTime"]) < dateLimit:
                 break
 
+        # Affect types
+        acc_data = acc_data.astype(
+            {
+                "startTime": "int",
+                "openPrice": "float",
+                "highPrice": "float",
+                "lowPrice": "float",
+                "closePrice": "float",
+                "volume": "float",
+                "turnover": "float",
+            }
+        )
+
+        if product in PERPETUALS:
+            acc_data = await self.get_funding_rates(klines_df=acc_data, product=product)
+
         if not acc_data.empty:
             save_klines_parquet(file_name, acc_data)
         return acc_data
@@ -216,7 +315,7 @@ class Fetcher:
     async def save_klines(
         self,
         coin: str = "BTC",
-        datelimit: str = "01/01/2021",
+        datelimit: str = "01/01/2024",
         dest: str = "store",
         spot: bool = True,
         perpetual: bool = True,

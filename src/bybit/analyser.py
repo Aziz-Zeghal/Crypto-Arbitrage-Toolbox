@@ -38,7 +38,7 @@ class Analyser:
         coeff = round((shortPrice / longPrice - 1) * 100, 3)
 
         if applyFees:
-            coeff = min(coeff + 0.22, 0) if coeff < 0 else max(coeff - 0.22, 0)
+            coeff -= 0.22
 
         # | Time to delivery for the contracts, epoch in milliseconds (convert to seconds)
         longDelivery = int(longTickers["deliveryTime"]) / 1000
