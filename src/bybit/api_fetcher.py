@@ -416,23 +416,22 @@ class Fetcher:
 
         return markets
 
-    # WARNING: There is no Future/Inverse with USD or USDT, so selecting these will return nothing.
     @beartype
     def all_gaps_pd(
         self,
         coin: str = "BTC",
         quoteCoins: list[str] = ["USDC", "USDT", "USD"],
-        applyFees: bool = False,
         spot: bool = False,
         perpetual: bool = True,
         inverse: bool = False,
     ) -> pd.DataFrame:  # Function can return either DataFrame or Styler
         """Get all the gaps for multiple products in a DataFrame.
 
+        WARNING: There is no Future/Inverse with USD or USDT, so selecting these will return nothing.
+
         Args:
             coin (str): The coin to consider (e.g., "BTC").
             quoteCoins (list[str]): Quote currencies to consider (e.g., ["USDC", "USDT"]).
-            applyFees (bool): Apply trading fees (0.22% taker fee).
             spot (bool): Include spot contracts.
             perpetual (bool): Use perpetual contracts.
             inverse (bool): Use inverse contracts.
@@ -466,9 +465,11 @@ class Fetcher:
             "Sell": "string",
             "Gap": "float",
             "Coeff": "float",
+            "ROI": "float",
             "APR": "float",
-            "DaysLeft": "int",
+            "CumFundingRate": "float",
             "CumVolume": "int",
+            "DaysLeft": "int",
         }
 
         df_gaps = pd.DataFrame(columns=column_types.keys()).astype(column_types)
@@ -479,7 +480,7 @@ class Fetcher:
                 # Cross only the products in different categories
                 longInfo = long["list"][0]
                 shortInfo = short["list"][0]
-                gap = Analyser.get_gap(longInfo, shortInfo, applyFees)
+                gap = Analyser.get_gap(longInfo, shortInfo)
 
                 row = pd.DataFrame(
                     [
@@ -488,9 +489,11 @@ class Fetcher:
                             "Sell": shortInfo["symbol"],
                             "Gap": gap["gap"],
                             "Coeff": gap["coeff"],
+                            "ROI": gap["roi"],
                             "APR": gap["apr"],
-                            "DaysLeft": max(0, int(gap["daysLeft"])),
+                            "CumFundingRate": gap["cumFunding"],
                             "CumVolume": gap["cumVolume"],
+                            "DaysLeft": max(0, int(gap["daysLeft"])),
                         },
                     ],
                 )

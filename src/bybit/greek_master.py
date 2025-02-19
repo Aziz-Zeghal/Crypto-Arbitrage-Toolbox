@@ -170,7 +170,6 @@ class GreekMaster:
         gaps = self.fetcher.all_gaps_pd(
             inverse=False,
             perpetual=False,
-            applyFees=True,
             spot=True,
             quoteCoins=quoteCoins,
         )
@@ -191,7 +190,6 @@ class GreekMaster:
         gaps = self.fetcher.all_gaps_pd(
             inverse=False,
             perpetual=False,
-            applyFees=True,
             spot=True,
             quoteCoins=["USDC"],
         )
