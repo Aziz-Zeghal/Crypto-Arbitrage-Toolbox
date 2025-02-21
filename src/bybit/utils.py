@@ -41,6 +41,9 @@ def load_klines_parquet(file: str, pretty: bool = False) -> pd.DataFrame:
         df["lowPrice"] = pd.to_numeric(df["lowPrice"], errors="coerce")
         df["closePrice"] = pd.to_numeric(df["closePrice"], errors="coerce")
 
+        if "fundingRate" in df.columns:
+            df["fundingRate"] = pd.to_numeric(df["fundingRate"] * 100, errors="coerce")
+
     return df
 
 
