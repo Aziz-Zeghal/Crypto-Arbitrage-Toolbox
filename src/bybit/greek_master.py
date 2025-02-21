@@ -98,7 +98,7 @@ class GreekMaster:
             # Exit position (can also be a rollover)
             await self.client.exit_amount()
 
-            (setattr(self, "watching", False),)
+            self.watching = False
             self.logger.info("Delivery arrived, exited arbitrage !")
 
             # Here, you would want to return self.sch.CancelJob.

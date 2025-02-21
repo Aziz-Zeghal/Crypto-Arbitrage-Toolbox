@@ -219,6 +219,8 @@ class UlysseSpotFut(BybitClient):
 
     async def exit_amount(self) -> dict:
         """Places the exit order."""
+        # TODO: If quantity changes during arbitrage (manual operation)
+        # Should be handled here
         return await self.fetcher.place_order(
             symbol=self.longContract["symbol"],
             side="Sell",

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 from beartype import beartype
+from pybit.exceptions import InvalidRequestError
 from pybit.unified_trading import HTTP, WebSocket
 
 # Custom imports
@@ -585,14 +586,20 @@ class Fetcher:
             dict: The response from the API
 
         """
-        return self.session.place_order(
-            symbol=symbol,
-            category=category,
-            side=side,
-            qty=quantity,
-            orderType="Market",
-            reduceOnly=reduce_only,
-        )
+        resp = None
+        try:
+            resp = self.session.place_order(
+                symbol=symbol,
+                category=category,
+                side=side,
+                qty=quantity,
+                orderType="Market",
+                reduceOnly=reduce_only,
+            )
+        except InvalidRequestError:
+            self.logger.exception("Error when placing order")
+
+        return resp
 
     @beartype
     async def enter_spot_linear(
