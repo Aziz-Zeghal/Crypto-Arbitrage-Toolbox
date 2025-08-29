@@ -11,3 +11,9 @@ This repository is a work-in-progress toolbox for implementing arbitrage strateg
 2. Simulate market conditions.
 3. Execute arbitrage strategies.
 4. Optimize profits while minimizing risks with a lab environment.
+
+## Documentation
+Run the following command:
+```bash
+pdoc -o docs bybit && mv docs code_doc && mv code_doc ../docs
+```
