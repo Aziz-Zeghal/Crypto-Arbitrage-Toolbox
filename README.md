@@ -17,3 +17,8 @@ Run the following command:
 ```bash
 pdoc -o docs bybit && mv docs code_doc && mv code_doc ../docs
 ```
+
+Read with:
+```bash
+pdoc --host localhost : bybit
+```
