@@ -1,3 +1,5 @@
+
+
 # KairosEdge
 
 Welcome to the **KairosEdge**, a sandbox for exploring and implementing various arbitrage strategies on cryptocurrency platforms (mainly Bybit).
@@ -20,5 +22,5 @@ pdoc -o docs bybit && mv docs code_doc && mv code_doc ../docs
 
 Read with:
 ```bash
-pdoc --host localhost : bybit
+pdoc --serve bybit
 ```
